@@ -6,18 +6,18 @@ import io.ktor.client.request.`get`
 import kotlin.Deprecated
 
 public class Legacy internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
   @Deprecated("Deprecated by the API provider")
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   @Deprecated("Deprecated by the API provider")
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     @Deprecated("Deprecated by the API provider")
     public suspend operator fun invoke() {
-      val response = client.get("legacy")
+      val response = __client.get("legacy")
       if (response.status.value != 200) throw ResponseException(response, "")
     }
   }

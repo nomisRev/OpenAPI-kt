@@ -9,15 +9,15 @@ import io.ktor.http.contentType
 import kotlin.ByteArray
 
 public class Media internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: ByteArray, contentType: ContentType) {
-      val response = client.post("media") {
+      val response = __client.post("media") {
         require((contentType.match(ContentType("image", "*")) || contentType.match(ContentType("video", "*"))) && contentType.contentSubtype != "*") {
           "contentType must be a media type in image/* or video/*, but was $contentType"
         }

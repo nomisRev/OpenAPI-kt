@@ -14,21 +14,21 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Things internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val patch: Patch = Patch(client)
+  public val patch: Patch = Patch(__client)
 
   public class Patch internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Optional {
-      val response = client.patch("things")
+      val response = __client.patch("things")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }
 
     public suspend operator fun invoke(note: OptionalProperty<String> = OptionalProperty.Absent): Optional {
-      val response = client.patch("things") {
+      val response = __client.patch("things") {
         contentType(ContentType.Application.Json)
         setBody(Body(note = note))
       }

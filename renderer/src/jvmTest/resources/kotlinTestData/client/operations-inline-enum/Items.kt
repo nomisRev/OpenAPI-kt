@@ -9,15 +9,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Items internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(status: Status? = Status.All) {
-      val response = client.get("items") {
+      val response = __client.get("items") {
         if (status != null) {
           this.url.encodedParameters.append("status", status.value.encodeURLParameter())
         }

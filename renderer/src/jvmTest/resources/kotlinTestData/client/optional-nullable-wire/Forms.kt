@@ -11,15 +11,15 @@ import io.ktor.http.formUrlEncode
 import kotlin.String
 
 public class Forms internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(nickname: String? = null, filter: Filter? = null) {
-      val response = client.post("forms") {
+      val response = __client.post("forms") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           if (nickname != null) {

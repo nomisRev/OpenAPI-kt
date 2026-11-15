@@ -19,25 +19,25 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Vaults internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun id(id: String): IdStringPath = IdStringPath(client, id)
+  public fun id(id: String): IdStringPath = IdStringPath(__client, id)
 
   @OptIn(ExperimentalUuidApi::class)
-  public fun id(id: Uuid): IdUuidPath = IdUuidPath(client, id)
+  public fun id(id: Uuid): IdUuidPath = IdUuidPath(__client, id)
 
   public class IdStringPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("vaults/${this.id.encodeURLParameter()}")
+        val response = __client.get("vaults/${this._id.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
@@ -45,27 +45,27 @@ public class Vaults internal constructor(
 
   @OptIn(ExperimentalUuidApi::class)
   public class IdUuidPath internal constructor(
-    private val client: HttpClient,
-    private val id: Uuid,
+    private val __client: HttpClient,
+    private val _id: Uuid,
   ) {
-    public val items: Items = Items(client, id)
+    public val items: Items = Items(__client, _id)
 
-    public val files: Files = Files(client, id)
+    public val files: Files = Files(__client, _id)
 
     @OptIn(ExperimentalUuidApi::class)
     public class Items internal constructor(
-      private val client: HttpClient,
-      private val id: Uuid,
+      private val __client: HttpClient,
+      private val _id: Uuid,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       @OptIn(ExperimentalUuidApi::class)
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: Uuid,
+        private val __client: HttpClient,
+        private val _id: Uuid,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("vaults/${this.id}/items")
+          val response = __client.get("vaults/${this._id}/items")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
@@ -73,35 +73,35 @@ public class Vaults internal constructor(
 
     @OptIn(ExperimentalUuidApi::class)
     public class Files internal constructor(
-      private val client: HttpClient,
-      private val id: Uuid,
+      private val __client: HttpClient,
+      private val _id: Uuid,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public val put: Put = Put(client, id)
+      public val put: Put = Put(__client, _id)
 
       @OptIn(ExperimentalUuidApi::class)
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: Uuid,
+        private val __client: HttpClient,
+        private val _id: Uuid,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("vaults/${this.id}/files")
+          val response = __client.get("vaults/${this._id}/files")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
 
       @OptIn(ExperimentalUuidApi::class)
       public class Put internal constructor(
-        private val client: HttpClient,
-        private val id: Uuid,
+        private val __client: HttpClient,
+        private val _id: Uuid,
       ) {
         public suspend operator fun invoke(
           name: String,
           kind: Kind? = null,
           owner: Owner? = null,
         ): Response {
-          val response = client.put("vaults/${this.id}/files") {
+          val response = __client.put("vaults/${this._id}/files") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, kind = kind, owner = owner))
           }

@@ -9,19 +9,19 @@ import kotlin.Long
 import kotlin.String
 
 public class Limits internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       maxResults: Long? = null,
       maxResults2: String? = "all",
       maxResults3: Boolean? = null,
     ) {
-      val response = client.get("limits") {
+      val response = __client.get("limits") {
         if (maxResults != null) {
           this.url.encodedParameters.append("maxResults", maxResults.toString())
         }

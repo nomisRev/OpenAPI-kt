@@ -7,22 +7,22 @@ import io.ktor.http.encodeURLParameter
 import kotlin.collections.List
 
 public class Simple internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun ids(ids: List<Status>): IdsPath = IdsPath(client, ids)
+  public fun ids(ids: List<Status>): IdsPath = IdsPath(__client, ids)
 
   public class IdsPath internal constructor(
-    private val client: HttpClient,
-    private val ids: List<Status>,
+    private val __client: HttpClient,
+    private val _ids: List<Status>,
   ) {
-    public val `get`: Get = Get(client, ids)
+    public val `get`: Get = Get(__client, _ids)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val ids: List<Status>,
+      private val __client: HttpClient,
+      private val _ids: List<Status>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("simple/${this.ids.joinToString(",") { it.value.encodeURLParameter() }}")
+        val response = __client.get("simple/${this._ids.joinToString(",") { it.value.encodeURLParameter() }}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

@@ -12,22 +12,22 @@ import io.ktor.http.formUrlEncode
 import kotlin.String
 
 public class Form internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("form")
+      val response = __client.post("form")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     public suspend operator fun invoke(name: String, note: String? = null) {
-      val response = client.post("form") {
+      val response = __client.post("form") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)
@@ -41,10 +41,10 @@ public class Form internal constructor(
   }
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(name: String, note: String? = null) {
-      val response = client.put("form") {
+      val response = __client.put("form") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)

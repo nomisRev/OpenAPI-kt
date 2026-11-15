@@ -6,26 +6,26 @@ import io.ktor.client.request.`get`
 import io.ktor.client.request.post
 
 public class SecretScanning2 internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.get("secret_scanning")
+      val response = __client.get("secret_scanning")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("secret_scanning")
+      val response = __client.post("secret_scanning")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
   }

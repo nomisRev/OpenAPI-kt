@@ -70,14 +70,6 @@ internal class OperationArguments(
     /** The name of [argument], or the one it is given when nothing else has it, for code of an overload without it. */
     private fun generated(argument: BodyArgument): String =
         generatedNames[argument] ?: argument.preferredName()
-
-    /**
-     * Whether an argument is named `client`, which would be nearer than the `HttpClient` property of the operation
-     * class: the generated code then reads the property as `this.client`.
-     */
-    val shadowsClient: Boolean
-        get() = (parameterNames.map { it.second } + fieldNames.values + generatedNames.values)
-            .any { it.unescapeBackticks() == "client" }
 }
 
 /** The symbols of a parameter name that are spelled out when two parameters have one Kotlin name. */

@@ -38,52 +38,52 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 public class App internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val hook: Hook = Hook(client)
+  public val hook: Hook = Hook(__client)
 
-  public val installationRequests: InstallationRequests = InstallationRequests(client)
+  public val installationRequests: InstallationRequests = InstallationRequests(__client)
 
-  public val installations: Installations = Installations(client)
+  public val installations: Installations = Installations(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Integration? {
-      val response = client.get("app")
+      val response = __client.get("app")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }
   }
 
   public class Hook internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val config: Config = Config(client)
+    public val config: Config = Config(__client)
 
-    public val deliveries: Deliveries = Deliveries(client)
+    public val deliveries: Deliveries = Deliveries(__client)
 
     public class Config internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
-      public val patch: Patch = Patch(client)
+      public val patch: Patch = Patch(__client)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(): WebhookConfig {
-          val response = client.get("app/hook/config")
+          val response = __client.get("app/hook/config")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
       }
 
       public class Patch internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(
           url: WebhookConfigUrl? = null,
@@ -91,7 +91,7 @@ public class App internal constructor(
           secret: WebhookConfigSecret? = null,
           insecureSsl: WebhookConfigInsecureSsl? = null,
         ): WebhookConfig {
-          val response = client.patch("app/hook/config") {
+          val response = __client.patch("app/hook/config") {
             contentType(ContentType.Application.Json)
             setBody(Body(url = url, contentType = contentType, secret = secret, insecureSsl = insecureSsl))
           }
@@ -117,17 +117,17 @@ public class App internal constructor(
     }
 
     public class Deliveries internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
-      public fun deliveryId(deliveryId: Long): DeliveryIdPath = DeliveryIdPath(client, deliveryId)
+      public fun deliveryId(deliveryId: Long): DeliveryIdPath = DeliveryIdPath(__client, deliveryId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, cursor: String? = null): Response {
-          val response = client.get("app/hook/deliveries") {
+          val response = __client.get("app/hook/deliveries") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -159,19 +159,19 @@ public class App internal constructor(
       }
 
       public class DeliveryIdPath internal constructor(
-        private val client: HttpClient,
-        private val deliveryId: Long,
+        private val __client: HttpClient,
+        private val _deliveryId: Long,
       ) {
-        public val `get`: Get = Get(client, deliveryId)
+        public val `get`: Get = Get(__client, _deliveryId)
 
-        public val attempts: Attempts = Attempts(client, deliveryId)
+        public val attempts: Attempts = Attempts(__client, _deliveryId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val deliveryId: Long,
+          private val __client: HttpClient,
+          private val _deliveryId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("app/hook/deliveries/${this.deliveryId}")
+            val response = __client.get("app/hook/deliveries/${this._deliveryId}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               400 -> Response.BadRequest(response.body())
@@ -196,17 +196,17 @@ public class App internal constructor(
         }
 
         public class Attempts internal constructor(
-          private val client: HttpClient,
-          private val deliveryId: Long,
+          private val __client: HttpClient,
+          private val _deliveryId: Long,
         ) {
-          public val post: Post = Post(client, deliveryId)
+          public val post: Post = Post(__client, _deliveryId)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val deliveryId: Long,
+            private val __client: HttpClient,
+            private val _deliveryId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.post("app/hook/deliveries/${this.deliveryId}/attempts")
+              val response = __client.post("app/hook/deliveries/${this._deliveryId}/attempts")
               return when (response.status.value) {
                 202 -> Response.Accepted(response.body())
                 400 -> Response.BadRequest(response.body())
@@ -235,15 +235,15 @@ public class App internal constructor(
   }
 
   public class InstallationRequests internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("app/installation-requests") {
+        val response = __client.get("app/installation-requests") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -274,14 +274,14 @@ public class App internal constructor(
   }
 
   public class Installations internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public fun installationId(installationId: Long): InstallationIdPath = InstallationIdPath(client, installationId)
+    public fun installationId(installationId: Long): InstallationIdPath = InstallationIdPath(__client, installationId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         perPage: Long? = 30L,
@@ -289,7 +289,7 @@ public class App internal constructor(
         since: Instant? = null,
         outdated: String? = null,
       ): List<Installation> {
-        val response = client.get("app/installations") {
+        val response = __client.get("app/installations") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -309,23 +309,23 @@ public class App internal constructor(
     }
 
     public class InstallationIdPath internal constructor(
-      private val client: HttpClient,
-      private val installationId: Long,
+      private val __client: HttpClient,
+      private val _installationId: Long,
     ) {
-      public val delete: Delete = Delete(client, installationId)
+      public val delete: Delete = Delete(__client, _installationId)
 
-      public val `get`: Get = Get(client, installationId)
+      public val `get`: Get = Get(__client, _installationId)
 
-      public val accessTokens: AccessTokens = AccessTokens(client, installationId)
+      public val accessTokens: AccessTokens = AccessTokens(__client, _installationId)
 
-      public val suspended: Suspended = Suspended(client, installationId)
+      public val suspended: Suspended = Suspended(__client, _installationId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val installationId: Long,
+        private val __client: HttpClient,
+        private val _installationId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("app/installations/${this.installationId}")
+          val response = __client.delete("app/installations/${this._installationId}")
           return when (response.status.value) {
             204 -> Response.NoContent
             404 -> Response.NotFound(response.body())
@@ -343,11 +343,11 @@ public class App internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val installationId: Long,
+        private val __client: HttpClient,
+        private val _installationId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("app/installations/${this.installationId}")
+          val response = __client.get("app/installations/${this._installationId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())
@@ -367,17 +367,17 @@ public class App internal constructor(
       }
 
       public class AccessTokens internal constructor(
-        private val client: HttpClient,
-        private val installationId: Long,
+        private val __client: HttpClient,
+        private val _installationId: Long,
       ) {
-        public val post: Post = Post(client, installationId)
+        public val post: Post = Post(__client, _installationId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val installationId: Long,
+          private val __client: HttpClient,
+          private val _installationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("app/installations/${this.installationId}/access_tokens")
+            val response = __client.post("app/installations/${this._installationId}/access_tokens")
             return when (response.status.value) {
               201 -> Response.Created(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -393,7 +393,7 @@ public class App internal constructor(
             repositoryIds: List<Long>? = null,
             permissions: AppPermissions? = null,
           ): Response {
-            val response = client.post("app/installations/${this.installationId}/access_tokens") {
+            val response = __client.post("app/installations/${this._installationId}/access_tokens") {
               contentType(ContentType.Application.Json)
               setBody(Body(repositories = repositories, repositoryIds = repositoryIds, permissions = permissions))
             }
@@ -444,19 +444,19 @@ public class App internal constructor(
       }
 
       public class Suspended internal constructor(
-        private val client: HttpClient,
-        private val installationId: Long,
+        private val __client: HttpClient,
+        private val _installationId: Long,
       ) {
-        public val delete: Delete = Delete(client, installationId)
+        public val delete: Delete = Delete(__client, _installationId)
 
-        public val put: Put = Put(client, installationId)
+        public val put: Put = Put(__client, _installationId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val installationId: Long,
+          private val __client: HttpClient,
+          private val _installationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("app/installations/${this.installationId}/suspended")
+            val response = __client.delete("app/installations/${this._installationId}/suspended")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -474,11 +474,11 @@ public class App internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val installationId: Long,
+          private val __client: HttpClient,
+          private val _installationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("app/installations/${this.installationId}/suspended")
+            val response = __client.put("app/installations/${this._installationId}/suspended")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())

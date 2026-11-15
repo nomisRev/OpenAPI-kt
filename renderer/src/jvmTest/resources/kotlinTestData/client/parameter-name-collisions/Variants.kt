@@ -11,19 +11,19 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Variants internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       body: List<String>,
       bodyRequestType: RequestType,
       requestType: String? = null,
     ) {
-      val response = client.post("variants") {
+      val response = __client.post("variants") {
         if (requestType != null) {
           this.url.encodedParameters.append("requestType", requestType.encodeURLParameter())
         }

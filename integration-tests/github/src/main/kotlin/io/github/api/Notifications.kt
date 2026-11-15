@@ -27,16 +27,16 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Notifications internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
-  public val threads: Threads = Threads(client)
+  public val threads: Threads = Threads(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       all: Boolean? = false,
@@ -46,7 +46,7 @@ public class Notifications internal constructor(
       page: Long? = 1L,
       perPage: Long? = 50L,
     ): Response {
-      val response = client.get("notifications") {
+      val response = __client.get("notifications") {
         if (all != null) {
           this.url.encodedParameters.append("all", all.toString())
         }
@@ -98,10 +98,10 @@ public class Notifications internal constructor(
   }
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.put("notifications")
+      val response = __client.put("notifications")
       return when (response.status.value) {
         202 -> response.body<Response.Accepted>()
         205 -> Response.ResetContent
@@ -113,7 +113,7 @@ public class Notifications internal constructor(
     }
 
     public suspend operator fun invoke(lastReadAt: Instant? = null, read: Boolean? = null): Response {
-      val response = client.put("notifications") {
+      val response = __client.put("notifications") {
         contentType(ContentType.Application.Json)
         setBody(Body(lastReadAt = lastReadAt, read = read))
       }
@@ -160,38 +160,38 @@ public class Notifications internal constructor(
   }
 
   public class Threads internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public fun threadId(threadId: Long): ThreadIdPath = ThreadIdPath(client, threadId)
+    public fun threadId(threadId: Long): ThreadIdPath = ThreadIdPath(__client, threadId)
 
     public class ThreadIdPath internal constructor(
-      private val client: HttpClient,
-      private val threadId: Long,
+      private val __client: HttpClient,
+      private val _threadId: Long,
     ) {
-      public val delete: Delete = Delete(client, threadId)
+      public val delete: Delete = Delete(__client, _threadId)
 
-      public val `get`: Get = Get(client, threadId)
+      public val `get`: Get = Get(__client, _threadId)
 
-      public val patch: Patch = Patch(client, threadId)
+      public val patch: Patch = Patch(__client, _threadId)
 
-      public val subscription: Subscription = Subscription(client, threadId)
+      public val subscription: Subscription = Subscription(__client, _threadId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val threadId: Long,
+        private val __client: HttpClient,
+        private val _threadId: Long,
       ) {
         public suspend operator fun invoke() {
-          val response = client.delete("notifications/threads/${this.threadId}")
+          val response = __client.delete("notifications/threads/${this._threadId}")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val threadId: Long,
+        private val __client: HttpClient,
+        private val _threadId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("notifications/threads/${this.threadId}")
+          val response = __client.get("notifications/threads/${this._threadId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             304 -> Response.NotModified
@@ -219,11 +219,11 @@ public class Notifications internal constructor(
       }
 
       public class Patch internal constructor(
-        private val client: HttpClient,
-        private val threadId: Long,
+        private val __client: HttpClient,
+        private val _threadId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.patch("notifications/threads/${this.threadId}")
+          val response = __client.patch("notifications/threads/${this._threadId}")
           return when (response.status.value) {
             205 -> Response.ResetContent
             304 -> Response.NotModified
@@ -244,21 +244,21 @@ public class Notifications internal constructor(
       }
 
       public class Subscription internal constructor(
-        private val client: HttpClient,
-        private val threadId: Long,
+        private val __client: HttpClient,
+        private val _threadId: Long,
       ) {
-        public val delete: Delete = Delete(client, threadId)
+        public val delete: Delete = Delete(__client, _threadId)
 
-        public val `get`: Get = Get(client, threadId)
+        public val `get`: Get = Get(__client, _threadId)
 
-        public val put: Put = Put(client, threadId)
+        public val put: Put = Put(__client, _threadId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val threadId: Long,
+          private val __client: HttpClient,
+          private val _threadId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("notifications/threads/${this.threadId}/subscription")
+            val response = __client.delete("notifications/threads/${this._threadId}/subscription")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -284,11 +284,11 @@ public class Notifications internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val threadId: Long,
+          private val __client: HttpClient,
+          private val _threadId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("notifications/threads/${this.threadId}/subscription")
+            val response = __client.get("notifications/threads/${this._threadId}/subscription")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -316,11 +316,11 @@ public class Notifications internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val threadId: Long,
+          private val __client: HttpClient,
+          private val _threadId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("notifications/threads/${this.threadId}/subscription")
+            val response = __client.put("notifications/threads/${this._threadId}/subscription")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -331,7 +331,7 @@ public class Notifications internal constructor(
           }
 
           public suspend operator fun invoke(ignored: Boolean? = null): Response {
-            val response = client.put("notifications/threads/${this.threadId}/subscription") {
+            val response = __client.put("notifications/threads/${this._threadId}/subscription") {
               contentType(ContentType.Application.Json)
               setBody(Body(ignored = ignored))
             }

@@ -14,15 +14,15 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Reports internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend fun json(contentType: String? = null, authorization: String? = null): String {
-      val response = client.get("reports") {
+      val response = __client.get("reports") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
         if (contentType != null) {
           this.url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())
@@ -36,7 +36,7 @@ public class Reports internal constructor(
     }
 
     public suspend fun textCsv(contentType: String? = null, authorization: String? = null): String {
-      val response = client.get("reports") {
+      val response = __client.get("reports") {
         `header`(HttpHeaders.Accept, ContentType("text", "csv"))
         if (contentType != null) {
           this.url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())

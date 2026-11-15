@@ -14,22 +14,22 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Json internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("json")
+      val response = __client.post("json")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     public suspend operator fun invoke(name: String, note: String? = null) {
-      val response = client.post("json") {
+      val response = __client.post("json") {
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, note = note))
       }
@@ -46,10 +46,10 @@ public class Json internal constructor(
   }
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(name: String, note: String? = null) {
-      val response = client.put("json") {
+      val response = __client.put("json") {
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, note = note))
       }

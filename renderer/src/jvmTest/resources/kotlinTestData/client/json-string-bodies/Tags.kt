@@ -11,15 +11,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Tags internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.put("tags") {
+      val response = __client.put("tags") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }
@@ -27,7 +27,7 @@ public class Tags internal constructor(
     }
 
     public suspend operator fun invoke(body: Name) {
-      val response = client.put("tags") {
+      val response = __client.put("tags") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

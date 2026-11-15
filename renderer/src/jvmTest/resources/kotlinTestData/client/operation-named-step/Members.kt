@@ -6,53 +6,53 @@ import io.ktor.client.request.`get`
 import io.ktor.client.request.post
 
 public class Members internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val delete: Delete = Delete(client)
+  public val delete: Delete = Delete(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public suspend operator fun invoke() {
-      val response = client.get("members")
+      val response = __client.get("members")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.post("members/get")
+        val response = __client.post("members/get")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("members")
+      val response = __client.post("members")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
   }
 
   public class Delete internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.post("members/delete")
+        val response = __client.post("members/delete")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

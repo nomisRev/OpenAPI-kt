@@ -10,27 +10,27 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 public class Scans internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): ScanRead {
-      val response = client.get("scans")
+      val response = __client.get("scans")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: ScanWrite) {
-      val response = client.post("scans") {
+      val response = __client.post("scans") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

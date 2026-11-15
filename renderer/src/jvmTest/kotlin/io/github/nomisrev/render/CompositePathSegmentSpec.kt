@@ -258,25 +258,25 @@ val compositePathSegmentSpec by testSuite {
         val result = generate("/hackathons/{id}/json", "/hackathons/{id}.json")
         assertEquals(listOf(warning), result.diagnostics.map { it.message })
         val hackathons = result.files.single { it.name == "Hackathons" }.toString()
-        assertTrue("public val json: Json = Json(client, id)" in hackathons, hackathons)
-        assertTrue("public val dotJson: DotJson = DotJson(client, id)" in hackathons, hackathons)
-        assertTrue("client.get(\"hackathons/${'$'}{this.id.encodeURLParameter()}/json\")" in hackathons, hackathons)
-        assertTrue("client.get(\"hackathons/${'$'}{this.id.encodeURLParameter()}.json\")" in hackathons, hackathons)
+        assertTrue("public val json: Json = Json(__client, _id)" in hackathons, hackathons)
+        assertTrue("public val dotJson: DotJson = DotJson(__client, _id)" in hackathons, hackathons)
+        assertTrue("__client.get(\"hackathons/${'$'}{this._id.encodeURLParameter()}/json\")" in hackathons, hackathons)
+        assertTrue("__client.get(\"hackathons/${'$'}{this._id.encodeURLParameter()}.json\")" in hackathons, hackathons)
 
         // The order of the spec does not matter: the segment after a slash keeps the plain name.
         val reversed = generate("/hackathons/{id}.json", "/hackathons/{id}/json")
         assertEquals(listOf(warning), reversed.diagnostics.map { it.message })
         assertTrue(
-            "public val dotJson: DotJson = DotJson(client, id)" in reversed.files.single { it.name == "Hackathons" }.toString()
+            "public val dotJson: DotJson = DotJson(__client, _id)" in reversed.files.single { it.name == "Hackathons" }.toString()
         )
 
         // A parameter step and other separators.
         val others = generate("/lists/{id}", "/lists.{id}", "/v1/{id}/cancel", "/v1/{id}:cancel")
         val lists = others.files.single { it.name == "Lists" }.toString()
-        assertTrue("public fun id(id: String): IdPath = IdPath(client, id)" in lists, lists)
-        assertTrue("public fun dotId(id: String): DotIdPath = DotIdPath(client, id)" in lists, lists)
+        assertTrue("public fun id(id: String): IdPath = IdPath(__client, id)" in lists, lists)
+        assertTrue("public fun dotId(id: String): DotIdPath = DotIdPath(__client, id)" in lists, lists)
         val v1 = others.files.single { it.name == "V1" }.toString()
-        assertTrue("public val colonCancel: ColonCancel = ColonCancel(client, id)" in v1, v1)
+        assertTrue("public val colonCancel: ColonCancel = ColonCancel(__client, _id)" in v1, v1)
 
         // Two joined steps of one name and no slash step: both are named with their separator.
         val joined = generate("/hackathons/{id}.json", "/hackathons/{id}:json").files.single { it.name == "Hackathons" }.toString()

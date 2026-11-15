@@ -12,37 +12,37 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Networks internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun owner(owner: String): OwnerPath = OwnerPath(client, owner)
+  public fun owner(owner: String): OwnerPath = OwnerPath(__client, owner)
 
   public class OwnerPath internal constructor(
-    private val client: HttpClient,
-    private val owner: String,
+    private val __client: HttpClient,
+    private val _owner: String,
   ) {
-    public fun repo(repo: String): RepoPath = RepoPath(client, owner, repo)
+    public fun repo(repo: String): RepoPath = RepoPath(__client, _owner, repo)
 
     public class RepoPath internal constructor(
-      private val client: HttpClient,
-      private val owner: String,
-      private val repo: String,
+      private val __client: HttpClient,
+      private val _owner: String,
+      private val _repo: String,
     ) {
-      public val events: Events = Events(client, owner, repo)
+      public val events: Events = Events(__client, _owner, _repo)
 
       public class Events internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("networks/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/events") {
+            val response = __client.get("networks/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/events") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }

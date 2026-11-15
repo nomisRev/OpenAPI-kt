@@ -11,19 +11,19 @@ import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val form: Form = Form(client)
+  public val form: Form = Form(__client)
 
-  public val formOptionalFields: FormOptionalFields = FormOptionalFields(client)
+  public val formOptionalFields: FormOptionalFields = FormOptionalFields(__client)
 
-  public val json: Json = Json(client)
+  public val json: Json = Json(__client)
 
-  public val jsonOptionalFields: JsonOptionalFields = JsonOptionalFields(client)
+  public val jsonOptionalFields: JsonOptionalFields = JsonOptionalFields(__client)
 
-  public val multipart: Multipart = Multipart(client)
+  public val multipart: Multipart = Multipart(__client)
 
-  public val formOrMultipart: FormOrMultipart = FormOrMultipart(client)
+  public val formOrMultipart: FormOrMultipart = FormOrMultipart(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -42,6 +42,6 @@ public class Api internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

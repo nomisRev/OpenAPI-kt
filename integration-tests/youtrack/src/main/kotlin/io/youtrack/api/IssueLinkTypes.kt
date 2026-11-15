@@ -17,23 +17,23 @@ import kotlin.String
 import kotlin.collections.List
 
 public class IssueLinkTypes internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource",
       skip: Int? = null,
       top: Int? = null,
     ): List<IssueLinkTypeRead> {
-      val response = client.get("issueLinkTypes") {
+      val response = __client.get("issueLinkTypes") {
         if (fields != null) {
           this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
@@ -50,10 +50,10 @@ public class IssueLinkTypes internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead {
-      val response = client.post("issueLinkTypes") {
+      val response = __client.post("issueLinkTypes") {
         if (fields != null) {
           this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
@@ -68,31 +68,31 @@ public class IssueLinkTypes internal constructor(
   }
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val delete: Delete = Delete(client, id)
+    public val delete: Delete = Delete(__client, _id)
 
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
-    public val post: Post = Post(client, id)
+    public val post: Post = Post(__client, _id)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("issueLinkTypes/${this.id.encodeURLParameter()}")
+        val response = __client.delete("issueLinkTypes/${this._id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource"): IssueLinkTypeRead {
-        val response = client.get("issueLinkTypes/${this.id.encodeURLParameter()}") {
+        val response = __client.get("issueLinkTypes/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -103,11 +103,11 @@ public class IssueLinkTypes internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead {
-        val response = client.post("issueLinkTypes/${this.id.encodeURLParameter()}") {
+        val response = __client.post("issueLinkTypes/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

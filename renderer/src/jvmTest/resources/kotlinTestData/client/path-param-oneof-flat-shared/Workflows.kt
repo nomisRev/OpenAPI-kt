@@ -6,46 +6,46 @@ import io.ktor.client.request.`get`
 import kotlin.Int
 
 public class Workflows internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val queued: Queued = Queued(client)
+  public val queued: Queued = Queued(__client)
 
-  public val inProgress: InProgress = InProgress(client)
+  public val inProgress: InProgress = InProgress(__client)
 
-  public fun workflowId(workflowId: Int): WorkflowIdPath = WorkflowIdPath(client, workflowId)
+  public fun workflowId(workflowId: Int): WorkflowIdPath = WorkflowIdPath(__client, workflowId)
 
   public class Queued internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val runs: Runs = Runs(client)
+    public val runs: Runs = Runs(__client)
 
-    public val history: History = History(client)
+    public val history: History = History(__client)
 
     public class Runs internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("workflows/queued/runs")
+          val response = __client.get("workflows/queued/runs")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
     }
 
     public class History internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("workflows/queued/history")
+          val response = __client.get("workflows/queued/history")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
@@ -53,37 +53,37 @@ public class Workflows internal constructor(
   }
 
   public class InProgress internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val runs: Runs = Runs(client)
+    public val runs: Runs = Runs(__client)
 
-    public val history: History = History(client)
+    public val history: History = History(__client)
 
     public class Runs internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("workflows/in-progress/runs")
+          val response = __client.get("workflows/in-progress/runs")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
     }
 
     public class History internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("workflows/in-progress/history")
+          val response = __client.get("workflows/in-progress/history")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
@@ -91,42 +91,42 @@ public class Workflows internal constructor(
   }
 
   public class WorkflowIdPath internal constructor(
-    private val client: HttpClient,
-    private val workflowId: Int,
+    private val __client: HttpClient,
+    private val _workflowId: Int,
   ) {
-    public val runs: Runs = Runs(client, workflowId)
+    public val runs: Runs = Runs(__client, _workflowId)
 
-    public val history: History = History(client, workflowId)
+    public val history: History = History(__client, _workflowId)
 
     public class Runs internal constructor(
-      private val client: HttpClient,
-      private val workflowId: Int,
+      private val __client: HttpClient,
+      private val _workflowId: Int,
     ) {
-      public val `get`: Get = Get(client, workflowId)
+      public val `get`: Get = Get(__client, _workflowId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val workflowId: Int,
+        private val __client: HttpClient,
+        private val _workflowId: Int,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("workflows/${this.workflowId}/runs")
+          val response = __client.get("workflows/${this._workflowId}/runs")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
     }
 
     public class History internal constructor(
-      private val client: HttpClient,
-      private val workflowId: Int,
+      private val __client: HttpClient,
+      private val _workflowId: Int,
     ) {
-      public val `get`: Get = Get(client, workflowId)
+      public val `get`: Get = Get(__client, _workflowId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val workflowId: Int,
+        private val __client: HttpClient,
+        private val _workflowId: Int,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("workflows/${this.workflowId}/history")
+          val response = __client.get("workflows/${this._workflowId}/history")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

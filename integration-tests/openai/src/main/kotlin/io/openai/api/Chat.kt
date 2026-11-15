@@ -25,21 +25,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Chat internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val completions: Completions = Completions(client)
+  public val completions: Completions = Completions(__client)
 
   public class Completions internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
-    public fun completionId(completionId: String): CompletionIdPath = CompletionIdPath(client, completionId)
+    public fun completionId(completionId: String): CompletionIdPath = CompletionIdPath(__client, completionId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         model: String? = null,
@@ -48,7 +48,7 @@ public class Chat internal constructor(
         limit: Long? = 20L,
         order: Order? = Order.Asc,
       ): ChatCompletionList {
-        val response = client.get("chat/completions") {
+        val response = __client.get("chat/completions") {
           if (model != null) {
             this.url.encodedParameters.append("model", model.encodeURLParameter())
           }
@@ -82,10 +82,10 @@ public class Chat internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend fun json(body: CreateChatCompletionRequest): CreateChatCompletionResponse {
-        val response = client.post("chat/completions") {
+        val response = __client.post("chat/completions") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
           contentType(ContentType.Application.Json)
           setBody(body)
@@ -95,7 +95,7 @@ public class Chat internal constructor(
       }
 
       public suspend fun textEventStream(body: CreateChatCompletionRequest): CreateChatCompletionStreamResponse {
-        val response = client.post("chat/completions") {
+        val response = __client.post("chat/completions") {
           `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
           contentType(ContentType.Application.Json)
           setBody(body)
@@ -106,45 +106,45 @@ public class Chat internal constructor(
     }
 
     public class CompletionIdPath internal constructor(
-      private val client: HttpClient,
-      private val completionId: String,
+      private val __client: HttpClient,
+      private val _completionId: String,
     ) {
-      public val delete: Delete = Delete(client, completionId)
+      public val delete: Delete = Delete(__client, _completionId)
 
-      public val `get`: Get = Get(client, completionId)
+      public val `get`: Get = Get(__client, _completionId)
 
-      public val post: Post = Post(client, completionId)
+      public val post: Post = Post(__client, _completionId)
 
-      public val messages: Messages = Messages(client, completionId)
+      public val messages: Messages = Messages(__client, _completionId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val completionId: String,
+        private val __client: HttpClient,
+        private val _completionId: String,
       ) {
         public suspend operator fun invoke(): ChatCompletionDeleted {
-          val response = client.delete("chat/completions/${this.completionId.encodeURLParameter()}")
+          val response = __client.delete("chat/completions/${this._completionId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val completionId: String,
+        private val __client: HttpClient,
+        private val _completionId: String,
       ) {
         public suspend operator fun invoke(): CreateChatCompletionResponse {
-          val response = client.get("chat/completions/${this.completionId.encodeURLParameter()}")
+          val response = __client.get("chat/completions/${this._completionId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val completionId: String,
+        private val __client: HttpClient,
+        private val _completionId: String,
       ) {
         public suspend operator fun invoke(metadata: Metadata?): CreateChatCompletionResponse {
-          val response = client.post("chat/completions/${this.completionId.encodeURLParameter()}") {
+          val response = __client.post("chat/completions/${this._completionId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(Body(metadata = metadata))
           }
@@ -159,21 +159,21 @@ public class Chat internal constructor(
       }
 
       public class Messages internal constructor(
-        private val client: HttpClient,
-        private val completionId: String,
+        private val __client: HttpClient,
+        private val _completionId: String,
       ) {
-        public val `get`: Get = Get(client, completionId)
+        public val `get`: Get = Get(__client, _completionId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val completionId: String,
+          private val __client: HttpClient,
+          private val _completionId: String,
         ) {
           public suspend operator fun invoke(
             after: String? = null,
             limit: Long? = 20L,
             order: Order? = Order.Asc,
           ): ChatCompletionMessageList {
-            val response = client.get("chat/completions/${this.completionId.encodeURLParameter()}/messages") {
+            val response = __client.get("chat/completions/${this._completionId.encodeURLParameter()}/messages") {
               if (after != null) {
                 this.url.encodedParameters.append("after", after.encodeURLParameter())
               }

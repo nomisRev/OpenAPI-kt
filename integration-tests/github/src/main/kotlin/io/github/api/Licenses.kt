@@ -14,21 +14,21 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Licenses internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun license(license: String): LicensePath = LicensePath(client, license)
+  public fun license(license: String): LicensePath = LicensePath(__client, license)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       featured: Boolean? = null,
       perPage: Long? = 30L,
       page: Long? = 1L,
     ): Response {
-      val response = client.get("licenses") {
+      val response = __client.get("licenses") {
         if (featured != null) {
           this.url.encodedParameters.append("featured", featured.toString())
         }
@@ -56,17 +56,17 @@ public class Licenses internal constructor(
   }
 
   public class LicensePath internal constructor(
-    private val client: HttpClient,
-    private val license: String,
+    private val __client: HttpClient,
+    private val _license: String,
   ) {
-    public val `get`: Get = Get(client, license)
+    public val `get`: Get = Get(__client, _license)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val license: String,
+      private val __client: HttpClient,
+      private val _license: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("licenses/${this.license.encodeURLParameter()}")
+        val response = __client.get("licenses/${this._license.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified

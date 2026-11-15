@@ -13,20 +13,20 @@ import io.youtrack.model.IssueCountResponseWrite
 import kotlin.String
 
 public class IssuesGetter internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val count: Count = Count(client)
+  public val count: Count = Count(__client)
 
   public class Count internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,count,id", body: IssueCountResponseWrite? = null): IssueCountResponseRead {
-        val response = client.post("issuesGetter/count") {
+        val response = __client.post("issuesGetter/count") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

@@ -49,6 +49,17 @@ fun String.toParamName(): String {
     return if (sanitized.isValidParamName()) sanitized else "`$sanitized`"
 }
 
+/**
+ * The name of the private `HttpClient` a generated path or root class holds. The state of these classes is named with a
+ * leading underscore so that it is never the name of a navigation member or an argument, which come from the spec.
+ * The client has two, which the state of a path parameter ([toStateName], one underscore and a camel case name, so a
+ * path parameter `{client}` is `_client`) does not have.
+ */
+internal const val ClientStateName = "__client"
+
+/** The name of the private field that holds this path parameter in a generated class: `_realm` for `realm`. */
+internal fun String.toStateName(): String = "_" + toCamelCase()
+
 fun String.unescapeBackticks(): String =
     if (startsWith("`") && endsWith("`") && length >= 2) substring(1, length - 1) else this
 

@@ -12,19 +12,19 @@ import kotlin.Int
 import kotlin.String
 
 public class Direct internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       limit: Int,
       xTraceId: String,
       body: Owner,
     ): Owner {
-      val response = client.put("direct") {
+      val response = __client.put("direct") {
         this.url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
         contentType(ContentType.Application.Json)

@@ -33,14 +33,14 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Advisories internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun ghsaId(ghsaId: String): GhsaIdPath = GhsaIdPath(client, ghsaId)
+  public fun ghsaId(ghsaId: String): GhsaIdPath = GhsaIdPath(__client, ghsaId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       ghsaId: String? = null,
@@ -62,7 +62,7 @@ public class Advisories internal constructor(
       perPage: Long? = 30L,
       sort: Sort? = Sort.Published,
     ): Response {
-      val response = client.get("advisories") {
+      val response = __client.get("advisories") {
         if (ghsaId != null) {
           this.url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
         }
@@ -312,17 +312,17 @@ public class Advisories internal constructor(
   }
 
   public class GhsaIdPath internal constructor(
-    private val client: HttpClient,
-    private val ghsaId: String,
+    private val __client: HttpClient,
+    private val _ghsaId: String,
   ) {
-    public val `get`: Get = Get(client, ghsaId)
+    public val `get`: Get = Get(__client, _ghsaId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val ghsaId: String,
+      private val __client: HttpClient,
+      private val _ghsaId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("advisories/${this.ghsaId.encodeURLParameter()}")
+        val response = __client.get("advisories/${this._ghsaId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())

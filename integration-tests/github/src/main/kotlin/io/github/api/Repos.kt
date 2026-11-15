@@ -260,171 +260,173 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
 
 public class Repos internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun owner(owner: String): OwnerPath = OwnerPath(client, owner)
+  public fun owner(owner: String): OwnerPath = OwnerPath(__client, owner)
 
-  public fun templateOwner(templateOwner: String): TemplateOwnerPath = TemplateOwnerPath(client, templateOwner)
+  public fun templateOwner(templateOwner: String): TemplateOwnerPath = TemplateOwnerPath(__client, templateOwner)
 
   public class OwnerPath internal constructor(
-    private val client: HttpClient,
-    private val owner: String,
+    private val __client: HttpClient,
+    private val _owner: String,
   ) {
-    public fun repo(repo: String): RepoPath = RepoPath(client, owner, repo)
+    public fun repo(repo: String): RepoPath = RepoPath(__client, _owner, repo)
 
     public class RepoPath internal constructor(
-      private val client: HttpClient,
-      private val owner: String,
-      private val repo: String,
+      private val __client: HttpClient,
+      private val _owner: String,
+      private val _repo: String,
     ) {
-      public val delete: Delete = Delete(client, owner, repo)
+      public val delete: Delete = Delete(__client, _owner, _repo)
 
-      public val `get`: Get = Get(client, owner, repo)
+      public val `get`: Get = Get(__client, _owner, _repo)
 
-      public val patch: Patch = Patch(client, owner, repo)
+      public val patch: Patch = Patch(__client, _owner, _repo)
 
-      public val actions: Actions = Actions(client, owner, repo)
+      public val actions: Actions = Actions(__client, _owner, _repo)
 
-      public val activity: Activity = Activity(client, owner, repo)
+      public val activity: Activity = Activity(__client, _owner, _repo)
 
-      public val assignees: Assignees = Assignees(client, owner, repo)
+      public val assignees: Assignees = Assignees(__client, _owner, _repo)
 
-      public val attestations: Attestations = Attestations(client, owner, repo)
+      public val attestations: Attestations = Attestations(__client, _owner, _repo)
 
-      public val autolinks: Autolinks = Autolinks(client, owner, repo)
+      public val autolinks: Autolinks = Autolinks(__client, _owner, _repo)
 
       public val automatedSecurityFixes: AutomatedSecurityFixes =
-          AutomatedSecurityFixes(client, owner, repo)
+          AutomatedSecurityFixes(__client, _owner, _repo)
 
-      public val branches: Branches = Branches(client, owner, repo)
+      public val branches: Branches = Branches(__client, _owner, _repo)
 
-      public val checkRuns: CheckRuns = CheckRuns(client, owner, repo)
+      public val checkRuns: CheckRuns = CheckRuns(__client, _owner, _repo)
 
-      public val checkSuites: CheckSuites = CheckSuites(client, owner, repo)
+      public val checkSuites: CheckSuites = CheckSuites(__client, _owner, _repo)
 
-      public val codeScanning: CodeScanning = CodeScanning(client, owner, repo)
+      public val codeScanning: CodeScanning = CodeScanning(__client, _owner, _repo)
 
       public val codeSecurityConfiguration: CodeSecurityConfiguration =
-          CodeSecurityConfiguration(client, owner, repo)
+          CodeSecurityConfiguration(__client, _owner, _repo)
 
-      public val codeowners: Codeowners = Codeowners(client, owner, repo)
+      public val codeowners: Codeowners = Codeowners(__client, _owner, _repo)
 
-      public val codespaces: Codespaces = Codespaces(client, owner, repo)
+      public val codespaces: Codespaces = Codespaces(__client, _owner, _repo)
 
-      public val collaborators: Collaborators = Collaborators(client, owner, repo)
+      public val collaborators: Collaborators = Collaborators(__client, _owner, _repo)
 
-      public val comments: Comments = Comments(client, owner, repo)
+      public val comments: Comments = Comments(__client, _owner, _repo)
 
-      public val commits: Commits = Commits(client, owner, repo)
+      public val commits: Commits = Commits(__client, _owner, _repo)
 
-      public val community: Community = Community(client, owner, repo)
+      public val community: Community = Community(__client, _owner, _repo)
 
-      public val compare: Compare = Compare(client, owner, repo)
+      public val compare: Compare = Compare(__client, _owner, _repo)
 
-      public val contents: Contents = Contents(client, owner, repo)
+      public val contents: Contents = Contents(__client, _owner, _repo)
 
-      public val contributors: Contributors = Contributors(client, owner, repo)
+      public val contributors: Contributors = Contributors(__client, _owner, _repo)
 
-      public val dependabot: Dependabot = Dependabot(client, owner, repo)
+      public val dependabot: Dependabot = Dependabot(__client, _owner, _repo)
 
-      public val dependencyGraph: DependencyGraph = DependencyGraph(client, owner, repo)
+      public val dependencyGraph: DependencyGraph = DependencyGraph(__client, _owner, _repo)
 
-      public val deployments: Deployments = Deployments(client, owner, repo)
+      public val deployments: Deployments = Deployments(__client, _owner, _repo)
 
-      public val dispatches: Dispatches = Dispatches(client, owner, repo)
+      public val dispatches: Dispatches = Dispatches(__client, _owner, _repo)
 
-      public val environments: Environments = Environments(client, owner, repo)
+      public val environments: Environments = Environments(__client, _owner, _repo)
 
-      public val events: Events = Events(client, owner, repo)
+      public val events: Events = Events(__client, _owner, _repo)
 
-      public val forks: Forks = Forks(client, owner, repo)
+      public val forks: Forks = Forks(__client, _owner, _repo)
 
-      public val git: Git = Git(client, owner, repo)
+      public val git: Git = Git(__client, _owner, _repo)
 
-      public val hooks: Hooks = Hooks(client, owner, repo)
+      public val hooks: Hooks = Hooks(__client, _owner, _repo)
 
-      public val immutableReleases: ImmutableReleases = ImmutableReleases(client, owner, repo)
+      public val immutableReleases: ImmutableReleases = ImmutableReleases(__client, _owner, _repo)
 
-      public val `import`: Import = Import(client, owner, repo)
+      public val `import`: Import = Import(__client, _owner, _repo)
 
-      public val installation: Installation = Installation(client, owner, repo)
+      public val installation: Installation = Installation(__client, _owner, _repo)
 
-      public val interactionLimits: InteractionLimits = InteractionLimits(client, owner, repo)
+      public val interactionLimits: InteractionLimits = InteractionLimits(__client, _owner, _repo)
 
-      public val invitations: Invitations = Invitations(client, owner, repo)
+      public val invitations: Invitations = Invitations(__client, _owner, _repo)
 
-      public val issues: Issues = Issues(client, owner, repo)
+      public val issues: Issues = Issues(__client, _owner, _repo)
 
-      public val keys: Keys = Keys(client, owner, repo)
+      public val keys: Keys = Keys(__client, _owner, _repo)
 
-      public val labels: Labels = Labels(client, owner, repo)
+      public val labels: Labels = Labels(__client, _owner, _repo)
 
-      public val languages: Languages = Languages(client, owner, repo)
+      public val languages: Languages = Languages(__client, _owner, _repo)
 
-      public val license: License = License(client, owner, repo)
+      public val license: License = License(__client, _owner, _repo)
 
-      public val mergeUpstream: MergeUpstream = MergeUpstream(client, owner, repo)
+      public val mergeUpstream: MergeUpstream = MergeUpstream(__client, _owner, _repo)
 
-      public val merges: Merges = Merges(client, owner, repo)
+      public val merges: Merges = Merges(__client, _owner, _repo)
 
-      public val milestones: Milestones = Milestones(client, owner, repo)
+      public val milestones: Milestones = Milestones(__client, _owner, _repo)
 
-      public val notifications: Notifications = Notifications(client, owner, repo)
+      public val notifications: Notifications = Notifications(__client, _owner, _repo)
 
-      public val pages: Pages = Pages(client, owner, repo)
+      public val pages: Pages = Pages(__client, _owner, _repo)
 
       public val privateVulnerabilityReporting: PrivateVulnerabilityReporting =
-          PrivateVulnerabilityReporting(client, owner, repo)
+          PrivateVulnerabilityReporting(__client, _owner, _repo)
 
-      public val properties: Properties = Properties(client, owner, repo)
+      public val properties: Properties = Properties(__client, _owner, _repo)
 
-      public val pulls: Pulls = Pulls(client, owner, repo)
+      public val pulls: Pulls = Pulls(__client, _owner, _repo)
 
-      public val readme: Readme = Readme(client, owner, repo)
+      public val readme: Readme = Readme(__client, _owner, _repo)
 
-      public val releases: Releases = Releases(client, owner, repo)
+      public val releases: Releases = Releases(__client, _owner, _repo)
 
-      public val rules: Rules = Rules(client, owner, repo)
+      public val rules: Rules = Rules(__client, _owner, _repo)
 
-      public val rulesets: Rulesets = Rulesets(client, owner, repo)
+      public val rulesets: Rulesets = Rulesets(__client, _owner, _repo)
 
-      public val secretScanning: SecretScanning = SecretScanning(client, owner, repo)
+      public val secretScanning: SecretScanning = SecretScanning(__client, _owner, _repo)
 
-      public val securityAdvisories: SecurityAdvisories = SecurityAdvisories(client, owner, repo)
+      public val securityAdvisories: SecurityAdvisories =
+          SecurityAdvisories(__client, _owner, _repo)
 
-      public val stargazers: Stargazers = Stargazers(client, owner, repo)
+      public val stargazers: Stargazers = Stargazers(__client, _owner, _repo)
 
-      public val stats: Stats = Stats(client, owner, repo)
+      public val stats: Stats = Stats(__client, _owner, _repo)
 
-      public val statuses: Statuses = Statuses(client, owner, repo)
+      public val statuses: Statuses = Statuses(__client, _owner, _repo)
 
-      public val subscribers: Subscribers = Subscribers(client, owner, repo)
+      public val subscribers: Subscribers = Subscribers(__client, _owner, _repo)
 
-      public val subscription: Subscription = Subscription(client, owner, repo)
+      public val subscription: Subscription = Subscription(__client, _owner, _repo)
 
-      public val tags: Tags = Tags(client, owner, repo)
+      public val tags: Tags = Tags(__client, _owner, _repo)
 
-      public val tarball: Tarball = Tarball(client, owner, repo)
+      public val tarball: Tarball = Tarball(__client, _owner, _repo)
 
-      public val teams: Teams = Teams(client, owner, repo)
+      public val teams: Teams = Teams(__client, _owner, _repo)
 
-      public val topics: Topics = Topics(client, owner, repo)
+      public val topics: Topics = Topics(__client, _owner, _repo)
 
-      public val traffic: Traffic = Traffic(client, owner, repo)
+      public val traffic: Traffic = Traffic(__client, _owner, _repo)
 
-      public val transfer: Transfer = Transfer(client, owner, repo)
+      public val transfer: Transfer = Transfer(__client, _owner, _repo)
 
-      public val vulnerabilityAlerts: VulnerabilityAlerts = VulnerabilityAlerts(client, owner, repo)
+      public val vulnerabilityAlerts: VulnerabilityAlerts =
+          VulnerabilityAlerts(__client, _owner, _repo)
 
-      public val zipball: Zipball = Zipball(client, owner, repo)
+      public val zipball: Zipball = Zipball(__client, _owner, _repo)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+          val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
           return when (response.status.value) {
             204 -> Response.NoContent
             307 -> Response.TemporaryRedirect(response.body())
@@ -463,12 +465,12 @@ public class Repos internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+          val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             301 -> Response.MovedPermanently(response.body())
@@ -498,12 +500,12 @@ public class Repos internal constructor(
       }
 
       public class Patch internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+          val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             307 -> Response.TemporaryRedirect(response.body())
@@ -541,7 +543,7 @@ public class Repos internal constructor(
           allowForking: Boolean? = null,
           webCommitSignoffRequired: Boolean? = null,
         ): Response {
-          val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}") {
+          val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, description = description, homepage = homepage, private = private, visibility = visibility, securityAndAnalysis = securityAndAnalysis, hasIssues = hasIssues, hasProjects = hasProjects, hasWiki = hasWiki, isTemplate = isTemplate, defaultBranch = defaultBranch, allowSquashMerge = allowSquashMerge, allowMergeCommit = allowMergeCommit, allowRebaseMerge = allowRebaseMerge, allowAutoMerge = allowAutoMerge, deleteBranchOnMerge = deleteBranchOnMerge, allowUpdateBranch = allowUpdateBranch, useSquashPrTitleAsDefault = useSquashPrTitleAsDefault, squashMergeCommitTitle = squashMergeCommitTitle, squashMergeCommitMessage = squashMergeCommitMessage, mergeCommitTitle = mergeCommitTitle, mergeCommitMessage = mergeCommitMessage, archived = archived, allowForking = allowForking, webCommitSignoffRequired = webCommitSignoffRequired))
           }
@@ -864,58 +866,58 @@ public class Repos internal constructor(
       }
 
       public class Actions internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val artifacts: Artifacts = Artifacts(client, owner, repo)
+        public val artifacts: Artifacts = Artifacts(__client, _owner, _repo)
 
-        public val cache: Cache = Cache(client, owner, repo)
+        public val cache: Cache = Cache(__client, _owner, _repo)
 
-        public val caches: Caches = Caches(client, owner, repo)
+        public val caches: Caches = Caches(__client, _owner, _repo)
 
-        public val jobs: Jobs = Jobs(client, owner, repo)
+        public val jobs: Jobs = Jobs(__client, _owner, _repo)
 
-        public val oidc: Oidc = Oidc(client, owner, repo)
+        public val oidc: Oidc = Oidc(__client, _owner, _repo)
 
         public val organizationSecrets: OrganizationSecrets =
-            OrganizationSecrets(client, owner, repo)
+            OrganizationSecrets(__client, _owner, _repo)
 
         public val organizationVariables: OrganizationVariables =
-            OrganizationVariables(client, owner, repo)
+            OrganizationVariables(__client, _owner, _repo)
 
-        public val permissions: Permissions = Permissions(client, owner, repo)
+        public val permissions: Permissions = Permissions(__client, _owner, _repo)
 
-        public val runners: Runners = Runners(client, owner, repo)
+        public val runners: Runners = Runners(__client, _owner, _repo)
 
-        public val runs: Runs = Runs(client, owner, repo)
+        public val runs: Runs = Runs(__client, _owner, _repo)
 
-        public val secrets: Secrets = Secrets(client, owner, repo)
+        public val secrets: Secrets = Secrets(__client, _owner, _repo)
 
-        public val variables: Variables = Variables(client, owner, repo)
+        public val variables: Variables = Variables(__client, _owner, _repo)
 
-        public val workflows: Workflows = Workflows(client, owner, repo)
+        public val workflows: Workflows = Workflows(__client, _owner, _repo)
 
         public class Artifacts internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun artifactId(artifactId: Long): ArtifactIdPath = ArtifactIdPath(client, owner, repo, artifactId)
+          public fun artifactId(artifactId: Long): ArtifactIdPath = ArtifactIdPath(__client, _owner, _repo, artifactId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               perPage: Long? = 30L,
               page: Long? = 1L,
               name: String? = null,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/artifacts") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/artifacts") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -939,60 +941,60 @@ public class Repos internal constructor(
           }
 
           public class ArtifactIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val artifactId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _artifactId: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, artifactId)
+            public val delete: Delete = Delete(__client, _owner, _repo, _artifactId)
 
-            public val `get`: Get = Get(client, owner, repo, artifactId)
+            public val `get`: Get = Get(__client, _owner, _repo, _artifactId)
 
-            public fun archiveFormat(archiveFormat: String): ArchiveFormatPath = ArchiveFormatPath(client, owner, repo, artifactId, archiveFormat)
+            public fun archiveFormat(archiveFormat: String): ArchiveFormatPath = ArchiveFormatPath(__client, _owner, _repo, _artifactId, archiveFormat)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val artifactId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _artifactId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/artifacts/${this.artifactId}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/artifacts/${this._artifactId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val artifactId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _artifactId: Long,
             ) {
               public suspend operator fun invoke(): Artifact {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/artifacts/${this.artifactId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/artifacts/${this._artifactId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class ArchiveFormatPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val artifactId: Long,
-              private val archiveFormat: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _artifactId: Long,
+              private val _archiveFormat: String,
             ) {
-              public val `get`: Get = Get(client, owner, repo, artifactId, archiveFormat)
+              public val `get`: Get = Get(__client, _owner, _repo, _artifactId, _archiveFormat)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val artifactId: Long,
-                private val archiveFormat: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _artifactId: Long,
+                private val _archiveFormat: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/artifacts/${this.artifactId}/${this.archiveFormat.encodeURLParameter()}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/artifacts/${this._artifactId}/${this._archiveFormat.encodeURLParameter()}")
                   return when (response.status.value) {
                     302 -> Response.Found
                     410 -> Response.Gone(response.body())
@@ -1013,32 +1015,32 @@ public class Repos internal constructor(
         }
 
         public class Cache internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val retentionLimit: RetentionLimit = RetentionLimit(client, owner, repo)
+          public val retentionLimit: RetentionLimit = RetentionLimit(__client, _owner, _repo)
 
-          public val storageLimit: StorageLimit = StorageLimit(client, owner, repo)
+          public val storageLimit: StorageLimit = StorageLimit(__client, _owner, _repo)
 
-          public val usage: Usage = Usage(client, owner, repo)
+          public val usage: Usage = Usage(__client, _owner, _repo)
 
           public class RetentionLimit internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public val put: Put = Put(client, owner, repo)
+            public val put: Put = Put(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/retention-limit")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/cache/retention-limit")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -1063,12 +1065,12 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsCacheRetentionLimitForRepository): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/retention-limit") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/cache/retention-limit") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1100,21 +1102,21 @@ public class Repos internal constructor(
           }
 
           public class StorageLimit internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public val put: Put = Put(client, owner, repo)
+            public val put: Put = Put(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/storage-limit")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/cache/storage-limit")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -1139,12 +1141,12 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsCacheStorageLimitForRepository): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/storage-limit") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/cache/storage-limit") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1176,19 +1178,19 @@ public class Repos internal constructor(
           }
 
           public class Usage internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): ActionsCacheUsageByRepository {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/usage")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/cache/usage")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1197,23 +1199,23 @@ public class Repos internal constructor(
         }
 
         public class Caches internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val delete: Delete = Delete(client, owner, repo)
+          public val delete: Delete = Delete(__client, _owner, _repo)
 
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun cacheId(cacheId: Long): CacheIdPath = CacheIdPath(client, owner, repo, cacheId)
+          public fun cacheId(cacheId: Long): CacheIdPath = CacheIdPath(__client, _owner, _repo, cacheId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(key: String, ref: String? = null): ActionsCacheList {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/caches") {
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/caches") {
                 this.url.encodedParameters.append("key", key.encodeURLParameter())
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
@@ -1225,9 +1227,9 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               perPage: Long? = 30L,
@@ -1237,7 +1239,7 @@ public class Repos internal constructor(
               sort: Sort? = Sort.LastAccessedAt,
               direction: Direction? = Direction.Desc,
             ): ActionsCacheList {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/caches") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/caches") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -1287,21 +1289,21 @@ public class Repos internal constructor(
           }
 
           public class CacheIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val cacheId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _cacheId: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, cacheId)
+            public val delete: Delete = Delete(__client, _owner, _repo, _cacheId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val cacheId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _cacheId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/caches/${this.cacheId}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/caches/${this._cacheId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -1309,74 +1311,74 @@ public class Repos internal constructor(
         }
 
         public class Jobs internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public fun jobId(jobId: Long): JobIdPath = JobIdPath(client, owner, repo, jobId)
+          public fun jobId(jobId: Long): JobIdPath = JobIdPath(__client, _owner, _repo, jobId)
 
           public class JobIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val jobId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _jobId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, jobId)
+            public val `get`: Get = Get(__client, _owner, _repo, _jobId)
 
-            public val logs: Logs = Logs(client, owner, repo, jobId)
+            public val logs: Logs = Logs(__client, _owner, _repo, _jobId)
 
-            public val rerun: Rerun = Rerun(client, owner, repo, jobId)
+            public val rerun: Rerun = Rerun(__client, _owner, _repo, _jobId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val jobId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _jobId: Long,
             ) {
               public suspend operator fun invoke(): Job {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/jobs/${this.jobId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/jobs/${this._jobId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Logs internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val jobId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _jobId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, jobId)
+              public val `get`: Get = Get(__client, _owner, _repo, _jobId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val jobId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _jobId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/jobs/${this.jobId}/logs")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/jobs/${this._jobId}/logs")
                   if (response.status.value != 302) throw ResponseException(response, "")
                 }
               }
             }
 
             public class Rerun internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val jobId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _jobId: Long,
             ) {
-              public val post: Post = Post(client, owner, repo, jobId)
+              public val post: Post = Post(__client, _owner, _repo, _jobId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val jobId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _jobId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/jobs/${this.jobId}/rerun")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/jobs/${this._jobId}/rerun")
                   return when (response.status.value) {
                     201 -> Response.Created(response.body())
                     403 -> Response.Forbidden(response.body())
@@ -1385,7 +1387,7 @@ public class Repos internal constructor(
                 }
 
                 public suspend operator fun invoke(enableDebugLogging: Boolean? = null): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/jobs/${this.jobId}/rerun") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/jobs/${this._jobId}/rerun") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(enableDebugLogging = enableDebugLogging))
                   }
@@ -1419,35 +1421,35 @@ public class Repos internal constructor(
         }
 
         public class Oidc internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val customization: Customization = Customization(client, owner, repo)
+          public val customization: Customization = Customization(__client, _owner, _repo)
 
           public class Customization internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val sub: Sub = Sub(client, owner, repo)
+            public val sub: Sub = Sub(__client, _owner, _repo)
 
             public class Sub internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
-              public val `get`: Get = Get(client, owner, repo)
+              public val `get`: Get = Get(__client, _owner, _repo)
 
-              public val put: Put = Put(client, owner, repo)
+              public val put: Put = Put(__client, _owner, _repo)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/oidc/customization/sub")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/oidc/customization/sub")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     400 -> Response.BadRequest(response.body())
@@ -1472,12 +1474,12 @@ public class Repos internal constructor(
               }
 
               public class Put internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
               ) {
                 public suspend operator fun invoke(useDefault: Boolean, includeClaimKeys: List<String>? = null): Response {
-                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/oidc/customization/sub") {
+                  val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/oidc/customization/sub") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(useDefault = useDefault, includeClaimKeys = includeClaimKeys))
                   }
@@ -1526,19 +1528,19 @@ public class Repos internal constructor(
         }
 
         public class OrganizationSecrets internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/organization-secrets") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/organization-secrets") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -1560,19 +1562,19 @@ public class Repos internal constructor(
         }
 
         public class OrganizationVariables internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/organization-variables") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/organization-variables") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -1594,52 +1596,52 @@ public class Repos internal constructor(
         }
 
         public class Permissions internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val put: Put = Put(client, owner, repo)
+          public val put: Put = Put(__client, _owner, _repo)
 
-          public val access: Access = Access(client, owner, repo)
+          public val access: Access = Access(__client, _owner, _repo)
 
           public val artifactAndLogRetention: ArtifactAndLogRetention =
-              ArtifactAndLogRetention(client, owner, repo)
+              ArtifactAndLogRetention(__client, _owner, _repo)
 
           public val forkPrContributorApproval: ForkPrContributorApproval =
-              ForkPrContributorApproval(client, owner, repo)
+              ForkPrContributorApproval(__client, _owner, _repo)
 
           public val forkPrWorkflowsPrivateRepos: ForkPrWorkflowsPrivateRepos =
-              ForkPrWorkflowsPrivateRepos(client, owner, repo)
+              ForkPrWorkflowsPrivateRepos(__client, _owner, _repo)
 
-          public val selectedActions: SelectedActions = SelectedActions(client, owner, repo)
+          public val selectedActions: SelectedActions = SelectedActions(__client, _owner, _repo)
 
-          public val workflow: Workflow = Workflow(client, owner, repo)
+          public val workflow: Workflow = Workflow(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): ActionsRepositoryPermissions {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               enabled: ActionsEnabled,
               allowedActions: AllowedActions? = null,
               shaPinningRequired: ShaPinningRequired? = null,
             ) {
-              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions") {
+              val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(enabled = enabled, allowedActions = allowedActions, shaPinningRequired = shaPinningRequired))
               }
@@ -1660,33 +1662,33 @@ public class Repos internal constructor(
           }
 
           public class Access internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public val put: Put = Put(client, owner, repo)
+            public val put: Put = Put(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): ActionsWorkflowAccessToRepository {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/access")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/access")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsWorkflowAccessToRepository) {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/access") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/access") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1696,21 +1698,21 @@ public class Repos internal constructor(
           }
 
           public class ArtifactAndLogRetention internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public val put: Put = Put(client, owner, repo)
+            public val put: Put = Put(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/artifact-and-log-retention")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/artifact-and-log-retention")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -1730,12 +1732,12 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsArtifactAndLogRetention): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/artifact-and-log-retention") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/artifact-and-log-retention") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1762,21 +1764,21 @@ public class Repos internal constructor(
           }
 
           public class ForkPrContributorApproval internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public val put: Put = Put(client, owner, repo)
+            public val put: Put = Put(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -1796,12 +1798,12 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsForkPrContributorApproval): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1828,21 +1830,21 @@ public class Repos internal constructor(
           }
 
           public class ForkPrWorkflowsPrivateRepos internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public val put: Put = Put(client, owner, repo)
+            public val put: Put = Put(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -1867,12 +1869,12 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsForkPrWorkflowsPrivateReposRequest): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1899,33 +1901,33 @@ public class Repos internal constructor(
           }
 
           public class SelectedActions internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public val put: Put = Put(client, owner, repo)
+            public val put: Put = Put(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): io.github.model.SelectedActions {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/selected-actions")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/selected-actions")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(body: io.github.model.SelectedActions? = null) {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/selected-actions") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/selected-actions") {
                   body?.let {
                     contentType(ContentType.Application.Json)
                     setBody(it)
@@ -1937,33 +1939,33 @@ public class Repos internal constructor(
           }
 
           public class Workflow internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public val put: Put = Put(client, owner, repo)
+            public val put: Put = Put(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): ActionsGetDefaultWorkflowPermissions {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/workflow")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/workflow")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsSetDefaultWorkflowPermissions): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/workflow") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/permissions/workflow") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1984,33 +1986,35 @@ public class Repos internal constructor(
         }
 
         public class Runners internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val downloads: Downloads = Downloads(client, owner, repo)
+          public val downloads: Downloads = Downloads(__client, _owner, _repo)
 
-          public val generateJitconfig: GenerateJitconfig = GenerateJitconfig(client, owner, repo)
+          public val generateJitconfig: GenerateJitconfig =
+              GenerateJitconfig(__client, _owner, _repo)
 
-          public val registrationToken: RegistrationToken = RegistrationToken(client, owner, repo)
+          public val registrationToken: RegistrationToken =
+              RegistrationToken(__client, _owner, _repo)
 
-          public val removeToken: RemoveToken = RemoveToken(client, owner, repo)
+          public val removeToken: RemoveToken = RemoveToken(__client, _owner, _repo)
 
-          public fun runnerId(runnerId: Long): RunnerIdPath = RunnerIdPath(client, owner, repo, runnerId)
+          public fun runnerId(runnerId: Long): RunnerIdPath = RunnerIdPath(__client, _owner, _repo, runnerId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               name: String? = null,
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners") {
                 if (name != null) {
                   this.url.encodedParameters.append("name", name.encodeURLParameter())
                 }
@@ -2034,19 +2038,19 @@ public class Repos internal constructor(
           }
 
           public class Downloads internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): List<RunnerApplication> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/downloads")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/downloads")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2054,16 +2058,16 @@ public class Repos internal constructor(
           }
 
           public class GenerateJitconfig internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val post: Post = Post(client, owner, repo)
+            public val post: Post = Post(__client, _owner, _repo)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(
                 name: String,
@@ -2071,7 +2075,7 @@ public class Repos internal constructor(
                 labels: List<String>,
                 workFolder: String? = null,
               ): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/generate-jitconfig") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/generate-jitconfig") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(name = name, runnerGroupId = runnerGroupId, labels = labels, workFolder = workFolder))
                 }
@@ -2120,19 +2124,19 @@ public class Repos internal constructor(
           }
 
           public class RegistrationToken internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val post: Post = Post(client, owner, repo)
+            public val post: Post = Post(__client, _owner, _repo)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): AuthenticationToken {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/registration-token")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/registration-token")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2140,19 +2144,19 @@ public class Repos internal constructor(
           }
 
           public class RemoveToken internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val post: Post = Post(client, owner, repo)
+            public val post: Post = Post(__client, _owner, _repo)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): AuthenticationToken {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/remove-token")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/remove-token")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2160,25 +2164,25 @@ public class Repos internal constructor(
           }
 
           public class RunnerIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val runnerId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _runnerId: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, runnerId)
+            public val delete: Delete = Delete(__client, _owner, _repo, _runnerId)
 
-            public val `get`: Get = Get(client, owner, repo, runnerId)
+            public val `get`: Get = Get(__client, _owner, _repo, _runnerId)
 
-            public val labels: Labels = Labels(client, owner, repo, runnerId)
+            public val labels: Labels = Labels(__client, _owner, _repo, _runnerId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runnerId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runnerId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/${this._runnerId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   422 -> Response.UnprocessableEntity(response.body())
@@ -2196,42 +2200,42 @@ public class Repos internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runnerId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runnerId: Long,
             ) {
               public suspend operator fun invoke(): Runner {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/${this._runnerId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Labels internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runnerId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runnerId: Long,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, runnerId)
+              public val delete: Delete = Delete(__client, _owner, _repo, _runnerId)
 
-              public val `get`: Get = Get(client, owner, repo, runnerId)
+              public val `get`: Get = Get(__client, _owner, _repo, _runnerId)
 
-              public val post: Post = Post(client, owner, repo, runnerId)
+              public val post: Post = Post(__client, _owner, _repo, _runnerId)
 
-              public val put: Put = Put(client, owner, repo, runnerId)
+              public val put: Put = Put(__client, _owner, _repo, _runnerId)
 
-              public fun name(name: String): NamePath = NamePath(client, owner, repo, runnerId, name)
+              public fun name(name: String): NamePath = NamePath(__client, _owner, _repo, _runnerId, name)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runnerId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runnerId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/${this._runnerId}/labels")
                   return when (response.status.value) {
                     200 -> response.body<Response.Ok>()
                     404 -> Response.NotFound(response.body())
@@ -2254,13 +2258,13 @@ public class Repos internal constructor(
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runnerId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runnerId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/${this._runnerId}/labels")
                   return when (response.status.value) {
                     200 -> response.body<Response.Ok>()
                     404 -> Response.NotFound(response.body())
@@ -2283,13 +2287,13 @@ public class Repos internal constructor(
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runnerId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runnerId: Long,
               ) {
                 public suspend operator fun invoke(labels: List<String>): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/${this._runnerId}/labels") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(labels = labels))
                   }
@@ -2325,13 +2329,13 @@ public class Repos internal constructor(
               }
 
               public class Put internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runnerId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runnerId: Long,
               ) {
                 public suspend operator fun invoke(labels: List<String>): Response {
-                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels") {
+                  val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/${this._runnerId}/labels") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(labels = labels))
                   }
@@ -2367,23 +2371,23 @@ public class Repos internal constructor(
               }
 
               public class NamePath internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runnerId: Long,
-                private val name: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runnerId: Long,
+                private val _name: String,
               ) {
-                public val delete: Delete = Delete(client, owner, repo, runnerId, name)
+                public val delete: Delete = Delete(__client, _owner, _repo, _runnerId, _name)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val runnerId: Long,
-                  private val name: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _runnerId: Long,
+                  private val _name: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels/${this.name.encodeURLParameter()}")
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runners/${this._runnerId}/labels/${this._name.encodeURLParameter()}")
                     return when (response.status.value) {
                       200 -> response.body<Response.Ok>()
                       404 -> Response.NotFound(response.body())
@@ -2415,18 +2419,18 @@ public class Repos internal constructor(
         }
 
         public class Runs internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun runId(runId: Long): RunIdPath = RunIdPath(client, owner, repo, runId)
+          public fun runId(runId: Long): RunIdPath = RunIdPath(__client, _owner, _repo, runId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               actor: String? = null,
@@ -2440,7 +2444,7 @@ public class Repos internal constructor(
               checkSuiteId: Long? = null,
               headSha: String? = null,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs") {
                 if (actor != null) {
                   this.url.encodedParameters.append("actor", actor.encodeURLParameter())
                 }
@@ -2521,64 +2525,64 @@ public class Repos internal constructor(
           }
 
           public class RunIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val runId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _runId: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, runId)
+            public val delete: Delete = Delete(__client, _owner, _repo, _runId)
 
-            public val `get`: Get = Get(client, owner, repo, runId)
+            public val `get`: Get = Get(__client, _owner, _repo, _runId)
 
-            public val approvals: Approvals = Approvals(client, owner, repo, runId)
+            public val approvals: Approvals = Approvals(__client, _owner, _repo, _runId)
 
-            public val approve: Approve = Approve(client, owner, repo, runId)
+            public val approve: Approve = Approve(__client, _owner, _repo, _runId)
 
-            public val artifacts: Artifacts = Artifacts(client, owner, repo, runId)
+            public val artifacts: Artifacts = Artifacts(__client, _owner, _repo, _runId)
 
-            public val attempts: Attempts = Attempts(client, owner, repo, runId)
+            public val attempts: Attempts = Attempts(__client, _owner, _repo, _runId)
 
-            public val cancel: Cancel = Cancel(client, owner, repo, runId)
+            public val cancel: Cancel = Cancel(__client, _owner, _repo, _runId)
 
             public val deploymentProtectionRule: DeploymentProtectionRule =
-                DeploymentProtectionRule(client, owner, repo, runId)
+                DeploymentProtectionRule(__client, _owner, _repo, _runId)
 
-            public val forceCancel: ForceCancel = ForceCancel(client, owner, repo, runId)
+            public val forceCancel: ForceCancel = ForceCancel(__client, _owner, _repo, _runId)
 
-            public val jobs: Jobs = Jobs(client, owner, repo, runId)
+            public val jobs: Jobs = Jobs(__client, _owner, _repo, _runId)
 
-            public val logs: Logs = Logs(client, owner, repo, runId)
+            public val logs: Logs = Logs(__client, _owner, _repo, _runId)
 
             public val pendingDeployments: PendingDeployments =
-                PendingDeployments(client, owner, repo, runId)
+                PendingDeployments(__client, _owner, _repo, _runId)
 
-            public val rerun: Rerun = Rerun(client, owner, repo, runId)
+            public val rerun: Rerun = Rerun(__client, _owner, _repo, _runId)
 
             public val rerunFailedJobs: RerunFailedJobs =
-                RerunFailedJobs(client, owner, repo, runId)
+                RerunFailedJobs(__client, _owner, _repo, _runId)
 
-            public val timing: Timing = Timing(client, owner, repo, runId)
+            public val timing: Timing = Timing(__client, _owner, _repo, _runId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
               public suspend operator fun invoke(excludePullRequests: Boolean? = false): WorkflowRun {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}") {
                   if (excludePullRequests != null) {
                     this.url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
                   }
@@ -2589,21 +2593,21 @@ public class Repos internal constructor(
             }
 
             public class Approvals internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, runId)
+              public val `get`: Get = Get(__client, _owner, _repo, _runId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): List<EnvironmentApprovals> {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/approvals")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/approvals")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -2611,21 +2615,21 @@ public class Repos internal constructor(
             }
 
             public class Approve internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val post: Post = Post(client, owner, repo, runId)
+              public val post: Post = Post(__client, _owner, _repo, _runId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/approve")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/approve")
                   return when (response.status.value) {
                     201 -> Response.Created(response.body())
                     403 -> Response.Forbidden(response.body())
@@ -2651,18 +2655,18 @@ public class Repos internal constructor(
             }
 
             public class Artifacts internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, runId)
+              public val `get`: Get = Get(__client, _owner, _repo, _runId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(
                   perPage: Long? = 30L,
@@ -2670,7 +2674,7 @@ public class Repos internal constructor(
                   name: String? = null,
                   direction: Direction? = Direction.Desc,
                 ): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/artifacts") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/artifacts") {
                     if (perPage != null) {
                       this.url.encodedParameters.append("per_page", perPage.toString())
                     }
@@ -2709,35 +2713,35 @@ public class Repos internal constructor(
             }
 
             public class Attempts internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public fun attemptNumber(attemptNumber: Long): AttemptNumberPath = AttemptNumberPath(client, owner, repo, runId, attemptNumber)
+              public fun attemptNumber(attemptNumber: Long): AttemptNumberPath = AttemptNumberPath(__client, _owner, _repo, _runId, attemptNumber)
 
               public class AttemptNumberPath internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
-                private val attemptNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
+                private val _attemptNumber: Long,
               ) {
-                public val `get`: Get = Get(client, owner, repo, runId, attemptNumber)
+                public val `get`: Get = Get(__client, _owner, _repo, _runId, _attemptNumber)
 
-                public val jobs: Jobs = Jobs(client, owner, repo, runId, attemptNumber)
+                public val jobs: Jobs = Jobs(__client, _owner, _repo, _runId, _attemptNumber)
 
-                public val logs: Logs = Logs(client, owner, repo, runId, attemptNumber)
+                public val logs: Logs = Logs(__client, _owner, _repo, _runId, _attemptNumber)
 
                 public class Get internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val runId: Long,
-                  private val attemptNumber: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _runId: Long,
+                  private val _attemptNumber: Long,
                 ) {
                   public suspend operator fun invoke(excludePullRequests: Boolean? = false): WorkflowRun {
-                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/attempts/${this.attemptNumber}") {
+                    val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/attempts/${this._attemptNumber}") {
                       if (excludePullRequests != null) {
                         this.url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
                       }
@@ -2748,23 +2752,23 @@ public class Repos internal constructor(
                 }
 
                 public class Jobs internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val runId: Long,
-                  private val attemptNumber: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _runId: Long,
+                  private val _attemptNumber: Long,
                 ) {
-                  public val `get`: Get = Get(client, owner, repo, runId, attemptNumber)
+                  public val `get`: Get = Get(__client, _owner, _repo, _runId, _attemptNumber)
 
                   public class Get internal constructor(
-                    private val client: HttpClient,
-                    private val owner: String,
-                    private val repo: String,
-                    private val runId: Long,
-                    private val attemptNumber: Long,
+                    private val __client: HttpClient,
+                    private val _owner: String,
+                    private val _repo: String,
+                    private val _runId: Long,
+                    private val _attemptNumber: Long,
                   ) {
                     public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                      val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/attempts/${this.attemptNumber}/jobs") {
+                      val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/attempts/${this._attemptNumber}/jobs") {
                         if (perPage != null) {
                           this.url.encodedParameters.append("per_page", perPage.toString())
                         }
@@ -2795,23 +2799,23 @@ public class Repos internal constructor(
                 }
 
                 public class Logs internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val runId: Long,
-                  private val attemptNumber: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _runId: Long,
+                  private val _attemptNumber: Long,
                 ) {
-                  public val `get`: Get = Get(client, owner, repo, runId, attemptNumber)
+                  public val `get`: Get = Get(__client, _owner, _repo, _runId, _attemptNumber)
 
                   public class Get internal constructor(
-                    private val client: HttpClient,
-                    private val owner: String,
-                    private val repo: String,
-                    private val runId: Long,
-                    private val attemptNumber: Long,
+                    private val __client: HttpClient,
+                    private val _owner: String,
+                    private val _repo: String,
+                    private val _runId: Long,
+                    private val _attemptNumber: Long,
                   ) {
                     public suspend operator fun invoke() {
-                      val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/attempts/${this.attemptNumber}/logs")
+                      val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/attempts/${this._attemptNumber}/logs")
                       if (response.status.value != 302) throw ResponseException(response, "")
                     }
                   }
@@ -2820,21 +2824,21 @@ public class Repos internal constructor(
             }
 
             public class Cancel internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val post: Post = Post(client, owner, repo, runId)
+              public val post: Post = Post(__client, _owner, _repo, _runId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/cancel")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/cancel")
                   return when (response.status.value) {
                     202 -> Response.Accepted(response.body())
                     409 -> Response.Conflict(response.body())
@@ -2855,21 +2859,21 @@ public class Repos internal constructor(
             }
 
             public class DeploymentProtectionRule internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val post: Post = Post(client, owner, repo, runId)
+              public val post: Post = Post(__client, _owner, _repo, _runId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(body: ReviewCustomGatesCommentRequired) {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/deployment_protection_rule") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/deployment_protection_rule") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -2877,7 +2881,7 @@ public class Repos internal constructor(
                 }
 
                 public suspend operator fun invoke(body: ReviewCustomGatesStateRequired) {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/deployment_protection_rule") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/deployment_protection_rule") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -2887,21 +2891,21 @@ public class Repos internal constructor(
             }
 
             public class ForceCancel internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val post: Post = Post(client, owner, repo, runId)
+              public val post: Post = Post(__client, _owner, _repo, _runId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/force-cancel")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/force-cancel")
                   return when (response.status.value) {
                     202 -> Response.Accepted(response.body())
                     409 -> Response.Conflict(response.body())
@@ -2922,25 +2926,25 @@ public class Repos internal constructor(
             }
 
             public class Jobs internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, runId)
+              public val `get`: Get = Get(__client, _owner, _repo, _runId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(
                   filter: Filter? = Filter.Latest,
                   perPage: Long? = 30L,
                   page: Long? = 1L,
                 ): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/jobs") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/jobs") {
                     if (filter != null) {
                       this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
                     }
@@ -2976,23 +2980,23 @@ public class Repos internal constructor(
             }
 
             public class Logs internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, runId)
+              public val delete: Delete = Delete(__client, _owner, _repo, _runId)
 
-              public val `get`: Get = Get(client, owner, repo, runId)
+              public val `get`: Get = Get(__client, _owner, _repo, _runId)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/logs")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/logs")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     403 -> Response.Forbidden(response.body())
@@ -3015,53 +3019,53 @@ public class Repos internal constructor(
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/logs")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/logs")
                   if (response.status.value != 302) throw ResponseException(response, "")
                 }
               }
             }
 
             public class PendingDeployments internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, runId)
+              public val `get`: Get = Get(__client, _owner, _repo, _runId)
 
-              public val post: Post = Post(client, owner, repo, runId)
+              public val post: Post = Post(__client, _owner, _repo, _runId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): List<PendingDeployment> {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/pending_deployments")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/pending_deployments")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(
                   environmentIds: List<Long>,
                   state: State,
                   comment: String,
                 ): List<Deployment> {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/pending_deployments") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/pending_deployments") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(environmentIds = environmentIds, state = state, comment = comment))
                   }
@@ -3091,27 +3095,27 @@ public class Repos internal constructor(
             }
 
             public class Rerun internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val post: Post = Post(client, owner, repo, runId)
+              public val post: Post = Post(__client, _owner, _repo, _runId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): EmptyObject {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/rerun")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/rerun")
                   if (response.status.value != 201) throw ResponseException(response, "")
                   return response.body()
                 }
 
                 public suspend operator fun invoke(enableDebugLogging: Boolean? = null): EmptyObject {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/rerun") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/rerun") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(enableDebugLogging = enableDebugLogging))
                   }
@@ -3130,27 +3134,27 @@ public class Repos internal constructor(
             }
 
             public class RerunFailedJobs internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val post: Post = Post(client, owner, repo, runId)
+              public val post: Post = Post(__client, _owner, _repo, _runId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): EmptyObject {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/rerun-failed-jobs")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/rerun-failed-jobs")
                   if (response.status.value != 201) throw ResponseException(response, "")
                   return response.body()
                 }
 
                 public suspend operator fun invoke(enableDebugLogging: Boolean? = null): EmptyObject {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/rerun-failed-jobs") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/rerun-failed-jobs") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(enableDebugLogging = enableDebugLogging))
                   }
@@ -3169,21 +3173,21 @@ public class Repos internal constructor(
             }
 
             public class Timing internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val runId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _runId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, runId)
+              public val `get`: Get = Get(__client, _owner, _repo, _runId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val runId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _runId: Long,
               ) {
                 public suspend operator fun invoke(): WorkflowRunUsage {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/timing")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/runs/${this._runId}/timing")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -3193,23 +3197,23 @@ public class Repos internal constructor(
         }
 
         public class Secrets internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val publicKey: PublicKey = PublicKey(client, owner, repo)
+          public val publicKey: PublicKey = PublicKey(__client, _owner, _repo)
 
-          public fun secretName(secretName: String): SecretNamePath = SecretNamePath(client, owner, repo, secretName)
+          public fun secretName(secretName: String): SecretNamePath = SecretNamePath(__client, _owner, _repo, secretName)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/secrets") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -3230,19 +3234,19 @@ public class Repos internal constructor(
           }
 
           public class PublicKey internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): ActionsPublicKey {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets/public-key")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/secrets/public-key")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -3250,50 +3254,50 @@ public class Repos internal constructor(
           }
 
           public class SecretNamePath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val secretName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _secretName: String,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, secretName)
+            public val delete: Delete = Delete(__client, _owner, _repo, _secretName)
 
-            public val `get`: Get = Get(client, owner, repo, secretName)
+            public val `get`: Get = Get(__client, _owner, _repo, _secretName)
 
-            public val put: Put = Put(client, owner, repo, secretName)
+            public val put: Put = Put(__client, _owner, _repo, _secretName)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets/${this.secretName.encodeURLParameter()}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/secrets/${this._secretName.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke(): ActionsSecret {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets/${this.secretName.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/secrets/${this._secretName.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke(encryptedValue: String, keyId: String): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets/${this.secretName.encodeURLParameter()}") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/secrets/${this._secretName.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(encryptedValue = encryptedValue, keyId = keyId))
                 }
@@ -3324,23 +3328,23 @@ public class Repos internal constructor(
         }
 
         public class Variables internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public fun name(name: String): NamePath = NamePath(client, owner, repo, name)
+          public fun name(name: String): NamePath = NamePath(__client, _owner, _repo, name)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/variables") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -3361,12 +3365,12 @@ public class Repos internal constructor(
           }
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(name: String, `value`: String): EmptyObject {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/variables") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, value = value))
               }
@@ -3382,50 +3386,50 @@ public class Repos internal constructor(
           }
 
           public class NamePath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val name: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _name: String,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, name)
+            public val delete: Delete = Delete(__client, _owner, _repo, _name)
 
-            public val `get`: Get = Get(client, owner, repo, name)
+            public val `get`: Get = Get(__client, _owner, _repo, _name)
 
-            public val patch: Patch = Patch(client, owner, repo, name)
+            public val patch: Patch = Patch(__client, _owner, _repo, _name)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val name: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _name: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables/${this.name.encodeURLParameter()}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/variables/${this._name.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val name: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _name: String,
             ) {
               public suspend operator fun invoke(): ActionsVariable {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables/${this.name.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/variables/${this._name.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val name: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _name: String,
             ) {
               public suspend operator fun invoke(name: String? = null, `value`: String? = null) {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables/${this.name.encodeURLParameter()}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/variables/${this._name.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(name = name, value = value))
                 }
@@ -3445,23 +3449,23 @@ public class Repos internal constructor(
         }
 
         public class Workflows internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun workflowId(workflowId: Long): WorkflowIdPath = WorkflowIdPath(client, owner, repo, workflowId.toString())
+          public fun workflowId(workflowId: Long): WorkflowIdPath = WorkflowIdPath(__client, _owner, _repo, workflowId.toString())
 
-          public fun workflowId(workflowId: String): WorkflowIdPath = WorkflowIdPath(client, owner, repo, workflowId)
+          public fun workflowId(workflowId: String): WorkflowIdPath = WorkflowIdPath(__client, _owner, _repo, workflowId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/workflows") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -3482,77 +3486,77 @@ public class Repos internal constructor(
           }
 
           public class WorkflowIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val workflowId: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _workflowId: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, workflowId)
+            public val `get`: Get = Get(__client, _owner, _repo, _workflowId)
 
-            public val disable: Disable = Disable(client, owner, repo, workflowId)
+            public val disable: Disable = Disable(__client, _owner, _repo, _workflowId)
 
-            public val dispatches: Dispatches = Dispatches(client, owner, repo, workflowId)
+            public val dispatches: Dispatches = Dispatches(__client, _owner, _repo, _workflowId)
 
-            public val enable: Enable = Enable(client, owner, repo, workflowId)
+            public val enable: Enable = Enable(__client, _owner, _repo, _workflowId)
 
-            public val runs: Runs = Runs(client, owner, repo, workflowId)
+            public val runs: Runs = Runs(__client, _owner, _repo, _workflowId)
 
-            public val timing: Timing = Timing(client, owner, repo, workflowId)
+            public val timing: Timing = Timing(__client, _owner, _repo, _workflowId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val workflowId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _workflowId: String,
             ) {
               public suspend operator fun invoke(): Workflow {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/workflows/${this._workflowId.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Disable internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val workflowId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _workflowId: String,
             ) {
-              public val put: Put = Put(client, owner, repo, workflowId)
+              public val put: Put = Put(__client, _owner, _repo, _workflowId)
 
               public class Put internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val workflowId: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _workflowId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/disable")
+                  val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/workflows/${this._workflowId.encodeURLParameter()}/disable")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
             }
 
             public class Dispatches internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val workflowId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _workflowId: String,
             ) {
-              public val post: Post = Post(client, owner, repo, workflowId)
+              public val post: Post = Post(__client, _owner, _repo, _workflowId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val workflowId: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _workflowId: String,
               ) {
                 public suspend operator fun invoke(
                   ref: String,
                   inputs: JsonElement? = null,
                   returnRunDetails: Boolean? = null,
                 ): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/dispatches") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/workflows/${this._workflowId.encodeURLParameter()}/dispatches") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(ref = ref, inputs = inputs, returnRunDetails = returnRunDetails))
                   }
@@ -3585,39 +3589,39 @@ public class Repos internal constructor(
             }
 
             public class Enable internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val workflowId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _workflowId: String,
             ) {
-              public val put: Put = Put(client, owner, repo, workflowId)
+              public val put: Put = Put(__client, _owner, _repo, _workflowId)
 
               public class Put internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val workflowId: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _workflowId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/enable")
+                  val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/workflows/${this._workflowId.encodeURLParameter()}/enable")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
             }
 
             public class Runs internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val workflowId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _workflowId: String,
             ) {
-              public val `get`: Get = Get(client, owner, repo, workflowId)
+              public val `get`: Get = Get(__client, _owner, _repo, _workflowId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val workflowId: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _workflowId: String,
               ) {
                 public suspend operator fun invoke(
                   actor: String? = null,
@@ -3631,7 +3635,7 @@ public class Repos internal constructor(
                   checkSuiteId: Long? = null,
                   headSha: String? = null,
                 ): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/runs") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/workflows/${this._workflowId.encodeURLParameter()}/runs") {
                     if (actor != null) {
                       this.url.encodedParameters.append("actor", actor.encodeURLParameter())
                     }
@@ -3713,21 +3717,21 @@ public class Repos internal constructor(
             }
 
             public class Timing internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val workflowId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _workflowId: String,
             ) {
-              public val `get`: Get = Get(client, owner, repo, workflowId)
+              public val `get`: Get = Get(__client, _owner, _repo, _workflowId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val workflowId: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _workflowId: String,
               ) {
                 public suspend operator fun invoke(): WorkflowUsage {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/timing")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/actions/workflows/${this._workflowId.encodeURLParameter()}/timing")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -3738,16 +3742,16 @@ public class Repos internal constructor(
       }
 
       public class Activity internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             direction: Direction? = Direction.Desc,
@@ -3759,7 +3763,7 @@ public class Repos internal constructor(
             timePeriod: TimePeriod? = null,
             activityType: ActivityType? = null,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/activity") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/activity") {
               if (direction != null) {
                 this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
@@ -3852,21 +3856,21 @@ public class Repos internal constructor(
       }
 
       public class Assignees internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public fun assignee(assignee: String): AssigneePath = AssigneePath(client, owner, repo, assignee)
+        public fun assignee(assignee: String): AssigneePath = AssigneePath(__client, _owner, _repo, assignee)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/assignees") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/assignees") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -3893,21 +3897,21 @@ public class Repos internal constructor(
         }
 
         public class AssigneePath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val assignee: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _assignee: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, assignee)
+          public val `get`: Get = Get(__client, _owner, _repo, _assignee)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val assignee: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _assignee: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/assignees/${this.assignee.encodeURLParameter()}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/assignees/${this._assignee.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -3927,21 +3931,21 @@ public class Repos internal constructor(
       }
 
       public class Attestations internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public fun subjectDigest(subjectDigest: String): SubjectDigestPath = SubjectDigestPath(client, owner, repo, subjectDigest)
+        public fun subjectDigest(subjectDigest: String): SubjectDigestPath = SubjectDigestPath(__client, _owner, _repo, subjectDigest)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(bundle: Bundle): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/attestations") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/attestations") {
               contentType(ContentType.Application.Json)
               setBody(Body(bundle = bundle))
             }
@@ -3992,18 +3996,18 @@ public class Repos internal constructor(
         }
 
         public class SubjectDigestPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val subjectDigest: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _subjectDigest: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, subjectDigest)
+          public val `get`: Get = Get(__client, _owner, _repo, _subjectDigest)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val subjectDigest: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _subjectDigest: String,
           ) {
             public suspend operator fun invoke(
               perPage: Long? = 30L,
@@ -4011,7 +4015,7 @@ public class Repos internal constructor(
               after: String? = null,
               predicateType: String? = null,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/attestations/${this.subjectDigest.encodeURLParameter()}") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/attestations/${this._subjectDigest.encodeURLParameter()}") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -4070,39 +4074,39 @@ public class Repos internal constructor(
       }
 
       public class Autolinks internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public fun autolinkId(autolinkId: Long): AutolinkIdPath = AutolinkIdPath(client, owner, repo, autolinkId)
+        public fun autolinkId(autolinkId: Long): AutolinkIdPath = AutolinkIdPath(__client, _owner, _repo, autolinkId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): List<Autolink> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/autolinks")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/autolinks")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             keyPrefix: String,
             urlTemplate: String,
             isAlphanumeric: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/autolinks") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/autolinks") {
               contentType(ContentType.Application.Json)
               setBody(Body(keyPrefix = keyPrefix, urlTemplate = urlTemplate, isAlphanumeric = isAlphanumeric))
             }
@@ -4137,23 +4141,23 @@ public class Repos internal constructor(
         }
 
         public class AutolinkIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val autolinkId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _autolinkId: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, autolinkId)
+          public val delete: Delete = Delete(__client, _owner, _repo, _autolinkId)
 
-          public val `get`: Get = Get(client, owner, repo, autolinkId)
+          public val `get`: Get = Get(__client, _owner, _repo, _autolinkId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val autolinkId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _autolinkId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/autolinks/${this.autolinkId}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/autolinks/${this._autolinkId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -4171,13 +4175,13 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val autolinkId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _autolinkId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/autolinks/${this.autolinkId}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/autolinks/${this._autolinkId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -4199,34 +4203,34 @@ public class Repos internal constructor(
       }
 
       public class AutomatedSecurityFixes internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/automated-security-fixes")
+            val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/automated-security-fixes")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/automated-security-fixes")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/automated-security-fixes")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound
@@ -4244,37 +4248,37 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/automated-security-fixes")
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/automated-security-fixes")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
       }
 
       public class Branches internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public fun branch(branch: String): BranchPath = BranchPath(client, owner, repo, branch)
+        public fun branch(branch: String): BranchPath = BranchPath(__client, _owner, _repo, branch)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             `protected`: Boolean? = null,
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches") {
               if (protected != null) {
                 this.url.encodedParameters.append("protected", protected.toString())
               }
@@ -4304,25 +4308,25 @@ public class Repos internal constructor(
         }
 
         public class BranchPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val branch: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _branch: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, branch)
+          public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-          public val protection: Protection = Protection(client, owner, repo, branch)
+          public val protection: Protection = Protection(__client, _owner, _repo, _branch)
 
-          public val rename: Rename = Rename(client, owner, repo, branch)
+          public val rename: Rename = Rename(__client, _owner, _repo, _branch)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val branch: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _branch: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 301 -> Response.MovedPermanently(response.body())
@@ -4347,38 +4351,39 @@ public class Repos internal constructor(
           }
 
           public class Protection internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val branch: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _branch: String,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, branch)
+            public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-            public val `get`: Get = Get(client, owner, repo, branch)
+            public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-            public val put: Put = Put(client, owner, repo, branch)
+            public val put: Put = Put(__client, _owner, _repo, _branch)
 
-            public val enforceAdmins: EnforceAdmins = EnforceAdmins(client, owner, repo, branch)
+            public val enforceAdmins: EnforceAdmins =
+                EnforceAdmins(__client, _owner, _repo, _branch)
 
             public val requiredPullRequestReviews: RequiredPullRequestReviews =
-                RequiredPullRequestReviews(client, owner, repo, branch)
+                RequiredPullRequestReviews(__client, _owner, _repo, _branch)
 
             public val requiredSignatures: RequiredSignatures =
-                RequiredSignatures(client, owner, repo, branch)
+                RequiredSignatures(__client, _owner, _repo, _branch)
 
             public val requiredStatusChecks: RequiredStatusChecks =
-                RequiredStatusChecks(client, owner, repo, branch)
+                RequiredStatusChecks(__client, _owner, _repo, _branch)
 
-            public val restrictions: Restrictions = Restrictions(client, owner, repo, branch)
+            public val restrictions: Restrictions = Restrictions(__client, _owner, _repo, _branch)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -4396,13 +4401,13 @@ public class Repos internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -4422,10 +4427,10 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
               public suspend operator fun invoke(
                 requiredStatusChecks: RequiredStatusChecks?,
@@ -4440,7 +4445,7 @@ public class Repos internal constructor(
                 lockBranch: Boolean? = null,
                 allowForkSyncing: Boolean? = null,
               ): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(requiredStatusChecks = requiredStatusChecks, enforceAdmins = enforceAdmins, requiredPullRequestReviews = requiredPullRequestReviews, restrictions = restrictions, requiredLinearHistory = requiredLinearHistory, allowForcePushes = allowForcePushes, allowDeletions = allowDeletions, blockCreations = blockCreations, requiredConversationResolution = requiredConversationResolution, lockBranch = lockBranch, allowForkSyncing = allowForkSyncing))
                 }
@@ -4593,25 +4598,25 @@ public class Repos internal constructor(
             }
 
             public class EnforceAdmins internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, branch)
+              public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-              public val `get`: Get = Get(client, owner, repo, branch)
+              public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-              public val post: Post = Post(client, owner, repo, branch)
+              public val post: Post = Post(__client, _owner, _repo, _branch)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/enforce_admins")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/enforce_admins")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -4629,26 +4634,26 @@ public class Repos internal constructor(
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): ProtectedBranchAdminEnforced {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/enforce_admins")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/enforce_admins")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): ProtectedBranchAdminEnforced {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/enforce_admins")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/enforce_admins")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -4656,25 +4661,25 @@ public class Repos internal constructor(
             }
 
             public class RequiredPullRequestReviews internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, branch)
+              public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-              public val `get`: Get = Get(client, owner, repo, branch)
+              public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-              public val patch: Patch = Patch(client, owner, repo, branch)
+              public val patch: Patch = Patch(__client, _owner, _repo, _branch)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_pull_request_reviews")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_pull_request_reviews")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -4692,26 +4697,26 @@ public class Repos internal constructor(
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): ProtectedBranchPullRequestReview {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_pull_request_reviews")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_pull_request_reviews")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
               }
 
               public class Patch internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_pull_request_reviews")
+                  val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_pull_request_reviews")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     422 -> Response.UnprocessableEntity(response.body())
@@ -4727,7 +4732,7 @@ public class Repos internal constructor(
                   requireLastPushApproval: Boolean? = null,
                   bypassPullRequestAllowances: BypassPullRequestAllowances? = null,
                 ): Response {
-                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_pull_request_reviews") {
+                  val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_pull_request_reviews") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(dismissalRestrictions = dismissalRestrictions, dismissStaleReviews = dismissStaleReviews, requireCodeOwnerReviews = requireCodeOwnerReviews, requiredApprovingReviewCount = requiredApprovingReviewCount, requireLastPushApproval = requireLastPushApproval, bypassPullRequestAllowances = bypassPullRequestAllowances))
                   }
@@ -4802,25 +4807,25 @@ public class Repos internal constructor(
             }
 
             public class RequiredSignatures internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, branch)
+              public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-              public val `get`: Get = Get(client, owner, repo, branch)
+              public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-              public val post: Post = Post(client, owner, repo, branch)
+              public val post: Post = Post(__client, _owner, _repo, _branch)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_signatures")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_signatures")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -4838,13 +4843,13 @@ public class Repos internal constructor(
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_signatures")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_signatures")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -4864,13 +4869,13 @@ public class Repos internal constructor(
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_signatures")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_signatures")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -4891,39 +4896,39 @@ public class Repos internal constructor(
             }
 
             public class RequiredStatusChecks internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, branch)
+              public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-              public val `get`: Get = Get(client, owner, repo, branch)
+              public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-              public val patch: Patch = Patch(client, owner, repo, branch)
+              public val patch: Patch = Patch(__client, _owner, _repo, _branch)
 
-              public val contexts: Contexts = Contexts(client, owner, repo, branch)
+              public val contexts: Contexts = Contexts(__client, _owner, _repo, _branch)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -4943,13 +4948,13 @@ public class Repos internal constructor(
               }
 
               public class Patch internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks")
+                  val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -4963,7 +4968,7 @@ public class Repos internal constructor(
                   contexts: List<String>? = null,
                   checks: List<Checks>? = null,
                 ): Response {
-                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks") {
+                  val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(strict = strict, contexts = contexts, checks = checks))
                   }
@@ -5011,27 +5016,27 @@ public class Repos internal constructor(
               }
 
               public class Contexts internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
-                public val delete: Delete = Delete(client, owner, repo, branch)
+                public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-                public val `get`: Get = Get(client, owner, repo, branch)
+                public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-                public val post: Post = Post(client, owner, repo, branch)
+                public val post: Post = Post(__client, _owner, _repo, _branch)
 
-                public val put: Put = Put(client, owner, repo, branch)
+                public val put: Put = Put(__client, _owner, _repo, _branch)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts")
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5041,7 +5046,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: ContextsStrings): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5054,7 +5059,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5087,13 +5092,13 @@ public class Repos internal constructor(
                 }
 
                 public class Get internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts")
+                    val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5113,13 +5118,13 @@ public class Repos internal constructor(
                 }
 
                 public class Post internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts")
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       403 -> Response.Forbidden(response.body())
@@ -5130,7 +5135,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: ContextsStrings): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5144,7 +5149,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5182,13 +5187,13 @@ public class Repos internal constructor(
                 }
 
                 public class Put internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts")
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5198,7 +5203,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: ContextsStrings): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5211,7 +5216,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5246,41 +5251,41 @@ public class Repos internal constructor(
             }
 
             public class Restrictions internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, branch)
+              public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-              public val `get`: Get = Get(client, owner, repo, branch)
+              public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-              public val apps: Apps = Apps(client, owner, repo, branch)
+              public val apps: Apps = Apps(__client, _owner, _repo, _branch)
 
-              public val teams: Teams = Teams(client, owner, repo, branch)
+              public val teams: Teams = Teams(__client, _owner, _repo, _branch)
 
-              public val users: Users = Users(client, owner, repo, branch)
+              public val users: Users = Users(__client, _owner, _repo, _branch)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -5300,27 +5305,27 @@ public class Repos internal constructor(
               }
 
               public class Apps internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
-                public val delete: Delete = Delete(client, owner, repo, branch)
+                public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-                public val `get`: Get = Get(client, owner, repo, branch)
+                public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-                public val post: Post = Post(client, owner, repo, branch)
+                public val post: Post = Post(__client, _owner, _repo, _branch)
 
-                public val put: Put = Put(client, owner, repo, branch)
+                public val put: Put = Put(__client, _owner, _repo, _branch)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(apps: List<String>): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/apps") {
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/apps") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(apps = apps))
                     }
@@ -5348,13 +5353,13 @@ public class Repos internal constructor(
                 }
 
                 public class Get internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/apps")
+                    val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/apps")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5374,13 +5379,13 @@ public class Repos internal constructor(
                 }
 
                 public class Post internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(apps: List<String>): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/apps") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/apps") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(apps = apps))
                     }
@@ -5408,13 +5413,13 @@ public class Repos internal constructor(
                 }
 
                 public class Put internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(apps: List<String>): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/apps") {
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/apps") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(apps = apps))
                     }
@@ -5443,27 +5448,27 @@ public class Repos internal constructor(
               }
 
               public class Teams internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
-                public val delete: Delete = Delete(client, owner, repo, branch)
+                public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-                public val `get`: Get = Get(client, owner, repo, branch)
+                public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-                public val post: Post = Post(client, owner, repo, branch)
+                public val post: Post = Post(__client, _owner, _repo, _branch)
 
-                public val put: Put = Put(client, owner, repo, branch)
+                public val put: Put = Put(__client, _owner, _repo, _branch)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams")
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       422 -> Response.UnprocessableEntity(response.body())
@@ -5472,7 +5477,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: TeamsStrings): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5484,7 +5489,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5512,13 +5517,13 @@ public class Repos internal constructor(
                 }
 
                 public class Get internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams")
+                    val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5538,13 +5543,13 @@ public class Repos internal constructor(
                 }
 
                 public class Post internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams")
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       422 -> Response.UnprocessableEntity(response.body())
@@ -5553,7 +5558,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: TeamsStrings): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5565,7 +5570,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5593,13 +5598,13 @@ public class Repos internal constructor(
                 }
 
                 public class Put internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams")
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       422 -> Response.UnprocessableEntity(response.body())
@@ -5608,7 +5613,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: TeamsStrings): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5620,7 +5625,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5649,27 +5654,27 @@ public class Repos internal constructor(
               }
 
               public class Users internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val branch: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _branch: String,
               ) {
-                public val delete: Delete = Delete(client, owner, repo, branch)
+                public val delete: Delete = Delete(__client, _owner, _repo, _branch)
 
-                public val `get`: Get = Get(client, owner, repo, branch)
+                public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
-                public val post: Post = Post(client, owner, repo, branch)
+                public val post: Post = Post(__client, _owner, _repo, _branch)
 
-                public val put: Put = Put(client, owner, repo, branch)
+                public val put: Put = Put(__client, _owner, _repo, _branch)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(users: List<String>): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/users") {
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/users") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(users = users))
                     }
@@ -5697,13 +5702,13 @@ public class Repos internal constructor(
                 }
 
                 public class Get internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/users")
+                    val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/users")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5723,13 +5728,13 @@ public class Repos internal constructor(
                 }
 
                 public class Post internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(users: List<String>): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/users") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/users") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(users = users))
                     }
@@ -5757,13 +5762,13 @@ public class Repos internal constructor(
                 }
 
                 public class Put internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val branch: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _branch: String,
                 ) {
                   public suspend operator fun invoke(users: List<String>): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/users") {
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/protection/restrictions/users") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(users = users))
                     }
@@ -5794,21 +5799,21 @@ public class Repos internal constructor(
           }
 
           public class Rename internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val branch: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _branch: String,
           ) {
-            public val post: Post = Post(client, owner, repo, branch)
+            public val post: Post = Post(__client, _owner, _repo, _branch)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
               public suspend operator fun invoke(newName: String): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/rename") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/branches/${this._branch.encodeURLParameter()}/rename") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(newName = newName))
                 }
@@ -5850,18 +5855,18 @@ public class Repos internal constructor(
       }
 
       public class CheckRuns internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public fun checkRunId(checkRunId: Long): CheckRunIdPath = CheckRunIdPath(client, owner, repo, checkRunId)
+        public fun checkRunId(checkRunId: Long): CheckRunIdPath = CheckRunIdPath(__client, _owner, _repo, checkRunId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             name: String,
@@ -5875,7 +5880,7 @@ public class Repos internal constructor(
             output: Output? = null,
             actions: List<Actions>? = null,
           ): CheckRun {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-runs") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, headSha = headSha, detailsUrl = detailsUrl, externalId = externalId, status = status, startedAt = startedAt, conclusion = conclusion, completedAt = completedAt, output = output, actions = actions))
             }
@@ -6025,37 +6030,37 @@ public class Repos internal constructor(
         }
 
         public class CheckRunIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val checkRunId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _checkRunId: Long,
         ) {
-          public val `get`: Get = Get(client, owner, repo, checkRunId)
+          public val `get`: Get = Get(__client, _owner, _repo, _checkRunId)
 
-          public val patch: Patch = Patch(client, owner, repo, checkRunId)
+          public val patch: Patch = Patch(__client, _owner, _repo, _checkRunId)
 
-          public val annotations: Annotations = Annotations(client, owner, repo, checkRunId)
+          public val annotations: Annotations = Annotations(__client, _owner, _repo, _checkRunId)
 
-          public val rerequest: Rerequest = Rerequest(client, owner, repo, checkRunId)
+          public val rerequest: Rerequest = Rerequest(__client, _owner, _repo, _checkRunId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val checkRunId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _checkRunId: Long,
           ) {
             public suspend operator fun invoke(): CheckRun {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs/${this.checkRunId}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-runs/${this._checkRunId}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val checkRunId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _checkRunId: Long,
           ) {
             public suspend operator fun invoke(
               name: String? = null,
@@ -6068,7 +6073,7 @@ public class Repos internal constructor(
               output: Output? = null,
               actions: List<Actions>? = null,
             ): CheckRun {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs/${this.checkRunId}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-runs/${this._checkRunId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, detailsUrl = detailsUrl, externalId = externalId, startedAt = startedAt, status = status, conclusion = conclusion, completedAt = completedAt, output = output, actions = actions))
               }
@@ -6218,21 +6223,21 @@ public class Repos internal constructor(
           }
 
           public class Annotations internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val checkRunId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _checkRunId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, checkRunId)
+            public val `get`: Get = Get(__client, _owner, _repo, _checkRunId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val checkRunId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _checkRunId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CheckAnnotation> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs/${this.checkRunId}/annotations") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-runs/${this._checkRunId}/annotations") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -6247,21 +6252,21 @@ public class Repos internal constructor(
           }
 
           public class Rerequest internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val checkRunId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _checkRunId: Long,
           ) {
-            public val post: Post = Post(client, owner, repo, checkRunId)
+            public val post: Post = Post(__client, _owner, _repo, _checkRunId)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val checkRunId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _checkRunId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs/${this.checkRunId}/rerequest")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-runs/${this._checkRunId}/rerequest")
                 return when (response.status.value) {
                   201 -> Response.Created(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -6294,23 +6299,23 @@ public class Repos internal constructor(
       }
 
       public class CheckSuites internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public val preferences: Preferences = Preferences(client, owner, repo)
+        public val preferences: Preferences = Preferences(__client, _owner, _repo)
 
-        public fun checkSuiteId(checkSuiteId: Long): CheckSuiteIdPath = CheckSuiteIdPath(client, owner, repo, checkSuiteId)
+        public fun checkSuiteId(checkSuiteId: Long): CheckSuiteIdPath = CheckSuiteIdPath(__client, _owner, _repo, checkSuiteId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(headSha: String): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-suites") {
               contentType(ContentType.Application.Json)
               setBody(Body(headSha = headSha))
             }
@@ -6339,19 +6344,19 @@ public class Repos internal constructor(
         }
 
         public class Preferences internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val patch: Patch = Patch(client, owner, repo)
+          public val patch: Patch = Patch(__client, _owner, _repo)
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(autoTriggerChecks: List<AutoTriggerChecks>? = null): CheckSuitePreference {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites/preferences") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-suites/preferences") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(autoTriggerChecks = autoTriggerChecks))
               }
@@ -6378,43 +6383,43 @@ public class Repos internal constructor(
         }
 
         public class CheckSuiteIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val checkSuiteId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _checkSuiteId: Long,
         ) {
-          public val `get`: Get = Get(client, owner, repo, checkSuiteId)
+          public val `get`: Get = Get(__client, _owner, _repo, _checkSuiteId)
 
-          public val checkRuns: CheckRuns = CheckRuns(client, owner, repo, checkSuiteId)
+          public val checkRuns: CheckRuns = CheckRuns(__client, _owner, _repo, _checkSuiteId)
 
-          public val rerequest: Rerequest = Rerequest(client, owner, repo, checkSuiteId)
+          public val rerequest: Rerequest = Rerequest(__client, _owner, _repo, _checkSuiteId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val checkSuiteId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _checkSuiteId: Long,
           ) {
             public suspend operator fun invoke(): CheckSuite {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites/${this.checkSuiteId}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-suites/${this._checkSuiteId}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
           }
 
           public class CheckRuns internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val checkSuiteId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _checkSuiteId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, checkSuiteId)
+            public val `get`: Get = Get(__client, _owner, _repo, _checkSuiteId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val checkSuiteId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _checkSuiteId: Long,
             ) {
               public suspend operator fun invoke(
                 checkName: String? = null,
@@ -6423,7 +6428,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites/${this.checkSuiteId}/check-runs") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-suites/${this._checkSuiteId}/check-runs") {
                   if (checkName != null) {
                     this.url.encodedParameters.append("check_name", checkName.encodeURLParameter())
                   }
@@ -6479,21 +6484,21 @@ public class Repos internal constructor(
           }
 
           public class Rerequest internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val checkSuiteId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _checkSuiteId: Long,
           ) {
-            public val post: Post = Post(client, owner, repo, checkSuiteId)
+            public val post: Post = Post(__client, _owner, _repo, _checkSuiteId)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val checkSuiteId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _checkSuiteId: Long,
             ) {
               public suspend operator fun invoke(): EmptyObject {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites/${this.checkSuiteId}/rerequest")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/check-suites/${this._checkSuiteId}/rerequest")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -6503,33 +6508,33 @@ public class Repos internal constructor(
       }
 
       public class CodeScanning internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val alerts: Alerts = Alerts(client, owner, repo)
+        public val alerts: Alerts = Alerts(__client, _owner, _repo)
 
-        public val analyses: Analyses = Analyses(client, owner, repo)
+        public val analyses: Analyses = Analyses(__client, _owner, _repo)
 
-        public val codeql: Codeql = Codeql(client, owner, repo)
+        public val codeql: Codeql = Codeql(__client, _owner, _repo)
 
-        public val defaultSetup: DefaultSetup = DefaultSetup(client, owner, repo)
+        public val defaultSetup: DefaultSetup = DefaultSetup(__client, _owner, _repo)
 
-        public val sarifs: Sarifs = Sarifs(client, owner, repo)
+        public val sarifs: Sarifs = Sarifs(__client, _owner, _repo)
 
         public class Alerts internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun alertNumber(alertNumber: Long): AlertNumberPath = AlertNumberPath(client, owner, repo, alertNumber)
+          public fun alertNumber(alertNumber: Long): AlertNumberPath = AlertNumberPath(__client, _owner, _repo, alertNumber)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               toolName: String? = null,
@@ -6546,7 +6551,7 @@ public class Repos internal constructor(
               severity: CodeScanningAlertSeverity? = null,
               assignees: String? = null,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/alerts") {
                 if (toolName != null) {
                   this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
                 }
@@ -6649,27 +6654,27 @@ public class Repos internal constructor(
           }
 
           public class AlertNumberPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val alertNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _alertNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, alertNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _alertNumber)
 
-            public val patch: Patch = Patch(client, owner, repo, alertNumber)
+            public val patch: Patch = Patch(__client, _owner, _repo, _alertNumber)
 
-            public val autofix: Autofix = Autofix(client, owner, repo, alertNumber)
+            public val autofix: Autofix = Autofix(__client, _owner, _repo, _alertNumber)
 
-            public val instances: Instances = Instances(client, owner, repo, alertNumber)
+            public val instances: Instances = Instances(__client, _owner, _repo, _alertNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/alerts/${this._alertNumber}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   304 -> Response.NotModified
@@ -6710,10 +6715,10 @@ public class Repos internal constructor(
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
               public suspend operator fun invoke(
                 state: CodeScanningAlertSetState? = null,
@@ -6722,7 +6727,7 @@ public class Repos internal constructor(
                 createRequest: CodeScanningAlertCreateRequest? = null,
                 assignees: CodeScanningAlertAssignees? = null,
               ): Response {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/alerts/${this._alertNumber}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(state = state, dismissedReason = dismissedReason, dismissedComment = dismissedComment, createRequest = createRequest, assignees = assignees))
                 }
@@ -6788,25 +6793,25 @@ public class Repos internal constructor(
             }
 
             public class Autofix internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, alertNumber)
+              public val `get`: Get = Get(__client, _owner, _repo, _alertNumber)
 
-              public val post: Post = Post(client, owner, repo, alertNumber)
+              public val post: Post = Post(__client, _owner, _repo, _alertNumber)
 
-              public val commits: Commits = Commits(client, owner, repo, alertNumber)
+              public val commits: Commits = Commits(__client, _owner, _repo, _alertNumber)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val alertNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _alertNumber: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}/autofix")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/alerts/${this._alertNumber}/autofix")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     400 -> Response.BadRequest(response.body())
@@ -6849,13 +6854,13 @@ public class Repos internal constructor(
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val alertNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _alertNumber: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}/autofix")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/alerts/${this._alertNumber}/autofix")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     202 -> Response.Accepted(response.body())
@@ -6906,21 +6911,21 @@ public class Repos internal constructor(
               }
 
               public class Commits internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val alertNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _alertNumber: Long,
               ) {
-                public val post: Post = Post(client, owner, repo, alertNumber)
+                public val post: Post = Post(__client, _owner, _repo, _alertNumber)
 
                 public class Post internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val alertNumber: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _alertNumber: Long,
                 ) {
                   public suspend operator fun invoke(body: CodeScanningAutofixCommits? = null): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}/autofix/commits") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/alerts/${this._alertNumber}/autofix/commits") {
                       body?.let {
                         contentType(ContentType.Application.Json)
                         setBody(it)
@@ -6973,18 +6978,18 @@ public class Repos internal constructor(
             }
 
             public class Instances internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, alertNumber)
+              public val `get`: Get = Get(__client, _owner, _repo, _alertNumber)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val alertNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _alertNumber: Long,
               ) {
                 public suspend operator fun invoke(
                   page: Long? = 1L,
@@ -6992,7 +6997,7 @@ public class Repos internal constructor(
                   ref: String? = null,
                   pr: Long? = null,
                 ): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}/instances") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/alerts/${this._alertNumber}/instances") {
                     if (page != null) {
                       this.url.encodedParameters.append("page", page.toString())
                     }
@@ -7046,18 +7051,18 @@ public class Repos internal constructor(
         }
 
         public class Analyses internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun analysisId(analysisId: Long): AnalysisIdPath = AnalysisIdPath(client, owner, repo, analysisId)
+          public fun analysisId(analysisId: Long): AnalysisIdPath = AnalysisIdPath(__client, _owner, _repo, analysisId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               toolName: String? = null,
@@ -7070,7 +7075,7 @@ public class Repos internal constructor(
               direction: Direction? = Direction.Desc,
               sort: Sort? = Sort.Created,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/analyses") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/analyses") {
                 if (toolName != null) {
                   this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
                 }
@@ -7156,23 +7161,23 @@ public class Repos internal constructor(
           }
 
           public class AnalysisIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val analysisId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _analysisId: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, analysisId)
+            public val delete: Delete = Delete(__client, _owner, _repo, _analysisId)
 
-            public val `get`: Get = Get(client, owner, repo, analysisId)
+            public val `get`: Get = Get(__client, _owner, _repo, _analysisId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val analysisId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _analysisId: Long,
             ) {
               public suspend operator fun invoke(confirmDelete: String? = null): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/analyses/${this.analysisId}") {
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/analyses/${this._analysisId}") {
                   if (confirmDelete != null) {
                     this.url.encodedParameters.append("confirm_delete", confirmDelete.encodeURLParameter())
                   }
@@ -7219,13 +7224,13 @@ public class Repos internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val analysisId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _analysisId: Long,
             ) {
               public suspend fun json(): JsonResponse {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/analyses/${this.analysisId}") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/analyses/${this._analysisId}") {
                   `header`(HttpHeaders.Accept, ContentType.Application.Json)
                 }
                 return when (response.status.value) {
@@ -7239,7 +7244,7 @@ public class Repos internal constructor(
               }
 
               public suspend fun sarifJson(): SarifJsonResponse {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/analyses/${this.analysisId}") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/analyses/${this._analysisId}") {
                   `header`(HttpHeaders.Accept, ContentType("application", "sarif+json"))
                 }
                 return when (response.status.value) {
@@ -7296,30 +7301,30 @@ public class Repos internal constructor(
         }
 
         public class Codeql internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val databases: Databases = Databases(client, owner, repo)
+          public val databases: Databases = Databases(__client, _owner, _repo)
 
-          public val variantAnalyses: VariantAnalyses = VariantAnalyses(client, owner, repo)
+          public val variantAnalyses: VariantAnalyses = VariantAnalyses(__client, _owner, _repo)
 
           public class Databases internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
-            public fun language(language: String): LanguagePath = LanguagePath(client, owner, repo, language)
+            public fun language(language: String): LanguagePath = LanguagePath(__client, _owner, _repo, language)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/databases")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/codeql/databases")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -7357,23 +7362,23 @@ public class Repos internal constructor(
             }
 
             public class LanguagePath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val language: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _language: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, language)
+              public val delete: Delete = Delete(__client, _owner, _repo, _language)
 
-              public val `get`: Get = Get(client, owner, repo, language)
+              public val `get`: Get = Get(__client, _owner, _repo, _language)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val language: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _language: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/databases/${this.language.encodeURLParameter()}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/codeql/databases/${this._language.encodeURLParameter()}")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     403 -> Response.Forbidden(response.body())
@@ -7409,13 +7414,13 @@ public class Repos internal constructor(
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val language: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _language: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/databases/${this.language.encodeURLParameter()}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/codeql/databases/${this._language.encodeURLParameter()}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     302 -> Response.Found
@@ -7458,18 +7463,18 @@ public class Repos internal constructor(
           }
 
           public class VariantAnalyses internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val post: Post = Post(client, owner, repo)
+            public val post: Post = Post(__client, _owner, _repo)
 
-            public fun codeqlVariantAnalysisId(codeqlVariantAnalysisId: Long): CodeqlVariantAnalysisIdPath = CodeqlVariantAnalysisIdPath(client, owner, repo, codeqlVariantAnalysisId)
+            public fun codeqlVariantAnalysisId(codeqlVariantAnalysisId: Long): CodeqlVariantAnalysisIdPath = CodeqlVariantAnalysisIdPath(__client, _owner, _repo, codeqlVariantAnalysisId)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(
                 language: CodeScanningVariantAnalysisLanguage,
@@ -7478,7 +7483,7 @@ public class Repos internal constructor(
                 repositoryLists: List<String>? = null,
                 repositoryOwners: List<String>? = null,
               ): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(language = language, queryPack = queryPack, repositories = repositories, repositoryLists = repositoryLists, repositoryOwners = repositoryOwners))
                 }
@@ -7535,23 +7540,23 @@ public class Repos internal constructor(
             }
 
             public class CodeqlVariantAnalysisIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val codeqlVariantAnalysisId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _codeqlVariantAnalysisId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, codeqlVariantAnalysisId)
+              public val `get`: Get = Get(__client, _owner, _repo, _codeqlVariantAnalysisId)
 
-              public val repos: Repos = Repos(client, owner, repo, codeqlVariantAnalysisId)
+              public val repos: Repos = Repos(__client, _owner, _repo, _codeqlVariantAnalysisId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val codeqlVariantAnalysisId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _codeqlVariantAnalysisId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses/${this.codeqlVariantAnalysisId}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses/${this._codeqlVariantAnalysisId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -7584,43 +7589,43 @@ public class Repos internal constructor(
               }
 
               public class Repos internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val codeqlVariantAnalysisId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _codeqlVariantAnalysisId: Long,
               ) {
-                public fun repoOwner(repoOwner: String): RepoOwnerPath = RepoOwnerPath(client, owner, repo, codeqlVariantAnalysisId, repoOwner)
+                public fun repoOwner(repoOwner: String): RepoOwnerPath = RepoOwnerPath(__client, _owner, _repo, _codeqlVariantAnalysisId, repoOwner)
 
                 public class RepoOwnerPath internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val codeqlVariantAnalysisId: Long,
-                  private val repoOwner: String,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _codeqlVariantAnalysisId: Long,
+                  private val _repoOwner: String,
                 ) {
-                  public fun repoName(repoName: String): RepoNamePath = RepoNamePath(client, owner, repo, codeqlVariantAnalysisId, repoOwner, repoName)
+                  public fun repoName(repoName: String): RepoNamePath = RepoNamePath(__client, _owner, _repo, _codeqlVariantAnalysisId, _repoOwner, repoName)
 
                   public class RepoNamePath internal constructor(
-                    private val client: HttpClient,
-                    private val owner: String,
-                    private val repo: String,
-                    private val codeqlVariantAnalysisId: Long,
-                    private val repoOwner: String,
-                    private val repoName: String,
+                    private val __client: HttpClient,
+                    private val _owner: String,
+                    private val _repo: String,
+                    private val _codeqlVariantAnalysisId: Long,
+                    private val _repoOwner: String,
+                    private val _repoName: String,
                   ) {
                     public val `get`: Get =
-                        Get(client, owner, repo, codeqlVariantAnalysisId, repoOwner, repoName)
+                        Get(__client, _owner, _repo, _codeqlVariantAnalysisId, _repoOwner, _repoName)
 
                     public class Get internal constructor(
-                      private val client: HttpClient,
-                      private val owner: String,
-                      private val repo: String,
-                      private val codeqlVariantAnalysisId: Long,
-                      private val repoOwner: String,
-                      private val repoName: String,
+                      private val __client: HttpClient,
+                      private val _owner: String,
+                      private val _repo: String,
+                      private val _codeqlVariantAnalysisId: Long,
+                      private val _repoOwner: String,
+                      private val _repoName: String,
                     ) {
                       public suspend operator fun invoke(): Response {
-                        val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses/${this.codeqlVariantAnalysisId}/repos/${this.repoOwner.encodeURLParameter()}/${this.repoName.encodeURLParameter()}")
+                        val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses/${this._codeqlVariantAnalysisId}/repos/${this._repoOwner.encodeURLParameter()}/${this._repoName.encodeURLParameter()}")
                         return when (response.status.value) {
                           200 -> Response.Ok(response.body())
                           404 -> Response.NotFound(response.body())
@@ -7659,21 +7664,21 @@ public class Repos internal constructor(
         }
 
         public class DefaultSetup internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val patch: Patch = Patch(client, owner, repo)
+          public val patch: Patch = Patch(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/default-setup")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/default-setup")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -7711,12 +7716,12 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(body: CodeScanningDefaultSetupUpdate): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/default-setup") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/default-setup") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -7773,18 +7778,18 @@ public class Repos internal constructor(
         }
 
         public class Sarifs internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public fun sarifId(sarifId: String): SarifIdPath = SarifIdPath(client, owner, repo, sarifId)
+          public fun sarifId(sarifId: String): SarifIdPath = SarifIdPath(__client, _owner, _repo, sarifId)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               commitSha: CodeScanningAnalysisCommitSha,
@@ -7795,7 +7800,7 @@ public class Repos internal constructor(
               toolName: String? = null,
               validate: Boolean? = null,
             ): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/sarifs") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/sarifs") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(commitSha = commitSha, ref = ref, sarif = sarif, checkoutUri = checkoutUri, startedAt = startedAt, toolName = toolName, validate = validate))
               }
@@ -7862,21 +7867,21 @@ public class Repos internal constructor(
           }
 
           public class SarifIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val sarifId: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _sarifId: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, sarifId)
+            public val `get`: Get = Get(__client, _owner, _repo, _sarifId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val sarifId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _sarifId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/sarifs/${this.sarifId.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-scanning/sarifs/${this._sarifId.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -7915,19 +7920,19 @@ public class Repos internal constructor(
       }
 
       public class CodeSecurityConfiguration internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-security-configuration")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/code-security-configuration")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               204 -> Response.NoContent
@@ -7959,26 +7964,26 @@ public class Repos internal constructor(
       }
 
       public class Codeowners internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val errors: Errors = Errors(client, owner, repo)
+        public val errors: Errors = Errors(__client, _owner, _repo)
 
         public class Errors internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(ref: String? = null): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codeowners/errors") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codeowners/errors") {
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
@@ -8002,31 +8007,31 @@ public class Repos internal constructor(
       }
 
       public class Codespaces internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public val devcontainers: Devcontainers = Devcontainers(client, owner, repo)
+        public val devcontainers: Devcontainers = Devcontainers(__client, _owner, _repo)
 
-        public val machines: Machines = Machines(client, owner, repo)
+        public val machines: Machines = Machines(__client, _owner, _repo)
 
-        public val new: New = New(client, owner, repo)
+        public val new: New = New(__client, _owner, _repo)
 
-        public val permissionsCheck: PermissionsCheck = PermissionsCheck(client, owner, repo)
+        public val permissionsCheck: PermissionsCheck = PermissionsCheck(__client, _owner, _repo)
 
-        public val secrets: Secrets = Secrets(client, owner, repo)
+        public val secrets: Secrets = Secrets(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -8071,9 +8076,9 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             ref: String? = null,
@@ -8088,7 +8093,7 @@ public class Repos internal constructor(
             displayName: String? = null,
             retentionPeriodMinutes: Long? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces") {
               contentType(ContentType.Application.Json)
               setBody(Body(ref = ref, location = location, geo = geo, clientIp = clientIp, machine = machine, devcontainerPath = devcontainerPath, multiRepoPermissionsOptOut = multiRepoPermissionsOptOut, workingDirectory = workingDirectory, idleTimeoutMinutes = idleTimeoutMinutes, displayName = displayName, retentionPeriodMinutes = retentionPeriodMinutes))
             }
@@ -8186,19 +8191,19 @@ public class Repos internal constructor(
         }
 
         public class Devcontainers internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/devcontainers") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/devcontainers") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -8260,23 +8265,23 @@ public class Repos internal constructor(
         }
 
         public class Machines internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               location: String? = null,
               clientIp: String? = null,
               ref: String? = null,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/machines") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/machines") {
                 if (location != null) {
                   this.url.encodedParameters.append("location", location.encodeURLParameter())
                 }
@@ -8328,19 +8333,19 @@ public class Repos internal constructor(
         }
 
         public class New internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(ref: String? = null, clientIp: String? = null): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/new") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/new") {
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
@@ -8391,19 +8396,19 @@ public class Repos internal constructor(
         }
 
         public class PermissionsCheck internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(ref: String, devcontainerPath: String): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/permissions_check") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/permissions_check") {
                 this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 this.url.encodedParameters.append("devcontainer_path", devcontainerPath.encodeURLParameter())
               }
@@ -8455,23 +8460,23 @@ public class Repos internal constructor(
         }
 
         public class Secrets internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val publicKey: PublicKey = PublicKey(client, owner, repo)
+          public val publicKey: PublicKey = PublicKey(__client, _owner, _repo)
 
-          public fun secretName(secretName: String): SecretNamePath = SecretNamePath(client, owner, repo, secretName)
+          public fun secretName(secretName: String): SecretNamePath = SecretNamePath(__client, _owner, _repo, secretName)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/secrets") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -8492,19 +8497,19 @@ public class Repos internal constructor(
           }
 
           public class PublicKey internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): CodespacesPublicKey {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets/public-key")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/secrets/public-key")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -8512,50 +8517,50 @@ public class Repos internal constructor(
           }
 
           public class SecretNamePath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val secretName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _secretName: String,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, secretName)
+            public val delete: Delete = Delete(__client, _owner, _repo, _secretName)
 
-            public val `get`: Get = Get(client, owner, repo, secretName)
+            public val `get`: Get = Get(__client, _owner, _repo, _secretName)
 
-            public val put: Put = Put(client, owner, repo, secretName)
+            public val put: Put = Put(__client, _owner, _repo, _secretName)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets/${this.secretName.encodeURLParameter()}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/secrets/${this._secretName.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke(): RepoCodespacesSecret {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets/${this.secretName.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/secrets/${this._secretName.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke(encryptedValue: String? = null, keyId: String? = null): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets/${this.secretName.encodeURLParameter()}") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/codespaces/secrets/${this._secretName.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(encryptedValue = encryptedValue, keyId = keyId))
                 }
@@ -8590,18 +8595,18 @@ public class Repos internal constructor(
       }
 
       public class Collaborators internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public fun username(username: String): UsernamePath = UsernamePath(client, owner, repo, username)
+        public fun username(username: String): UsernamePath = UsernamePath(__client, _owner, _repo, username)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             affiliation: Affiliation? = Affiliation.All,
@@ -8609,7 +8614,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/collaborators") {
               if (affiliation != null) {
                 this.url.encodedParameters.append("affiliation", affiliation.value.encodeURLParameter())
               }
@@ -8672,27 +8677,27 @@ public class Repos internal constructor(
         }
 
         public class UsernamePath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val username: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _username: String,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, username)
+          public val delete: Delete = Delete(__client, _owner, _repo, _username)
 
-          public val `get`: Get = Get(client, owner, repo, username)
+          public val `get`: Get = Get(__client, _owner, _repo, _username)
 
-          public val put: Put = Put(client, owner, repo, username)
+          public val put: Put = Put(__client, _owner, _repo, _username)
 
-          public val permission: Permission = Permission(client, owner, repo, username)
+          public val permission: Permission = Permission(__client, _owner, _repo, _username)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val username: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _username: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/collaborators/${this._username.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 403 -> Response.Forbidden(response.body())
@@ -8715,13 +8720,13 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val username: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _username: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/collaborators/${this._username.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound
@@ -8737,13 +8742,13 @@ public class Repos internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val username: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _username: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}")
+              val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/collaborators/${this._username.encodeURLParameter()}")
               return when (response.status.value) {
                 201 -> Response.Created(response.body())
                 204 -> Response.NoContent
@@ -8754,7 +8759,7 @@ public class Repos internal constructor(
             }
 
             public suspend operator fun invoke(permission: String? = null): Response {
-              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}") {
+              val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/collaborators/${this._username.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(permission = permission))
               }
@@ -8792,21 +8797,21 @@ public class Repos internal constructor(
           }
 
           public class Permission internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val username: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _username: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, username)
+            public val `get`: Get = Get(__client, _owner, _repo, _username)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val username: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _username: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}/permission")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/collaborators/${this._username.encodeURLParameter()}/permission")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -8829,21 +8834,21 @@ public class Repos internal constructor(
       }
 
       public class Comments internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(client, owner, repo, commentId)
+        public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(__client, _owner, _repo, commentId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CommitComment> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/comments") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -8857,27 +8862,27 @@ public class Repos internal constructor(
         }
 
         public class CommentIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val commentId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _commentId: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, commentId)
+          public val delete: Delete = Delete(__client, _owner, _repo, _commentId)
 
-          public val `get`: Get = Get(client, owner, repo, commentId)
+          public val `get`: Get = Get(__client, _owner, _repo, _commentId)
 
-          public val patch: Patch = Patch(client, owner, repo, commentId)
+          public val patch: Patch = Patch(__client, _owner, _repo, _commentId)
 
-          public val reactions: Reactions = Reactions(client, owner, repo, commentId)
+          public val reactions: Reactions = Reactions(__client, _owner, _repo, _commentId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commentId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/comments/${this._commentId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -8895,13 +8900,13 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commentId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/comments/${this._commentId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -8921,13 +8926,13 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commentId: Long,
           ) {
             public suspend operator fun invoke(body: String): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/comments/${this._commentId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(body = body))
               }
@@ -8955,29 +8960,29 @@ public class Repos internal constructor(
           }
 
           public class Reactions internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commentId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, commentId)
+            public val `get`: Get = Get(__client, _owner, _repo, _commentId)
 
-            public val post: Post = Post(client, owner, repo, commentId)
+            public val post: Post = Post(__client, _owner, _repo, _commentId)
 
-            public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(client, owner, repo, commentId, reactionId)
+            public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(__client, _owner, _repo, _commentId, reactionId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
               public suspend operator fun invoke(
                 content: Content? = null,
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}/reactions") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/comments/${this._commentId}/reactions") {
                   if (content != null) {
                     this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
@@ -9028,13 +9033,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
               public suspend operator fun invoke(content: Content): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}/reactions") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/comments/${this._commentId}/reactions") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(content = content))
                 }
@@ -9088,23 +9093,23 @@ public class Repos internal constructor(
             }
 
             public class ReactionIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
-              private val reactionId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
+              private val _reactionId: Long,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, commentId, reactionId)
+              public val delete: Delete = Delete(__client, _owner, _repo, _commentId, _reactionId)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
-                private val reactionId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
+                private val _reactionId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}/reactions/${this.reactionId}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/comments/${this._commentId}/reactions/${this._reactionId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -9114,20 +9119,20 @@ public class Repos internal constructor(
       }
 
       public class Commits internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public fun commitSha(commitSha: String): CommitShaPath = CommitShaPath(client, owner, repo, commitSha)
+        public fun commitSha(commitSha: String): CommitShaPath = CommitShaPath(__client, _owner, _repo, commitSha)
 
-        public fun ref(ref: String): RefPath = RefPath(client, owner, repo, ref)
+        public fun ref(ref: String): RefPath = RefPath(__client, _owner, _repo, ref)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             sha: String? = null,
@@ -9139,7 +9144,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits") {
               if (sha != null) {
                 this.url.encodedParameters.append("sha", sha.encodeURLParameter())
               }
@@ -9199,34 +9204,34 @@ public class Repos internal constructor(
         }
 
         public class CommitShaPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val commitSha: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _commitSha: String,
         ) {
           public val branchesWhereHead: BranchesWhereHead =
-              BranchesWhereHead(client, owner, repo, commitSha)
+              BranchesWhereHead(__client, _owner, _repo, _commitSha)
 
-          public val comments: Comments = Comments(client, owner, repo, commitSha)
+          public val comments: Comments = Comments(__client, _owner, _repo, _commitSha)
 
-          public val pulls: Pulls = Pulls(client, owner, repo, commitSha)
+          public val pulls: Pulls = Pulls(__client, _owner, _repo, _commitSha)
 
           public class BranchesWhereHead internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commitSha: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commitSha: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, commitSha)
+            public val `get`: Get = Get(__client, _owner, _repo, _commitSha)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commitSha: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commitSha: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.commitSha.encodeURLParameter()}/branches-where-head")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._commitSha.encodeURLParameter()}/branches-where-head")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   409 -> Response.Conflict(response.body())
@@ -9252,23 +9257,23 @@ public class Repos internal constructor(
           }
 
           public class Comments internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commitSha: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commitSha: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, commitSha)
+            public val `get`: Get = Get(__client, _owner, _repo, _commitSha)
 
-            public val post: Post = Post(client, owner, repo, commitSha)
+            public val post: Post = Post(__client, _owner, _repo, _commitSha)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commitSha: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commitSha: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CommitComment> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.commitSha.encodeURLParameter()}/comments") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._commitSha.encodeURLParameter()}/comments") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -9282,10 +9287,10 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commitSha: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commitSha: String,
             ) {
               public suspend operator fun invoke(
                 body: String,
@@ -9293,7 +9298,7 @@ public class Repos internal constructor(
                 position: Long? = null,
                 line: Long? = null,
               ): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.commitSha.encodeURLParameter()}/comments") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._commitSha.encodeURLParameter()}/comments") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body, path = path, position = position, line = line))
                 }
@@ -9334,21 +9339,21 @@ public class Repos internal constructor(
           }
 
           public class Pulls internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commitSha: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commitSha: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, commitSha)
+            public val `get`: Get = Get(__client, _owner, _repo, _commitSha)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commitSha: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commitSha: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.commitSha.encodeURLParameter()}/pulls") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._commitSha.encodeURLParameter()}/pulls") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -9377,29 +9382,29 @@ public class Repos internal constructor(
         }
 
         public class RefPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val ref: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _ref: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, ref)
+          public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
-          public val checkRuns: CheckRuns = CheckRuns(client, owner, repo, ref)
+          public val checkRuns: CheckRuns = CheckRuns(__client, _owner, _repo, _ref)
 
-          public val checkSuites: CheckSuites = CheckSuites(client, owner, repo, ref)
+          public val checkSuites: CheckSuites = CheckSuites(__client, _owner, _repo, _ref)
 
-          public val status: Status = Status(client, owner, repo, ref)
+          public val status: Status = Status(__client, _owner, _repo, _ref)
 
-          public val statuses: Statuses = Statuses(client, owner, repo, ref)
+          public val statuses: Statuses = Statuses(__client, _owner, _repo, _ref)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._ref.encodeURLParameter()}") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -9454,18 +9459,18 @@ public class Repos internal constructor(
           }
 
           public class CheckRuns internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, ref)
+            public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ref: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ref: String,
             ) {
               public suspend operator fun invoke(
                 checkName: String? = null,
@@ -9475,7 +9480,7 @@ public class Repos internal constructor(
                 page: Long? = 1L,
                 appId: Long? = null,
               ): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}/check-runs") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._ref.encodeURLParameter()}/check-runs") {
                   if (checkName != null) {
                     this.url.encodedParameters.append("check_name", checkName.encodeURLParameter())
                   }
@@ -9534,18 +9539,18 @@ public class Repos internal constructor(
           }
 
           public class CheckSuites internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, ref)
+            public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ref: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ref: String,
             ) {
               public suspend operator fun invoke(
                 appId: Long? = null,
@@ -9553,7 +9558,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}/check-suites") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._ref.encodeURLParameter()}/check-suites") {
                   if (appId != null) {
                     this.url.encodedParameters.append("app_id", appId.toString())
                   }
@@ -9582,21 +9587,21 @@ public class Repos internal constructor(
           }
 
           public class Status internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, ref)
+            public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ref: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ref: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}/status") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._ref.encodeURLParameter()}/status") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -9624,21 +9629,21 @@ public class Repos internal constructor(
           }
 
           public class Statuses internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, ref)
+            public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ref: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ref: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}/statuses") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/commits/${this._ref.encodeURLParameter()}/statuses") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -9668,26 +9673,26 @@ public class Repos internal constructor(
       }
 
       public class Community internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val profile: Profile = Profile(client, owner, repo)
+        public val profile: Profile = Profile(__client, _owner, _repo)
 
         public class Profile internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): CommunityProfile {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/community/profile")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/community/profile")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -9696,28 +9701,28 @@ public class Repos internal constructor(
       }
 
       public class Compare internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public fun basehead(basehead: String): BaseheadPath = BaseheadPath(client, owner, repo, basehead)
+        public fun basehead(basehead: String): BaseheadPath = BaseheadPath(__client, _owner, _repo, basehead)
 
         public class BaseheadPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val basehead: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _basehead: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, basehead)
+          public val `get`: Get = Get(__client, _owner, _repo, _basehead)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val basehead: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _basehead: String,
           ) {
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/compare/${this.basehead.encodeURLParameter()}") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/compare/${this._basehead.encodeURLParameter()}") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -9764,29 +9769,29 @@ public class Repos internal constructor(
       }
 
       public class Contents internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public fun path(path: String): PathPath = PathPath(client, owner, repo, path)
+        public fun path(path: String): PathPath = PathPath(__client, _owner, _repo, path)
 
         public class PathPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val path: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _path: String,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, path)
+          public val delete: Delete = Delete(__client, _owner, _repo, _path)
 
-          public val `get`: Get = Get(client, owner, repo, path)
+          public val `get`: Get = Get(__client, _owner, _repo, _path)
 
-          public val put: Put = Put(client, owner, repo, path)
+          public val put: Put = Put(__client, _owner, _repo, _path)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val path: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _path: String,
           ) {
             public suspend operator fun invoke(
               message: String,
@@ -9795,7 +9800,7 @@ public class Repos internal constructor(
               committer: Committer? = null,
               author: Author? = null,
             ): Response {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/contents/${this._path.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(message = message, sha = sha, branch = branch, committer = committer, author = author))
               }
@@ -9878,13 +9883,13 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val path: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _path: String,
           ) {
             public suspend fun vndGithubObject(ref: String? = null, body: JsonElement? = null): VndGithubObjectResponse {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/contents/${this._path.encodeURLParameter()}") {
                 `header`(HttpHeaders.Accept, ContentType("application", "vnd.github.object"))
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
@@ -9905,7 +9910,7 @@ public class Repos internal constructor(
             }
 
             public suspend fun json(ref: String? = null, body: JsonElement? = null): JsonResponse {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/contents/${this._path.encodeURLParameter()}") {
                 `header`(HttpHeaders.Accept, ContentType.Application.Json)
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
@@ -10056,10 +10061,10 @@ public class Repos internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val path: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _path: String,
           ) {
             public suspend operator fun invoke(
               message: String,
@@ -10069,7 +10074,7 @@ public class Repos internal constructor(
               committer: Committer? = null,
               author: Author? = null,
             ): Response {
-              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
+              val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/contents/${this._path.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(message = message, content = content, sha = sha, branch = branch, committer = committer, author = author))
               }
@@ -10188,23 +10193,23 @@ public class Repos internal constructor(
       }
 
       public class Contributors internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             anon: String? = null,
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contributors") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/contributors") {
               if (anon != null) {
                 this.url.encodedParameters.append("anon", anon.encodeURLParameter())
               }
@@ -10243,27 +10248,27 @@ public class Repos internal constructor(
       }
 
       public class Dependabot internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val alerts: Alerts = Alerts(client, owner, repo)
+        public val alerts: Alerts = Alerts(__client, _owner, _repo)
 
-        public val secrets: Secrets = Secrets(client, owner, repo)
+        public val secrets: Secrets = Secrets(__client, _owner, _repo)
 
         public class Alerts internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun alertNumber(alertNumber: Long): AlertNumberPath = AlertNumberPath(client, owner, repo, alertNumber)
+          public fun alertNumber(alertNumber: Long): AlertNumberPath = AlertNumberPath(__client, _owner, _repo, alertNumber)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               state: String? = null,
@@ -10281,7 +10286,7 @@ public class Repos internal constructor(
               after: String? = null,
               perPage: Long? = 30L,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/alerts") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependabot/alerts") {
                 if (state != null) {
                   this.url.encodedParameters.append("state", state.encodeURLParameter())
                 }
@@ -10463,23 +10468,23 @@ public class Repos internal constructor(
           }
 
           public class AlertNumberPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val alertNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _alertNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, alertNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _alertNumber)
 
-            public val patch: Patch = Patch(client, owner, repo, alertNumber)
+            public val patch: Patch = Patch(__client, _owner, _repo, _alertNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/alerts/${this.alertNumber}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependabot/alerts/${this._alertNumber}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   304 -> Response.NotModified
@@ -10507,10 +10512,10 @@ public class Repos internal constructor(
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
               public suspend operator fun invoke(
                 state: State? = null,
@@ -10518,7 +10523,7 @@ public class Repos internal constructor(
                 dismissedComment: String? = null,
                 assignees: List<String>? = null,
               ): Response {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/alerts/${this.alertNumber}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependabot/alerts/${this._alertNumber}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(state = state, dismissedReason = dismissedReason, dismissedComment = dismissedComment, assignees = assignees))
                 }
@@ -10606,23 +10611,23 @@ public class Repos internal constructor(
         }
 
         public class Secrets internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val publicKey: PublicKey = PublicKey(client, owner, repo)
+          public val publicKey: PublicKey = PublicKey(__client, _owner, _repo)
 
-          public fun secretName(secretName: String): SecretNamePath = SecretNamePath(client, owner, repo, secretName)
+          public fun secretName(secretName: String): SecretNamePath = SecretNamePath(__client, _owner, _repo, secretName)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependabot/secrets") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -10643,19 +10648,19 @@ public class Repos internal constructor(
           }
 
           public class PublicKey internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): DependabotPublicKey {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets/public-key")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependabot/secrets/public-key")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -10663,50 +10668,50 @@ public class Repos internal constructor(
           }
 
           public class SecretNamePath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val secretName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _secretName: String,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, secretName)
+            public val delete: Delete = Delete(__client, _owner, _repo, _secretName)
 
-            public val `get`: Get = Get(client, owner, repo, secretName)
+            public val `get`: Get = Get(__client, _owner, _repo, _secretName)
 
-            public val put: Put = Put(client, owner, repo, secretName)
+            public val put: Put = Put(__client, _owner, _repo, _secretName)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets/${this.secretName.encodeURLParameter()}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependabot/secrets/${this._secretName.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke(): DependabotSecret {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets/${this.secretName.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependabot/secrets/${this._secretName.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _secretName: String,
             ) {
               public suspend operator fun invoke(encryptedValue: String? = null, keyId: String? = null): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets/${this.secretName.encodeURLParameter()}") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependabot/secrets/${this._secretName.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(encryptedValue = encryptedValue, keyId = keyId))
                 }
@@ -10741,39 +10746,39 @@ public class Repos internal constructor(
       }
 
       public class DependencyGraph internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val compare: Compare = Compare(client, owner, repo)
+        public val compare: Compare = Compare(__client, _owner, _repo)
 
-        public val sbom: Sbom = Sbom(client, owner, repo)
+        public val sbom: Sbom = Sbom(__client, _owner, _repo)
 
-        public val snapshots: Snapshots = Snapshots(client, owner, repo)
+        public val snapshots: Snapshots = Snapshots(__client, _owner, _repo)
 
         public class Compare internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public fun basehead(basehead: String): BaseheadPath = BaseheadPath(client, owner, repo, basehead)
+          public fun basehead(basehead: String): BaseheadPath = BaseheadPath(__client, _owner, _repo, basehead)
 
           public class BaseheadPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val basehead: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _basehead: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, basehead)
+            public val `get`: Get = Get(__client, _owner, _repo, _basehead)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val basehead: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _basehead: String,
             ) {
               public suspend operator fun invoke(name: String? = null): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependency-graph/compare/${this.basehead.encodeURLParameter()}") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependency-graph/compare/${this._basehead.encodeURLParameter()}") {
                   if (name != null) {
                     this.url.encodedParameters.append("name", name.encodeURLParameter())
                   }
@@ -10804,19 +10809,19 @@ public class Repos internal constructor(
         }
 
         public class Sbom internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependency-graph/sbom")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependency-graph/sbom")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -10842,19 +10847,19 @@ public class Repos internal constructor(
         }
 
         public class Snapshots internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(body: Snapshot): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependency-graph/snapshots") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dependency-graph/snapshots") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -10875,20 +10880,20 @@ public class Repos internal constructor(
       }
 
       public class Deployments internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public fun deploymentId(deploymentId: Long): DeploymentIdPath = DeploymentIdPath(client, owner, repo, deploymentId)
+        public fun deploymentId(deploymentId: Long): DeploymentIdPath = DeploymentIdPath(__client, _owner, _repo, deploymentId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             sha: String? = "none",
@@ -10898,7 +10903,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): List<Deployment> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/deployments") {
               if (sha != null) {
                 this.url.encodedParameters.append("sha", sha.encodeURLParameter())
               }
@@ -10924,9 +10929,9 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             ref: String,
@@ -10939,7 +10944,7 @@ public class Repos internal constructor(
             transientEnvironment: Boolean? = null,
             productionEnvironment: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/deployments") {
               contentType(ContentType.Application.Json)
               setBody(Body(ref = ref, task = task, autoMerge = autoMerge, requiredContexts = requiredContexts, payload = payload, environment = environment, description = description, transientEnvironment = transientEnvironment, productionEnvironment = productionEnvironment))
             }
@@ -11049,25 +11054,25 @@ public class Repos internal constructor(
         }
 
         public class DeploymentIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val deploymentId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _deploymentId: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, deploymentId)
+          public val delete: Delete = Delete(__client, _owner, _repo, _deploymentId)
 
-          public val `get`: Get = Get(client, owner, repo, deploymentId)
+          public val `get`: Get = Get(__client, _owner, _repo, _deploymentId)
 
-          public val statuses: Statuses = Statuses(client, owner, repo, deploymentId)
+          public val statuses: Statuses = Statuses(__client, _owner, _repo, _deploymentId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val deploymentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _deploymentId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/deployments/${this._deploymentId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -11090,13 +11095,13 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val deploymentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _deploymentId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/deployments/${this._deploymentId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -11116,25 +11121,25 @@ public class Repos internal constructor(
           }
 
           public class Statuses internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val deploymentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _deploymentId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, deploymentId)
+            public val `get`: Get = Get(__client, _owner, _repo, _deploymentId)
 
-            public val post: Post = Post(client, owner, repo, deploymentId)
+            public val post: Post = Post(__client, _owner, _repo, _deploymentId)
 
-            public fun statusId(statusId: Long): StatusIdPath = StatusIdPath(client, owner, repo, deploymentId, statusId)
+            public fun statusId(statusId: Long): StatusIdPath = StatusIdPath(__client, _owner, _repo, _deploymentId, statusId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val deploymentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _deploymentId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}/statuses") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/deployments/${this._deploymentId}/statuses") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -11161,10 +11166,10 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val deploymentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _deploymentId: Long,
             ) {
               public suspend operator fun invoke(
                 state: State,
@@ -11175,7 +11180,7 @@ public class Repos internal constructor(
                 environmentUrl: String? = null,
                 autoInactive: Boolean? = null,
               ): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}/statuses") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/deployments/${this._deploymentId}/statuses") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(state = state, targetUrl = targetUrl, logUrl = logUrl, description = description, environment = environment, environmentUrl = environmentUrl, autoInactive = autoInactive))
                 }
@@ -11241,23 +11246,23 @@ public class Repos internal constructor(
             }
 
             public class StatusIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val deploymentId: Long,
-              private val statusId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _deploymentId: Long,
+              private val _statusId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, deploymentId, statusId)
+              public val `get`: Get = Get(__client, _owner, _repo, _deploymentId, _statusId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val deploymentId: Long,
-                private val statusId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _deploymentId: Long,
+                private val _statusId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}/statuses/${this.statusId}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/deployments/${this._deploymentId}/statuses/${this._statusId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -11281,19 +11286,19 @@ public class Repos internal constructor(
       }
 
       public class Dispatches internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(eventType: String, clientPayload: JsonElement? = null): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dispatches") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/dispatches") {
               contentType(ContentType.Application.Json)
               setBody(Body(eventType = eventType, clientPayload = clientPayload))
             }
@@ -11330,21 +11335,21 @@ public class Repos internal constructor(
       }
 
       public class Environments internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public fun environmentName(environmentName: String): EnvironmentNamePath = EnvironmentNamePath(client, owner, repo, environmentName)
+        public fun environmentName(environmentName: String): EnvironmentNamePath = EnvironmentNamePath(__client, _owner, _repo, environmentName)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -11368,60 +11373,60 @@ public class Repos internal constructor(
         }
 
         public class EnvironmentNamePath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val environmentName: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _environmentName: String,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, environmentName)
+          public val delete: Delete = Delete(__client, _owner, _repo, _environmentName)
 
-          public val `get`: Get = Get(client, owner, repo, environmentName)
+          public val `get`: Get = Get(__client, _owner, _repo, _environmentName)
 
-          public val put: Put = Put(client, owner, repo, environmentName)
+          public val put: Put = Put(__client, _owner, _repo, _environmentName)
 
           public val deploymentBranchPolicies: DeploymentBranchPolicies =
-              DeploymentBranchPolicies(client, owner, repo, environmentName)
+              DeploymentBranchPolicies(__client, _owner, _repo, _environmentName)
 
           public val deploymentProtectionRules: DeploymentProtectionRules =
-              DeploymentProtectionRules(client, owner, repo, environmentName)
+              DeploymentProtectionRules(__client, _owner, _repo, _environmentName)
 
-          public val secrets: Secrets = Secrets(client, owner, repo, environmentName)
+          public val secrets: Secrets = Secrets(__client, _owner, _repo, _environmentName)
 
-          public val variables: Variables = Variables(client, owner, repo, environmentName)
+          public val variables: Variables = Variables(__client, _owner, _repo, _environmentName)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val environmentName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _environmentName: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val environmentName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _environmentName: String,
           ) {
             public suspend operator fun invoke(): Environment {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val environmentName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _environmentName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}")
+              val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 422 -> Response.UnprocessableEntity(response.body())
@@ -11435,7 +11440,7 @@ public class Repos internal constructor(
               reviewers: Optional<List<Reviewers>> = Optional.Absent,
               deploymentBranchPolicy: Optional<DeploymentBranchPolicySettings> = Optional.Absent,
             ): Response {
-              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}") {
+              val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(waitTimer = waitTimer, preventSelfReview = preventSelfReview, reviewers = reviewers, deploymentBranchPolicy = deploymentBranchPolicy))
               }
@@ -11484,25 +11489,25 @@ public class Repos internal constructor(
           }
 
           public class DeploymentBranchPolicies internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val environmentName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _environmentName: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, environmentName)
+            public val `get`: Get = Get(__client, _owner, _repo, _environmentName)
 
-            public val post: Post = Post(client, owner, repo, environmentName)
+            public val post: Post = Post(__client, _owner, _repo, _environmentName)
 
-            public fun branchPolicyId(branchPolicyId: Long): BranchPolicyIdPath = BranchPolicyIdPath(client, owner, repo, environmentName, branchPolicyId)
+            public fun branchPolicyId(branchPolicyId: Long): BranchPolicyIdPath = BranchPolicyIdPath(__client, _owner, _repo, _environmentName, branchPolicyId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment-branch-policies") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -11524,13 +11529,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
               public suspend operator fun invoke(body: DeploymentBranchPolicyNamePatternWithType): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment-branch-policies") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -11554,55 +11559,56 @@ public class Repos internal constructor(
             }
 
             public class BranchPolicyIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
-              private val branchPolicyId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
+              private val _branchPolicyId: Long,
             ) {
               public val delete: Delete =
-                  Delete(client, owner, repo, environmentName, branchPolicyId)
+                  Delete(__client, _owner, _repo, _environmentName, _branchPolicyId)
 
-              public val `get`: Get = Get(client, owner, repo, environmentName, branchPolicyId)
+              public val `get`: Get =
+                  Get(__client, _owner, _repo, _environmentName, _branchPolicyId)
 
-              public val put: Put = Put(client, owner, repo, environmentName, branchPolicyId)
+              public val put: Put = Put(__client, _owner, _repo, _environmentName, _branchPolicyId)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val branchPolicyId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _branchPolicyId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies/${this.branchPolicyId}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment-branch-policies/${this._branchPolicyId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val branchPolicyId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _branchPolicyId: Long,
               ) {
                 public suspend operator fun invoke(): DeploymentBranchPolicy {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies/${this.branchPolicyId}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment-branch-policies/${this._branchPolicyId}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
               }
 
               public class Put internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val branchPolicyId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _branchPolicyId: Long,
               ) {
                 public suspend operator fun invoke(body: DeploymentBranchPolicyNamePattern): DeploymentBranchPolicy {
-                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies/${this.branchPolicyId}") {
+                  val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment-branch-policies/${this._branchPolicyId}") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -11614,27 +11620,27 @@ public class Repos internal constructor(
           }
 
           public class DeploymentProtectionRules internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val environmentName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _environmentName: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, environmentName)
+            public val `get`: Get = Get(__client, _owner, _repo, _environmentName)
 
-            public val post: Post = Post(client, owner, repo, environmentName)
+            public val post: Post = Post(__client, _owner, _repo, _environmentName)
 
-            public val apps: Apps = Apps(client, owner, repo, environmentName)
+            public val apps: Apps = Apps(__client, _owner, _repo, _environmentName)
 
-            public fun protectionRuleId(protectionRuleId: Long): ProtectionRuleIdPath = ProtectionRuleIdPath(client, owner, repo, environmentName, protectionRuleId)
+            public fun protectionRuleId(protectionRuleId: Long): ProtectionRuleIdPath = ProtectionRuleIdPath(__client, _owner, _repo, _environmentName, protectionRuleId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment_protection_rules")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -11652,13 +11658,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
               public suspend operator fun invoke(integrationId: Long? = null): DeploymentProtectionRule {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment_protection_rules") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(integrationId = integrationId))
                 }
@@ -11676,21 +11682,21 @@ public class Repos internal constructor(
             }
 
             public class Apps internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
-              public val `get`: Get = Get(client, owner, repo, environmentName)
+              public val `get`: Get = Get(__client, _owner, _repo, _environmentName)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
               ) {
                 public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules/apps") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment_protection_rules/apps") {
                     if (page != null) {
                       this.url.encodedParameters.append("page", page.toString())
                     }
@@ -11717,39 +11723,40 @@ public class Repos internal constructor(
             }
 
             public class ProtectionRuleIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
-              private val protectionRuleId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
+              private val _protectionRuleId: Long,
             ) {
               public val delete: Delete =
-                  Delete(client, owner, repo, environmentName, protectionRuleId)
+                  Delete(__client, _owner, _repo, _environmentName, _protectionRuleId)
 
-              public val `get`: Get = Get(client, owner, repo, environmentName, protectionRuleId)
+              public val `get`: Get =
+                  Get(__client, _owner, _repo, _environmentName, _protectionRuleId)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val protectionRuleId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _protectionRuleId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules/${this.protectionRuleId}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment_protection_rules/${this._protectionRuleId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val protectionRuleId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _protectionRuleId: Long,
               ) {
                 public suspend operator fun invoke(): DeploymentProtectionRule {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules/${this.protectionRuleId}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/deployment_protection_rules/${this._protectionRuleId}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -11758,25 +11765,25 @@ public class Repos internal constructor(
           }
 
           public class Secrets internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val environmentName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _environmentName: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, environmentName)
+            public val `get`: Get = Get(__client, _owner, _repo, _environmentName)
 
-            public val publicKey: PublicKey = PublicKey(client, owner, repo, environmentName)
+            public val publicKey: PublicKey = PublicKey(__client, _owner, _repo, _environmentName)
 
-            public fun secretName(secretName: String): SecretNamePath = SecretNamePath(client, owner, repo, environmentName, secretName)
+            public fun secretName(secretName: String): SecretNamePath = SecretNamePath(__client, _owner, _repo, _environmentName, secretName)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/secrets") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -11797,21 +11804,21 @@ public class Repos internal constructor(
             }
 
             public class PublicKey internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
-              public val `get`: Get = Get(client, owner, repo, environmentName)
+              public val `get`: Get = Get(__client, _owner, _repo, _environmentName)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
               ) {
                 public suspend operator fun invoke(): ActionsPublicKey {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets/public-key")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/secrets/public-key")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -11819,54 +11826,55 @@ public class Repos internal constructor(
             }
 
             public class SecretNamePath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
-              private val secretName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
+              private val _secretName: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, environmentName, secretName)
+              public val delete: Delete =
+                  Delete(__client, _owner, _repo, _environmentName, _secretName)
 
-              public val `get`: Get = Get(client, owner, repo, environmentName, secretName)
+              public val `get`: Get = Get(__client, _owner, _repo, _environmentName, _secretName)
 
-              public val put: Put = Put(client, owner, repo, environmentName, secretName)
+              public val put: Put = Put(__client, _owner, _repo, _environmentName, _secretName)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val secretName: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _secretName: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets/${this.secretName.encodeURLParameter()}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/secrets/${this._secretName.encodeURLParameter()}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val secretName: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _secretName: String,
               ) {
                 public suspend operator fun invoke(): ActionsSecret {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets/${this.secretName.encodeURLParameter()}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/secrets/${this._secretName.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
               }
 
               public class Put internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val secretName: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _secretName: String,
               ) {
                 public suspend operator fun invoke(encryptedValue: String, keyId: String): Response {
-                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets/${this.secretName.encodeURLParameter()}") {
+                  val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/secrets/${this._secretName.encodeURLParameter()}") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(encryptedValue = encryptedValue, keyId = keyId))
                   }
@@ -11897,25 +11905,25 @@ public class Repos internal constructor(
           }
 
           public class Variables internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val environmentName: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _environmentName: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, environmentName)
+            public val `get`: Get = Get(__client, _owner, _repo, _environmentName)
 
-            public val post: Post = Post(client, owner, repo, environmentName)
+            public val post: Post = Post(__client, _owner, _repo, _environmentName)
 
-            public fun name(name: String): NamePath = NamePath(client, owner, repo, environmentName, name)
+            public fun name(name: String): NamePath = NamePath(__client, _owner, _repo, _environmentName, name)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/variables") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -11936,13 +11944,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
             ) {
               public suspend operator fun invoke(name: String, `value`: String): EmptyObject {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/variables") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(name = name, value = value))
                 }
@@ -11958,54 +11966,54 @@ public class Repos internal constructor(
             }
 
             public class NamePath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val environmentName: String,
-              private val name: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _environmentName: String,
+              private val _name: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, environmentName, name)
+              public val delete: Delete = Delete(__client, _owner, _repo, _environmentName, _name)
 
-              public val `get`: Get = Get(client, owner, repo, environmentName, name)
+              public val `get`: Get = Get(__client, _owner, _repo, _environmentName, _name)
 
-              public val patch: Patch = Patch(client, owner, repo, environmentName, name)
+              public val patch: Patch = Patch(__client, _owner, _repo, _environmentName, _name)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val name: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _name: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables/${this.name.encodeURLParameter()}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/variables/${this._name.encodeURLParameter()}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val name: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _name: String,
               ) {
                 public suspend operator fun invoke(): ActionsVariable {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables/${this.name.encodeURLParameter()}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/variables/${this._name.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
               }
 
               public class Patch internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val environmentName: String,
-                private val name: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _environmentName: String,
+                private val _name: String,
               ) {
                 public suspend operator fun invoke(name: String? = null, `value`: String? = null) {
-                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables/${this.name.encodeURLParameter()}") {
+                  val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/environments/${this._environmentName.encodeURLParameter()}/variables/${this._name.encodeURLParameter()}") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(name = name, value = value))
                   }
@@ -12027,19 +12035,19 @@ public class Repos internal constructor(
       }
 
       public class Events internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/events") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/events") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -12054,25 +12062,25 @@ public class Repos internal constructor(
       }
 
       public class Forks internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             sort: Sort? = Sort.Newest,
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/forks") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/forks") {
               if (sort != null) {
                 this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
@@ -12117,12 +12125,12 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/forks")
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/forks")
             return when (response.status.value) {
               202 -> Response.Accepted(response.body())
               400 -> Response.BadRequest(response.body())
@@ -12138,7 +12146,7 @@ public class Repos internal constructor(
             name: String? = null,
             defaultBranchOnly: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/forks") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/forks") {
               contentType(ContentType.Application.Json)
               setBody(Body(organization = organization, name = name, defaultBranchOnly = defaultBranchOnly))
             }
@@ -12189,40 +12197,40 @@ public class Repos internal constructor(
       }
 
       public class Git internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val blobs: Blobs = Blobs(client, owner, repo)
+        public val blobs: Blobs = Blobs(__client, _owner, _repo)
 
-        public val commits: Commits = Commits(client, owner, repo)
+        public val commits: Commits = Commits(__client, _owner, _repo)
 
-        public val matchingRefs: MatchingRefs = MatchingRefs(client, owner, repo)
+        public val matchingRefs: MatchingRefs = MatchingRefs(__client, _owner, _repo)
 
-        public val ref: Ref = Ref(client, owner, repo)
+        public val ref: Ref = Ref(__client, _owner, _repo)
 
-        public val refs: Refs = Refs(client, owner, repo)
+        public val refs: Refs = Refs(__client, _owner, _repo)
 
-        public val tags: Tags = Tags(client, owner, repo)
+        public val tags: Tags = Tags(__client, _owner, _repo)
 
-        public val trees: Trees = Trees(client, owner, repo)
+        public val trees: Trees = Trees(__client, _owner, _repo)
 
         public class Blobs internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public fun fileSha(fileSha: String): FileShaPath = FileShaPath(client, owner, repo, fileSha)
+          public fun fileSha(fileSha: String): FileShaPath = FileShaPath(__client, _owner, _repo, fileSha)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(content: String, encoding: String? = null): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/blobs") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/blobs") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(content = content, encoding = encoding))
               }
@@ -12308,21 +12316,21 @@ public class Repos internal constructor(
           }
 
           public class FileShaPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val fileSha: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _fileSha: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, fileSha)
+            public val `get`: Get = Get(__client, _owner, _repo, _fileSha)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val fileSha: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _fileSha: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/blobs/${this.fileSha.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/blobs/${this._fileSha.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -12359,18 +12367,18 @@ public class Repos internal constructor(
         }
 
         public class Commits internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public fun commitSha(commitSha: String): CommitShaPath = CommitShaPath(client, owner, repo, commitSha)
+          public fun commitSha(commitSha: String): CommitShaPath = CommitShaPath(__client, _owner, _repo, commitSha)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               message: String,
@@ -12380,7 +12388,7 @@ public class Repos internal constructor(
               committer: Committer? = null,
               signature: String? = null,
             ): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/commits") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/commits") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(message = message, tree = tree, parents = parents, author = author, committer = committer, signature = signature))
               }
@@ -12454,21 +12462,21 @@ public class Repos internal constructor(
           }
 
           public class CommitShaPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commitSha: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commitSha: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, commitSha)
+            public val `get`: Get = Get(__client, _owner, _repo, _commitSha)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commitSha: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commitSha: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/commits/${this.commitSha.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/commits/${this._commitSha.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -12495,28 +12503,28 @@ public class Repos internal constructor(
         }
 
         public class MatchingRefs internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public fun ref(ref: String): RefPath = RefPath(client, owner, repo, ref)
+          public fun ref(ref: String): RefPath = RefPath(__client, _owner, _repo, ref)
 
           public class RefPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, ref)
+            public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ref: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ref: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/matching-refs/${this.ref.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/matching-refs/${this._ref.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   409 -> Response.Conflict(response.body())
@@ -12538,28 +12546,28 @@ public class Repos internal constructor(
         }
 
         public class Ref internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public fun ref(ref: String): RefPath = RefPath(client, owner, repo, ref)
+          public fun ref(ref: String): RefPath = RefPath(__client, _owner, _repo, ref)
 
           public class RefPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, ref)
+            public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ref: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ref: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/ref/${this.ref.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/ref/${this._ref.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -12586,21 +12594,21 @@ public class Repos internal constructor(
         }
 
         public class Refs internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public fun ref(ref: String): RefPath = RefPath(client, owner, repo, ref)
+          public fun ref(ref: String): RefPath = RefPath(__client, _owner, _repo, ref)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(ref: String, sha: String): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/refs") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/refs") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(ref = ref, sha = sha))
               }
@@ -12634,23 +12642,23 @@ public class Repos internal constructor(
           }
 
           public class RefPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, ref)
+            public val delete: Delete = Delete(__client, _owner, _repo, _ref)
 
-            public val patch: Patch = Patch(client, owner, repo, ref)
+            public val patch: Patch = Patch(__client, _owner, _repo, _ref)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ref: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ref: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/refs/${this.ref.encodeURLParameter()}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/refs/${this._ref.encodeURLParameter()}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   409 -> Response.Conflict(response.body())
@@ -12671,13 +12679,13 @@ public class Repos internal constructor(
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ref: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ref: String,
             ) {
               public suspend operator fun invoke(sha: String, force: Boolean? = null): Response {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/refs/${this.ref.encodeURLParameter()}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/refs/${this._ref.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(sha = sha, force = force))
                 }
@@ -12715,18 +12723,18 @@ public class Repos internal constructor(
         }
 
         public class Tags internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public fun tagSha(tagSha: String): TagShaPath = TagShaPath(client, owner, repo, tagSha)
+          public fun tagSha(tagSha: String): TagShaPath = TagShaPath(__client, _owner, _repo, tagSha)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               tag: String,
@@ -12735,7 +12743,7 @@ public class Repos internal constructor(
               type: Type,
               tagger: Tagger? = null,
             ): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/tags") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/tags") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(tag = tag, message = message, `object` = `object`, type = type, tagger = tagger))
               }
@@ -12799,21 +12807,21 @@ public class Repos internal constructor(
           }
 
           public class TagShaPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val tagSha: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _tagSha: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, tagSha)
+            public val `get`: Get = Get(__client, _owner, _repo, _tagSha)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val tagSha: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _tagSha: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/tags/${this.tagSha.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/tags/${this._tagSha.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -12840,21 +12848,21 @@ public class Repos internal constructor(
         }
 
         public class Trees internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public fun treeSha(treeSha: String): TreeShaPath = TreeShaPath(client, owner, repo, treeSha)
+          public fun treeSha(treeSha: String): TreeShaPath = TreeShaPath(__client, _owner, _repo, treeSha)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(tree: List<Tree>, baseTree: String? = null): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/trees") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/trees") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(tree = tree, baseTree = baseTree))
               }
@@ -12938,21 +12946,21 @@ public class Repos internal constructor(
           }
 
           public class TreeShaPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val treeSha: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _treeSha: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, treeSha)
+            public val `get`: Get = Get(__client, _owner, _repo, _treeSha)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val treeSha: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _treeSha: String,
             ) {
               public suspend operator fun invoke(recursive: String? = null): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/trees/${this.treeSha.encodeURLParameter()}") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/git/trees/${this._treeSha.encodeURLParameter()}") {
                   if (recursive != null) {
                     this.url.encodedParameters.append("recursive", recursive.encodeURLParameter())
                   }
@@ -12989,23 +12997,23 @@ public class Repos internal constructor(
       }
 
       public class Hooks internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public fun hookId(hookId: Long): HookIdPath = HookIdPath(client, owner, repo, hookId)
+        public fun hookId(hookId: Long): HookIdPath = HookIdPath(__client, _owner, _repo, hookId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -13032,12 +13040,12 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks")
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks")
             return when (response.status.value) {
               201 -> Response.Created(response.body())
               403 -> Response.Forbidden(response.body())
@@ -13053,7 +13061,7 @@ public class Repos internal constructor(
             events: List<String>? = null,
             active: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, config = config, events = events, active = active))
             }
@@ -13117,33 +13125,33 @@ public class Repos internal constructor(
         }
 
         public class HookIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val hookId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _hookId: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, hookId)
+          public val delete: Delete = Delete(__client, _owner, _repo, _hookId)
 
-          public val `get`: Get = Get(client, owner, repo, hookId)
+          public val `get`: Get = Get(__client, _owner, _repo, _hookId)
 
-          public val patch: Patch = Patch(client, owner, repo, hookId)
+          public val patch: Patch = Patch(__client, _owner, _repo, _hookId)
 
-          public val config: Config = Config(client, owner, repo, hookId)
+          public val config: Config = Config(__client, _owner, _repo, _hookId)
 
-          public val deliveries: Deliveries = Deliveries(client, owner, repo, hookId)
+          public val deliveries: Deliveries = Deliveries(__client, _owner, _repo, _hookId)
 
-          public val pings: Pings = Pings(client, owner, repo, hookId)
+          public val pings: Pings = Pings(__client, _owner, _repo, _hookId)
 
-          public val tests: Tests = Tests(client, owner, repo, hookId)
+          public val tests: Tests = Tests(__client, _owner, _repo, _hookId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val hookId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _hookId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -13161,13 +13169,13 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val hookId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _hookId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -13187,10 +13195,10 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val hookId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _hookId: Long,
           ) {
             public suspend operator fun invoke(
               config: WebhookConfig? = null,
@@ -13199,7 +13207,7 @@ public class Repos internal constructor(
               removeEvents: List<String>? = null,
               active: Boolean? = null,
             ): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(config = config, events = events, addEvents = addEvents, removeEvents = removeEvents, active = active))
               }
@@ -13244,36 +13252,36 @@ public class Repos internal constructor(
           }
 
           public class Config internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val hookId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _hookId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, hookId)
+            public val `get`: Get = Get(__client, _owner, _repo, _hookId)
 
-            public val patch: Patch = Patch(client, owner, repo, hookId)
+            public val patch: Patch = Patch(__client, _owner, _repo, _hookId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val hookId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _hookId: Long,
             ) {
               public suspend operator fun invoke(): WebhookConfig {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/config")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}/config")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val hookId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _hookId: Long,
             ) {
               public suspend operator fun invoke(): WebhookConfig {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/config")
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}/config")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -13284,7 +13292,7 @@ public class Repos internal constructor(
                 secret: WebhookConfigSecret? = null,
                 insecureSsl: WebhookConfigInsecureSsl? = null,
               ): WebhookConfig {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/config") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}/config") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(url = url, contentType = contentType, secret = secret, insecureSsl = insecureSsl))
                 }
@@ -13310,23 +13318,23 @@ public class Repos internal constructor(
           }
 
           public class Deliveries internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val hookId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _hookId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, hookId)
+            public val `get`: Get = Get(__client, _owner, _repo, _hookId)
 
-            public fun deliveryId(deliveryId: Long): DeliveryIdPath = DeliveryIdPath(client, owner, repo, hookId, deliveryId)
+            public fun deliveryId(deliveryId: Long): DeliveryIdPath = DeliveryIdPath(__client, _owner, _repo, _hookId, deliveryId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val hookId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _hookId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, cursor: String? = null): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/deliveries") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}/deliveries") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -13358,25 +13366,26 @@ public class Repos internal constructor(
             }
 
             public class DeliveryIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val hookId: Long,
-              private val deliveryId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _hookId: Long,
+              private val _deliveryId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, hookId, deliveryId)
+              public val `get`: Get = Get(__client, _owner, _repo, _hookId, _deliveryId)
 
-              public val attempts: Attempts = Attempts(client, owner, repo, hookId, deliveryId)
+              public val attempts: Attempts =
+                  Attempts(__client, _owner, _repo, _hookId, _deliveryId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val hookId: Long,
-                private val deliveryId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _hookId: Long,
+                private val _deliveryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/deliveries/${this.deliveryId}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}/deliveries/${this._deliveryId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     400 -> Response.BadRequest(response.body())
@@ -13401,23 +13410,23 @@ public class Repos internal constructor(
               }
 
               public class Attempts internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val hookId: Long,
-                private val deliveryId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _hookId: Long,
+                private val _deliveryId: Long,
               ) {
-                public val post: Post = Post(client, owner, repo, hookId, deliveryId)
+                public val post: Post = Post(__client, _owner, _repo, _hookId, _deliveryId)
 
                 public class Post internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val hookId: Long,
-                  private val deliveryId: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _hookId: Long,
+                  private val _deliveryId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/deliveries/${this.deliveryId}/attempts")
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}/deliveries/${this._deliveryId}/attempts")
                     return when (response.status.value) {
                       202 -> Response.Accepted(response.body())
                       400 -> Response.BadRequest(response.body())
@@ -13445,21 +13454,21 @@ public class Repos internal constructor(
           }
 
           public class Pings internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val hookId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _hookId: Long,
           ) {
-            public val post: Post = Post(client, owner, repo, hookId)
+            public val post: Post = Post(__client, _owner, _repo, _hookId)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val hookId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _hookId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/pings")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}/pings")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound(response.body())
@@ -13478,21 +13487,21 @@ public class Repos internal constructor(
           }
 
           public class Tests internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val hookId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _hookId: Long,
           ) {
-            public val post: Post = Post(client, owner, repo, hookId)
+            public val post: Post = Post(__client, _owner, _repo, _hookId)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val hookId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _hookId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/tests")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/hooks/${this._hookId}/tests")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound(response.body())
@@ -13513,23 +13522,23 @@ public class Repos internal constructor(
       }
 
       public class ImmutableReleases internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/immutable-releases")
+            val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/immutable-releases")
             return when (response.status.value) {
               204 -> Response.NoContent
               409 -> Response.Conflict(response.body())
@@ -13547,12 +13556,12 @@ public class Repos internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/immutable-releases")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/immutable-releases")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound
@@ -13570,12 +13579,12 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/immutable-releases")
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/immutable-releases")
             return when (response.status.value) {
               204 -> Response.NoContent
               409 -> Response.Conflict(response.body())
@@ -13594,37 +13603,37 @@ public class Repos internal constructor(
       }
 
       public class Import internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
         @Deprecated("Deprecated by the API provider")
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
         @Deprecated("Deprecated by the API provider")
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         @Deprecated("Deprecated by the API provider")
-        public val patch: Patch = Patch(client, owner, repo)
+        public val patch: Patch = Patch(__client, _owner, _repo)
 
         @Deprecated("Deprecated by the API provider")
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
-        public val authors: Authors = Authors(client, owner, repo)
+        public val authors: Authors = Authors(__client, _owner, _repo)
 
-        public val largeFiles: LargeFiles = LargeFiles(client, owner, repo)
+        public val largeFiles: LargeFiles = LargeFiles(__client, _owner, _repo)
 
-        public val lfs: Lfs = Lfs(client, owner, repo)
+        public val lfs: Lfs = Lfs(__client, _owner, _repo)
 
         @Deprecated("Deprecated by the API provider")
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import")
+            val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import")
             return when (response.status.value) {
               204 -> Response.NoContent
               503 -> Response.ServiceUnavailable(response.body())
@@ -13643,13 +13652,13 @@ public class Repos internal constructor(
 
         @Deprecated("Deprecated by the API provider")
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -13675,13 +13684,13 @@ public class Repos internal constructor(
 
         @Deprecated("Deprecated by the API provider")
         public class Patch internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import")
+            val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               503 -> Response.ServiceUnavailable(response.body())
@@ -13696,7 +13705,7 @@ public class Repos internal constructor(
             vcs: Vcs? = null,
             tfvcProject: String? = null,
           ): Response {
-            val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import") {
+            val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import") {
               contentType(ContentType.Application.Json)
               setBody(Body(vcsUsername = vcsUsername, vcsPassword = vcsPassword, vcs = vcs, tfvcProject = tfvcProject))
             }
@@ -13751,9 +13760,9 @@ public class Repos internal constructor(
 
         @Deprecated("Deprecated by the API provider")
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(
@@ -13763,7 +13772,7 @@ public class Repos internal constructor(
             vcsPassword: String? = null,
             tfvcProject: String? = null,
           ): Response {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import") {
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import") {
               contentType(ContentType.Application.Json)
               setBody(Body(vcsUrl = vcsUrl, vcs = vcs, vcsUsername = vcsUsername, vcsPassword = vcsPassword, tfvcProject = tfvcProject))
             }
@@ -13829,24 +13838,24 @@ public class Repos internal constructor(
         }
 
         public class Authors internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           @Deprecated("Deprecated by the API provider")
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun authorId(authorId: Long): AuthorIdPath = AuthorIdPath(client, owner, repo, authorId)
+          public fun authorId(authorId: Long): AuthorIdPath = AuthorIdPath(__client, _owner, _repo, authorId)
 
           @Deprecated("Deprecated by the API provider")
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(since: Long? = null): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/authors") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import/authors") {
                 if (since != null) {
                   this.url.encodedParameters.append("since", since.toString())
                 }
@@ -13875,24 +13884,24 @@ public class Repos internal constructor(
           }
 
           public class AuthorIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val authorId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _authorId: Long,
           ) {
             @Deprecated("Deprecated by the API provider")
-            public val patch: Patch = Patch(client, owner, repo, authorId)
+            public val patch: Patch = Patch(__client, _owner, _repo, _authorId)
 
             @Deprecated("Deprecated by the API provider")
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val authorId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _authorId: Long,
             ) {
               @Deprecated("Deprecated by the API provider")
               public suspend operator fun invoke(): Response {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/authors/${this.authorId}")
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import/authors/${this._authorId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -13904,7 +13913,7 @@ public class Repos internal constructor(
 
               @Deprecated("Deprecated by the API provider")
               public suspend operator fun invoke(email: String? = null, name: String? = null): Response {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/authors/${this.authorId}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import/authors/${this._authorId}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(email = email, name = name))
                 }
@@ -13948,22 +13957,22 @@ public class Repos internal constructor(
         }
 
         public class LargeFiles internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           @Deprecated("Deprecated by the API provider")
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           @Deprecated("Deprecated by the API provider")
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/large_files")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import/large_files")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 503 -> Response.ServiceUnavailable(response.body())
@@ -13984,22 +13993,22 @@ public class Repos internal constructor(
         }
 
         public class Lfs internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           @Deprecated("Deprecated by the API provider")
-          public val patch: Patch = Patch(client, owner, repo)
+          public val patch: Patch = Patch(__client, _owner, _repo)
 
           @Deprecated("Deprecated by the API provider")
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(useLfs: UseLfs): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/lfs") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/import/lfs") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(useLfs = useLfs))
               }
@@ -14046,19 +14055,19 @@ public class Repos internal constructor(
       }
 
       public class Installation internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/installation")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/installation")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               301 -> Response.MovedPermanently(response.body())
@@ -14084,23 +14093,23 @@ public class Repos internal constructor(
       }
 
       public class InteractionLimits internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/interaction-limits")
+            val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/interaction-limits")
             return when (response.status.value) {
               204 -> Response.NoContent
               409 -> Response.Conflict
@@ -14116,12 +14125,12 @@ public class Repos internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/interaction-limits")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/interaction-limits")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -14169,12 +14178,12 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(body: InteractionLimit): Response {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/interaction-limits") {
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/interaction-limits") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -14196,21 +14205,21 @@ public class Repos internal constructor(
       }
 
       public class Invitations internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public fun invitationId(invitationId: Long): InvitationIdPath = InvitationIdPath(client, owner, repo, invitationId)
+        public fun invitationId(invitationId: Long): InvitationIdPath = InvitationIdPath(__client, _owner, _repo, invitationId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<RepositoryInvitation> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/invitations") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/invitations") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -14224,41 +14233,41 @@ public class Repos internal constructor(
         }
 
         public class InvitationIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val invitationId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _invitationId: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, invitationId)
+          public val delete: Delete = Delete(__client, _owner, _repo, _invitationId)
 
-          public val patch: Patch = Patch(client, owner, repo, invitationId)
+          public val patch: Patch = Patch(__client, _owner, _repo, _invitationId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val invitationId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _invitationId: Long,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/invitations/${this.invitationId}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/invitations/${this._invitationId}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val invitationId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _invitationId: Long,
           ) {
             public suspend operator fun invoke(): RepositoryInvitation {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/invitations/${this.invitationId}")
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/invitations/${this._invitationId}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
 
             public suspend operator fun invoke(permissions: Permissions? = null): RepositoryInvitation {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/invitations/${this.invitationId}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/invitations/${this._invitationId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(permissions = permissions))
               }
@@ -14294,24 +14303,24 @@ public class Repos internal constructor(
       }
 
       public class Issues internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public val comments: Comments = Comments(client, owner, repo)
+        public val comments: Comments = Comments(__client, _owner, _repo)
 
-        public val events: Events = Events(client, owner, repo)
+        public val events: Events = Events(__client, _owner, _repo)
 
-        public fun issueNumber(issueNumber: Long): IssueNumberPath = IssueNumberPath(client, owner, repo, issueNumber)
+        public fun issueNumber(issueNumber: Long): IssueNumberPath = IssueNumberPath(__client, _owner, _repo, issueNumber)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             milestone: String? = null,
@@ -14327,7 +14336,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues") {
               if (milestone != null) {
                 this.url.encodedParameters.append("milestone", milestone.encodeURLParameter())
               }
@@ -14431,9 +14440,9 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             title: String,
@@ -14444,7 +14453,7 @@ public class Repos internal constructor(
             assignees: List<String>? = null,
             type: Optional<String> = Optional.Absent,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseString(title), body = body, assignee = assignee, milestone = milestone, labels = labels, assignees = assignees, type = type))
             }
@@ -14469,7 +14478,7 @@ public class Repos internal constructor(
             assignees: List<String>? = null,
             type: Optional<String> = Optional.Absent,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseLong(title), body = body, assignee = assignee, milestone = milestone, labels = labels, assignees = assignees, type = type))
             }
@@ -14703,18 +14712,18 @@ public class Repos internal constructor(
         }
 
         public class Comments internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(client, owner, repo, commentId)
+          public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(__client, _owner, _repo, commentId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               sort: Sort? = Sort.Created,
@@ -14723,7 +14732,7 @@ public class Repos internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments") {
                 if (sort != null) {
                   this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
@@ -14786,41 +14795,41 @@ public class Repos internal constructor(
           }
 
           public class CommentIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commentId: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, commentId)
+            public val delete: Delete = Delete(__client, _owner, _repo, _commentId)
 
-            public val `get`: Get = Get(client, owner, repo, commentId)
+            public val `get`: Get = Get(__client, _owner, _repo, _commentId)
 
-            public val patch: Patch = Patch(client, owner, repo, commentId)
+            public val patch: Patch = Patch(__client, _owner, _repo, _commentId)
 
-            public val pin: Pin = Pin(client, owner, repo, commentId)
+            public val pin: Pin = Pin(__client, _owner, _repo, _commentId)
 
-            public val reactions: Reactions = Reactions(client, owner, repo, commentId)
+            public val reactions: Reactions = Reactions(__client, _owner, _repo, _commentId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments/${this._commentId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments/${this._commentId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -14840,13 +14849,13 @@ public class Repos internal constructor(
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
               public suspend operator fun invoke(body: String): Response {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments/${this._commentId}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body))
                 }
@@ -14874,23 +14883,23 @@ public class Repos internal constructor(
             }
 
             public class Pin internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, commentId)
+              public val delete: Delete = Delete(__client, _owner, _repo, _commentId)
 
-              public val put: Put = Put(client, owner, repo, commentId)
+              public val put: Put = Put(__client, _owner, _repo, _commentId)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/pin")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments/${this._commentId}/pin")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -14936,13 +14945,13 @@ public class Repos internal constructor(
               }
 
               public class Put internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/pin")
+                  val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments/${this._commentId}/pin")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     401 -> Response.Unauthorized(response.body())
@@ -14983,29 +14992,29 @@ public class Repos internal constructor(
             }
 
             public class Reactions internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, commentId)
+              public val `get`: Get = Get(__client, _owner, _repo, _commentId)
 
-              public val post: Post = Post(client, owner, repo, commentId)
+              public val post: Post = Post(__client, _owner, _repo, _commentId)
 
-              public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(client, owner, repo, commentId, reactionId)
+              public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(__client, _owner, _repo, _commentId, reactionId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
               ) {
                 public suspend operator fun invoke(
                   content: Content? = null,
                   perPage: Long? = 30L,
                   page: Long? = 1L,
                 ): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/reactions") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments/${this._commentId}/reactions") {
                     if (content != null) {
                       this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                     }
@@ -15056,13 +15065,13 @@ public class Repos internal constructor(
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
               ) {
                 public suspend operator fun invoke(content: Content): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/reactions") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments/${this._commentId}/reactions") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(content = content))
                   }
@@ -15116,23 +15125,23 @@ public class Repos internal constructor(
               }
 
               public class ReactionIdPath internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
-                private val reactionId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
+                private val _reactionId: Long,
               ) {
-                public val delete: Delete = Delete(client, owner, repo, commentId, reactionId)
+                public val delete: Delete = Delete(__client, _owner, _repo, _commentId, _reactionId)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val commentId: Long,
-                  private val reactionId: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _commentId: Long,
+                  private val _reactionId: Long,
                 ) {
                   public suspend operator fun invoke() {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/reactions/${this.reactionId}")
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/comments/${this._commentId}/reactions/${this._reactionId}")
                     if (response.status.value != 204) throw ResponseException(response, "")
                   }
                 }
@@ -15142,21 +15151,21 @@ public class Repos internal constructor(
         }
 
         public class Events internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun eventId(eventId: Long): EventIdPath = EventIdPath(client, owner, repo, eventId)
+          public fun eventId(eventId: Long): EventIdPath = EventIdPath(__client, _owner, _repo, eventId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/events") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/events") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -15183,21 +15192,21 @@ public class Repos internal constructor(
           }
 
           public class EventIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val eventId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _eventId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, eventId)
+            public val `get`: Get = Get(__client, _owner, _repo, _eventId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val eventId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _eventId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/events/${this.eventId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/events/${this._eventId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -15229,48 +15238,49 @@ public class Repos internal constructor(
         }
 
         public class IssueNumberPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val issueNumber: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _issueNumber: Long,
         ) {
-          public val `get`: Get = Get(client, owner, repo, issueNumber)
+          public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
-          public val patch: Patch = Patch(client, owner, repo, issueNumber)
+          public val patch: Patch = Patch(__client, _owner, _repo, _issueNumber)
 
-          public val assignees: Assignees = Assignees(client, owner, repo, issueNumber)
+          public val assignees: Assignees = Assignees(__client, _owner, _repo, _issueNumber)
 
-          public val comments: Comments = Comments(client, owner, repo, issueNumber)
+          public val comments: Comments = Comments(__client, _owner, _repo, _issueNumber)
 
-          public val dependencies: Dependencies = Dependencies(client, owner, repo, issueNumber)
+          public val dependencies: Dependencies =
+              Dependencies(__client, _owner, _repo, _issueNumber)
 
-          public val events: Events = Events(client, owner, repo, issueNumber)
+          public val events: Events = Events(__client, _owner, _repo, _issueNumber)
 
           public val issueFieldValues: IssueFieldValues =
-              IssueFieldValues(client, owner, repo, issueNumber)
+              IssueFieldValues(__client, _owner, _repo, _issueNumber)
 
-          public val labels: Labels = Labels(client, owner, repo, issueNumber)
+          public val labels: Labels = Labels(__client, _owner, _repo, _issueNumber)
 
-          public val lock: Lock = Lock(client, owner, repo, issueNumber)
+          public val lock: Lock = Lock(__client, _owner, _repo, _issueNumber)
 
-          public val parent: Parent = Parent(client, owner, repo, issueNumber)
+          public val parent: Parent = Parent(__client, _owner, _repo, _issueNumber)
 
-          public val reactions: Reactions = Reactions(client, owner, repo, issueNumber)
+          public val reactions: Reactions = Reactions(__client, _owner, _repo, _issueNumber)
 
-          public val subIssue: SubIssue = SubIssue(client, owner, repo, issueNumber)
+          public val subIssue: SubIssue = SubIssue(__client, _owner, _repo, _issueNumber)
 
-          public val subIssues: SubIssues = SubIssues(client, owner, repo, issueNumber)
+          public val subIssues: SubIssues = SubIssues(__client, _owner, _repo, _issueNumber)
 
-          public val timeline: Timeline = Timeline(client, owner, repo, issueNumber)
+          public val timeline: Timeline = Timeline(__client, _owner, _repo, _issueNumber)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 301 -> Response.MovedPermanently(response.body())
@@ -15303,13 +15313,13 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}")
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 301 -> Response.MovedPermanently(response.body())
@@ -15334,7 +15344,7 @@ public class Repos internal constructor(
               issueFieldValues: List<IssueFieldValues>? = null,
               type: Optional<String> = Optional.Absent,
             ): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(title = title, body = body, assignee = assignee, state = state, stateReason = stateReason, milestone = milestone, labels = labels, assignees = assignees, issueFieldValues = issueFieldValues, type = type))
               }
@@ -15663,31 +15673,31 @@ public class Repos internal constructor(
           }
 
           public class Assignees internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, issueNumber)
+            public val delete: Delete = Delete(__client, _owner, _repo, _issueNumber)
 
-            public val post: Post = Post(client, owner, repo, issueNumber)
+            public val post: Post = Post(__client, _owner, _repo, _issueNumber)
 
-            public fun assignee(assignee: String): AssigneePath = AssigneePath(client, owner, repo, issueNumber, assignee)
+            public fun assignee(assignee: String): AssigneePath = AssigneePath(__client, _owner, _repo, _issueNumber, assignee)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Issue {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/assignees")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
 
               public suspend operator fun invoke(assignees: List<String>? = null): Issue {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees") {
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/assignees") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(assignees = assignees))
                 }
@@ -15704,19 +15714,19 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Issue {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/assignees")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
 
               public suspend operator fun invoke(assignees: List<String>? = null): Issue {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/assignees") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(assignees = assignees))
                 }
@@ -15733,23 +15743,23 @@ public class Repos internal constructor(
             }
 
             public class AssigneePath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
-              private val assignee: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
+              private val _assignee: String,
             ) {
-              public val `get`: Get = Get(client, owner, repo, issueNumber, assignee)
+              public val `get`: Get = Get(__client, _owner, _repo, _issueNumber, _assignee)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val issueNumber: Long,
-                private val assignee: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _issueNumber: Long,
+                private val _assignee: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees/${this.assignee.encodeURLParameter()}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/assignees/${this._assignee.encodeURLParameter()}")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -15769,27 +15779,27 @@ public class Repos internal constructor(
           }
 
           public class Comments internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, issueNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
-            public val post: Post = Post(client, owner, repo, issueNumber)
+            public val post: Post = Post(__client, _owner, _repo, _issueNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(
                 since: Instant? = null,
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/comments") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/comments") {
                   if (since != null) {
                     this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
                   }
@@ -15824,13 +15834,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(body: String): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/comments") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/comments") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body))
                 }
@@ -15874,35 +15884,35 @@ public class Repos internal constructor(
           }
 
           public class Dependencies internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val blockedBy: BlockedBy = BlockedBy(client, owner, repo, issueNumber)
+            public val blockedBy: BlockedBy = BlockedBy(__client, _owner, _repo, _issueNumber)
 
-            public val blocking: Blocking = Blocking(client, owner, repo, issueNumber)
+            public val blocking: Blocking = Blocking(__client, _owner, _repo, _issueNumber)
 
             public class BlockedBy internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, issueNumber)
+              public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
-              public val post: Post = Post(client, owner, repo, issueNumber)
+              public val post: Post = Post(__client, _owner, _repo, _issueNumber)
 
-              public fun issueId(issueId: Long): IssueIdPath = IssueIdPath(client, owner, repo, issueNumber, issueId)
+              public fun issueId(issueId: Long): IssueIdPath = IssueIdPath(__client, _owner, _repo, _issueNumber, issueId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val issueNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _issueNumber: Long,
               ) {
                 public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/dependencies/blocked_by") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/dependencies/blocked_by") {
                     if (perPage != null) {
                       this.url.encodedParameters.append("per_page", perPage.toString())
                     }
@@ -15939,13 +15949,13 @@ public class Repos internal constructor(
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val issueNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _issueNumber: Long,
               ) {
                 public suspend operator fun invoke(issueId: Long): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/dependencies/blocked_by") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/dependencies/blocked_by") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(issueId = issueId))
                   }
@@ -15994,23 +16004,23 @@ public class Repos internal constructor(
               }
 
               public class IssueIdPath internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val issueNumber: Long,
-                private val issueId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _issueNumber: Long,
+                private val _issueId: Long,
               ) {
-                public val delete: Delete = Delete(client, owner, repo, issueNumber, issueId)
+                public val delete: Delete = Delete(__client, _owner, _repo, _issueNumber, _issueId)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val issueNumber: Long,
-                  private val issueId: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _issueNumber: Long,
+                  private val _issueId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/dependencies/blocked_by/${this.issueId}")
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/dependencies/blocked_by/${this._issueId}")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       301 -> Response.MovedPermanently(response.body())
@@ -16057,21 +16067,21 @@ public class Repos internal constructor(
             }
 
             public class Blocking internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, issueNumber)
+              public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val issueNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _issueNumber: Long,
               ) {
                 public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/dependencies/blocking") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/dependencies/blocking") {
                     if (perPage != null) {
                       this.url.encodedParameters.append("per_page", perPage.toString())
                     }
@@ -16110,21 +16120,21 @@ public class Repos internal constructor(
           }
 
           public class Events internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, issueNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/events") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/events") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -16152,21 +16162,21 @@ public class Repos internal constructor(
           }
 
           public class IssueFieldValues internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, issueNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/issue-field-values") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/issue-field-values") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -16204,29 +16214,29 @@ public class Repos internal constructor(
           }
 
           public class Labels internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, issueNumber)
+            public val delete: Delete = Delete(__client, _owner, _repo, _issueNumber)
 
-            public val `get`: Get = Get(client, owner, repo, issueNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
-            public val post: Post = Post(client, owner, repo, issueNumber)
+            public val post: Post = Post(__client, _owner, _repo, _issueNumber)
 
-            public val put: Put = Put(client, owner, repo, issueNumber)
+            public val put: Put = Put(__client, _owner, _repo, _issueNumber)
 
-            public fun name(name: String): NamePath = NamePath(client, owner, repo, issueNumber, name)
+            public fun name(name: String): NamePath = NamePath(__client, _owner, _repo, _issueNumber, name)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   301 -> Response.MovedPermanently(response.body())
@@ -16254,13 +16264,13 @@ public class Repos internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -16297,13 +16307,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   301 -> Response.MovedPermanently(response.body())
@@ -16315,7 +16325,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: LabelsStrings): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16331,7 +16341,7 @@ public class Repos internal constructor(
 
               @JvmName("StringList")
               public suspend operator fun invoke(body: List<String>): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16347,7 +16357,7 @@ public class Repos internal constructor(
 
               @JvmName("NameList")
               public suspend operator fun invoke(body: List<Name>): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16397,13 +16407,13 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels")
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   301 -> Response.MovedPermanently(response.body())
@@ -16415,7 +16425,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: LabelsStrings): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16431,7 +16441,7 @@ public class Repos internal constructor(
 
               @JvmName("StringList")
               public suspend operator fun invoke(body: List<String>): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16446,7 +16456,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: LabelsNames): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16462,7 +16472,7 @@ public class Repos internal constructor(
 
               @JvmName("NameList")
               public suspend operator fun invoke(body: List<Name>): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16477,7 +16487,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: String): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(JsonPrimitive(body))
                 }
@@ -16534,23 +16544,23 @@ public class Repos internal constructor(
             }
 
             public class NamePath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
-              private val name: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
+              private val _name: String,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, issueNumber, name)
+              public val delete: Delete = Delete(__client, _owner, _repo, _issueNumber, _name)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val issueNumber: Long,
-                private val name: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _issueNumber: Long,
+                private val _name: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels/${this.name.encodeURLParameter()}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels/${this._name.encodeURLParameter()}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     301 -> Response.MovedPermanently(response.body())
@@ -16582,23 +16592,23 @@ public class Repos internal constructor(
           }
 
           public class Lock internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, issueNumber)
+            public val delete: Delete = Delete(__client, _owner, _repo, _issueNumber)
 
-            public val put: Put = Put(client, owner, repo, issueNumber)
+            public val put: Put = Put(__client, _owner, _repo, _issueNumber)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/lock")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/lock")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -16621,13 +16631,13 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/lock")
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/lock")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -16639,7 +16649,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(lockReason: LockReason? = null): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/lock") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/lock") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(lockReason = lockReason))
                 }
@@ -16699,21 +16709,21 @@ public class Repos internal constructor(
           }
 
           public class Parent internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, issueNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/parent")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/parent")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   301 -> Response.MovedPermanently(response.body())
@@ -16744,29 +16754,29 @@ public class Repos internal constructor(
           }
 
           public class Reactions internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, issueNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
-            public val post: Post = Post(client, owner, repo, issueNumber)
+            public val post: Post = Post(__client, _owner, _repo, _issueNumber)
 
-            public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(client, owner, repo, issueNumber, reactionId)
+            public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(__client, _owner, _repo, _issueNumber, reactionId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(
                 content: Content? = null,
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/reactions") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/reactions") {
                   if (content != null) {
                     this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
@@ -16822,13 +16832,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(content: Content): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/reactions") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/reactions") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(content = content))
                 }
@@ -16882,23 +16892,23 @@ public class Repos internal constructor(
             }
 
             public class ReactionIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
-              private val reactionId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
+              private val _reactionId: Long,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, issueNumber, reactionId)
+              public val delete: Delete = Delete(__client, _owner, _repo, _issueNumber, _reactionId)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val issueNumber: Long,
-                private val reactionId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _issueNumber: Long,
+                private val _reactionId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/reactions/${this.reactionId}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/reactions/${this._reactionId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -16906,21 +16916,21 @@ public class Repos internal constructor(
           }
 
           public class SubIssue internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, issueNumber)
+            public val delete: Delete = Delete(__client, _owner, _repo, _issueNumber)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(subIssueId: Long): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/sub_issue") {
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/sub_issue") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(subIssueId = subIssueId))
                 }
@@ -16955,25 +16965,25 @@ public class Repos internal constructor(
           }
 
           public class SubIssues internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, issueNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
-            public val post: Post = Post(client, owner, repo, issueNumber)
+            public val post: Post = Post(__client, _owner, _repo, _issueNumber)
 
-            public val priority: Priority = Priority(client, owner, repo, issueNumber)
+            public val priority: Priority = Priority(__client, _owner, _repo, _issueNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/sub_issues") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/sub_issues") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -17005,13 +17015,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(subIssueId: Long, replaceParent: Boolean? = null): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/sub_issues") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/sub_issues") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(subIssueId = subIssueId, replaceParent = replaceParent))
                 }
@@ -17059,25 +17069,25 @@ public class Repos internal constructor(
             }
 
             public class Priority internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
-              public val patch: Patch = Patch(client, owner, repo, issueNumber)
+              public val patch: Patch = Patch(__client, _owner, _repo, _issueNumber)
 
               public class Patch internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val issueNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _issueNumber: Long,
               ) {
                 public suspend operator fun invoke(
                   subIssueId: Long,
                   afterId: Long? = null,
                   beforeId: Long? = null,
                 ): Response {
-                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/sub_issues/priority") {
+                  val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/sub_issues/priority") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(subIssueId = subIssueId, afterId = afterId, beforeId = beforeId))
                   }
@@ -17138,21 +17148,21 @@ public class Repos internal constructor(
           }
 
           public class Timeline internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, issueNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _issueNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/timeline") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/timeline") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -17187,23 +17197,23 @@ public class Repos internal constructor(
       }
 
       public class Keys internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public fun keyId(keyId: Long): KeyIdPath = KeyIdPath(client, owner, repo, keyId)
+        public fun keyId(keyId: Long): KeyIdPath = KeyIdPath(__client, _owner, _repo, keyId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<DeployKey> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/keys") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/keys") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -17217,16 +17227,16 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             title: String? = null,
             key: String,
             readOnly: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/keys") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/keys") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = title, key = key, readOnly = readOnly))
             }
@@ -17260,35 +17270,35 @@ public class Repos internal constructor(
         }
 
         public class KeyIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val keyId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _keyId: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, keyId)
+          public val delete: Delete = Delete(__client, _owner, _repo, _keyId)
 
-          public val `get`: Get = Get(client, owner, repo, keyId)
+          public val `get`: Get = Get(__client, _owner, _repo, _keyId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val keyId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _keyId: Long,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/keys/${this.keyId}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/keys/${this._keyId}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val keyId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _keyId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/keys/${this.keyId}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/keys/${this._keyId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -17310,23 +17320,23 @@ public class Repos internal constructor(
       }
 
       public class Labels internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public fun name(name: String): NamePath = NamePath(client, owner, repo, name)
+        public fun name(name: String): NamePath = NamePath(__client, _owner, _repo, name)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/labels") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -17353,16 +17363,16 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             name: String,
             color: String? = null,
             description: String? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/labels") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, color = color, description = description))
             }
@@ -17400,37 +17410,37 @@ public class Repos internal constructor(
         }
 
         public class NamePath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val name: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _name: String,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, name)
+          public val delete: Delete = Delete(__client, _owner, _repo, _name)
 
-          public val `get`: Get = Get(client, owner, repo, name)
+          public val `get`: Get = Get(__client, _owner, _repo, _name)
 
-          public val patch: Patch = Patch(client, owner, repo, name)
+          public val patch: Patch = Patch(__client, _owner, _repo, _name)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val name: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _name: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels/${this.name.encodeURLParameter()}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/labels/${this._name.encodeURLParameter()}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val name: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _name: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels/${this.name.encodeURLParameter()}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/labels/${this._name.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -17450,13 +17460,13 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val name: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _name: String,
           ) {
             public suspend operator fun invoke(): Label {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels/${this.name.encodeURLParameter()}")
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/labels/${this._name.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -17466,7 +17476,7 @@ public class Repos internal constructor(
               color: String? = null,
               description: String? = null,
             ): Label {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels/${this.name.encodeURLParameter()}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/labels/${this._name.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(newName = newName, color = color, description = description))
               }
@@ -17490,19 +17500,19 @@ public class Repos internal constructor(
       }
 
       public class Languages internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Language {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/languages")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/languages")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -17510,19 +17520,19 @@ public class Repos internal constructor(
       }
 
       public class License internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(ref: String? = null): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/license") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/license") {
               if (ref != null) {
                 this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
@@ -17547,19 +17557,19 @@ public class Repos internal constructor(
       }
 
       public class MergeUpstream internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(branch: String): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/merge-upstream") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/merge-upstream") {
               contentType(ContentType.Application.Json)
               setBody(Body(branch = branch))
             }
@@ -17589,23 +17599,23 @@ public class Repos internal constructor(
       }
 
       public class Merges internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             base: String,
             head: String,
             commitMessage: String? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/merges") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/merges") {
               contentType(ContentType.Application.Json)
               setBody(Body(base = base, head = head, commitMessage = commitMessage))
             }
@@ -17653,20 +17663,20 @@ public class Repos internal constructor(
       }
 
       public class Milestones internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public fun milestoneNumber(milestoneNumber: Long): MilestoneNumberPath = MilestoneNumberPath(client, owner, repo, milestoneNumber)
+        public fun milestoneNumber(milestoneNumber: Long): MilestoneNumberPath = MilestoneNumberPath(__client, _owner, _repo, milestoneNumber)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             state: State? = State.Open,
@@ -17675,7 +17685,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/milestones") {
               if (state != null) {
                 this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
@@ -17746,9 +17756,9 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             title: String,
@@ -17756,7 +17766,7 @@ public class Repos internal constructor(
             description: String? = null,
             dueOn: Instant? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/milestones") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = title, state = state, description = description, dueOn = dueOn))
             }
@@ -17808,27 +17818,27 @@ public class Repos internal constructor(
         }
 
         public class MilestoneNumberPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val milestoneNumber: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _milestoneNumber: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, milestoneNumber)
+          public val delete: Delete = Delete(__client, _owner, _repo, _milestoneNumber)
 
-          public val `get`: Get = Get(client, owner, repo, milestoneNumber)
+          public val `get`: Get = Get(__client, _owner, _repo, _milestoneNumber)
 
-          public val patch: Patch = Patch(client, owner, repo, milestoneNumber)
+          public val patch: Patch = Patch(__client, _owner, _repo, _milestoneNumber)
 
-          public val labels: Labels = Labels(client, owner, repo, milestoneNumber)
+          public val labels: Labels = Labels(__client, _owner, _repo, _milestoneNumber)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val milestoneNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _milestoneNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/milestones/${this._milestoneNumber}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -17846,13 +17856,13 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val milestoneNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _milestoneNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/milestones/${this._milestoneNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -17872,13 +17882,13 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val milestoneNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _milestoneNumber: Long,
           ) {
             public suspend operator fun invoke(): Milestone {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}")
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/milestones/${this._milestoneNumber}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -17889,7 +17899,7 @@ public class Repos internal constructor(
               description: String? = null,
               dueOn: Instant? = null,
             ): Milestone {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/milestones/${this._milestoneNumber}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(title = title, state = state, description = description, dueOn = dueOn))
               }
@@ -17924,21 +17934,21 @@ public class Repos internal constructor(
           }
 
           public class Labels internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val milestoneNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _milestoneNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, milestoneNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _milestoneNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val milestoneNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _milestoneNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Label> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}/labels") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/milestones/${this._milestoneNumber}/labels") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -17955,18 +17965,18 @@ public class Repos internal constructor(
       }
 
       public class Notifications internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             all: Boolean? = false,
@@ -17976,7 +17986,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): List<Thread> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/notifications") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/notifications") {
               if (all != null) {
                 this.url.encodedParameters.append("all", all.toString())
               }
@@ -18002,12 +18012,12 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/notifications")
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/notifications")
             return when (response.status.value) {
               202 -> response.body<Response.Accepted>()
               205 -> Response.ResetContent
@@ -18016,7 +18026,7 @@ public class Repos internal constructor(
           }
 
           public suspend operator fun invoke(lastReadAt: Instant? = null): Response {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/notifications") {
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/notifications") {
               contentType(ContentType.Application.Json)
               setBody(Body(lastReadAt = lastReadAt))
             }
@@ -18051,31 +18061,31 @@ public class Repos internal constructor(
       }
 
       public class Pages internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
-        public val builds: Builds = Builds(client, owner, repo)
+        public val builds: Builds = Builds(__client, _owner, _repo)
 
-        public val deployments: Deployments = Deployments(client, owner, repo)
+        public val deployments: Deployments = Deployments(__client, _owner, _repo)
 
-        public val health: Health = Health(client, owner, repo)
+        public val health: Health = Health(__client, _owner, _repo)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages")
+            val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -18103,12 +18113,12 @@ public class Repos internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -18128,12 +18138,12 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(buildType: BuildType? = null, source: Source? = null): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages") {
               contentType(ContentType.Application.Json)
               setBody(Body(buildType = buildType, source = source))
             }
@@ -18207,9 +18217,9 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             cname: Optional<String> = Optional.Absent,
@@ -18217,7 +18227,7 @@ public class Repos internal constructor(
             buildType: BuildType? = null,
             source: Source? = null,
           ): Response {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages") {
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages") {
               contentType(ContentType.Application.Json)
               setBody(Body(cname = cname, httpsEnforced = httpsEnforced, buildType = buildType, source = source))
             }
@@ -18345,25 +18355,25 @@ public class Repos internal constructor(
         }
 
         public class Builds internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public val latest: Latest = Latest(client, owner, repo)
+          public val latest: Latest = Latest(__client, _owner, _repo)
 
-          public fun buildId(buildId: Long): BuildIdPath = BuildIdPath(client, owner, repo, buildId)
+          public fun buildId(buildId: Long): BuildIdPath = BuildIdPath(__client, _owner, _repo, buildId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<PageBuild> {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/builds") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages/builds") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -18377,31 +18387,31 @@ public class Repos internal constructor(
           }
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): PageBuildStatus {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/builds")
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages/builds")
               if (response.status.value != 201) throw ResponseException(response, "")
               return response.body()
             }
           }
 
           public class Latest internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): PageBuild {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/builds/latest")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages/builds/latest")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -18409,21 +18419,21 @@ public class Repos internal constructor(
           }
 
           public class BuildIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val buildId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _buildId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, buildId)
+            public val `get`: Get = Get(__client, _owner, _repo, _buildId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val buildId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _buildId: Long,
             ) {
               public suspend operator fun invoke(): PageBuild {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/builds/${this.buildId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages/builds/${this._buildId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -18432,20 +18442,20 @@ public class Repos internal constructor(
         }
 
         public class Deployments internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
-          public fun pagesDeploymentId(pagesDeploymentId: Long): PagesDeploymentIdPath = PagesDeploymentIdPath(client, owner, repo, pagesDeploymentId.toString())
+          public fun pagesDeploymentId(pagesDeploymentId: Long): PagesDeploymentIdPath = PagesDeploymentIdPath(__client, _owner, _repo, pagesDeploymentId.toString())
 
-          public fun pagesDeploymentId(pagesDeploymentId: String): PagesDeploymentIdPath = PagesDeploymentIdPath(client, owner, repo, pagesDeploymentId)
+          public fun pagesDeploymentId(pagesDeploymentId: String): PagesDeploymentIdPath = PagesDeploymentIdPath(__client, _owner, _repo, pagesDeploymentId)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               artifactId: Double? = null,
@@ -18454,7 +18464,7 @@ public class Repos internal constructor(
               pagesBuildVersion: String,
               oidcToken: String,
             ): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/deployments") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages/deployments") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(artifactId = artifactId, artifactUrl = artifactUrl, environment = environment, pagesBuildVersion = pagesBuildVersion, oidcToken = oidcToken))
               }
@@ -18508,23 +18518,23 @@ public class Repos internal constructor(
           }
 
           public class PagesDeploymentIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pagesDeploymentId: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pagesDeploymentId: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, pagesDeploymentId)
+            public val `get`: Get = Get(__client, _owner, _repo, _pagesDeploymentId)
 
-            public val cancel: Cancel = Cancel(client, owner, repo, pagesDeploymentId)
+            public val cancel: Cancel = Cancel(__client, _owner, _repo, _pagesDeploymentId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pagesDeploymentId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pagesDeploymentId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/deployments/${this.pagesDeploymentId.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages/deployments/${this._pagesDeploymentId.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -18544,21 +18554,21 @@ public class Repos internal constructor(
             }
 
             public class Cancel internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pagesDeploymentId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pagesDeploymentId: String,
             ) {
-              public val post: Post = Post(client, owner, repo, pagesDeploymentId)
+              public val post: Post = Post(__client, _owner, _repo, _pagesDeploymentId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val pagesDeploymentId: String,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _pagesDeploymentId: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/deployments/${this.pagesDeploymentId.encodeURLParameter()}/cancel")
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages/deployments/${this._pagesDeploymentId.encodeURLParameter()}/cancel")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -18579,19 +18589,19 @@ public class Repos internal constructor(
         }
 
         public class Health internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/health")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages/health")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 202 -> Response.Accepted(response.body())
@@ -18624,23 +18634,23 @@ public class Repos internal constructor(
       }
 
       public class PrivateVulnerabilityReporting internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/private-vulnerability-reporting")
+            val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/private-vulnerability-reporting")
             return when (response.status.value) {
               204 -> Response.NoContent
               422 -> Response.UnprocessableEntity(response.body())
@@ -18658,12 +18668,12 @@ public class Repos internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/private-vulnerability-reporting")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/private-vulnerability-reporting")
             return when (response.status.value) {
               200 -> response.body<Response.Ok>()
               422 -> Response.UnprocessableEntity(response.body())
@@ -18684,12 +18694,12 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/private-vulnerability-reporting")
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/private-vulnerability-reporting")
             return when (response.status.value) {
               204 -> Response.NoContent
               422 -> Response.UnprocessableEntity(response.body())
@@ -18708,28 +18718,28 @@ public class Repos internal constructor(
       }
 
       public class Properties internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val values: Values = Values(client, owner, repo)
+        public val values: Values = Values(__client, _owner, _repo)
 
         public class Values internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public val patch: Patch = Patch(client, owner, repo)
+          public val patch: Patch = Patch(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/properties/values")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/properties/values")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -18754,12 +18764,12 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(properties: List<CustomPropertyValue>): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/properties/values") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/properties/values") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(properties = properties))
               }
@@ -18797,22 +18807,22 @@ public class Repos internal constructor(
       }
 
       public class Pulls internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public val comments: Comments = Comments(client, owner, repo)
+        public val comments: Comments = Comments(__client, _owner, _repo)
 
-        public fun pullNumber(pullNumber: Long): PullNumberPath = PullNumberPath(client, owner, repo, pullNumber)
+        public fun pullNumber(pullNumber: Long): PullNumberPath = PullNumberPath(__client, _owner, _repo, pullNumber)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             state: State? = State.Open,
@@ -18823,7 +18833,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls") {
               if (state != null) {
                 this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
@@ -18907,9 +18917,9 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             title: String? = null,
@@ -18921,7 +18931,7 @@ public class Repos internal constructor(
             draft: Boolean? = null,
             issue: Long? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = title, head = head, headRepo = headRepo, base = base, body = body, maintainerCanModify = maintainerCanModify, draft = draft, issue = issue))
             }
@@ -18970,18 +18980,18 @@ public class Repos internal constructor(
         }
 
         public class Comments internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(client, owner, repo, commentId)
+          public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(__client, _owner, _repo, commentId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               sort: Sort? = null,
@@ -18990,7 +19000,7 @@ public class Repos internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): List<PullRequestReviewComment> {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/comments") {
                 if (sort != null) {
                   this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
@@ -19037,27 +19047,27 @@ public class Repos internal constructor(
           }
 
           public class CommentIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val commentId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _commentId: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, commentId)
+            public val delete: Delete = Delete(__client, _owner, _repo, _commentId)
 
-            public val `get`: Get = Get(client, owner, repo, commentId)
+            public val `get`: Get = Get(__client, _owner, _repo, _commentId)
 
-            public val patch: Patch = Patch(client, owner, repo, commentId)
+            public val patch: Patch = Patch(__client, _owner, _repo, _commentId)
 
-            public val reactions: Reactions = Reactions(client, owner, repo, commentId)
+            public val reactions: Reactions = Reactions(__client, _owner, _repo, _commentId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/comments/${this._commentId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound(response.body())
@@ -19075,13 +19085,13 @@ public class Repos internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/comments/${this._commentId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -19101,13 +19111,13 @@ public class Repos internal constructor(
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
               public suspend operator fun invoke(body: String): PullRequestReviewComment {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/comments/${this._commentId}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body))
                 }
@@ -19122,29 +19132,29 @@ public class Repos internal constructor(
             }
 
             public class Reactions internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _commentId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, commentId)
+              public val `get`: Get = Get(__client, _owner, _repo, _commentId)
 
-              public val post: Post = Post(client, owner, repo, commentId)
+              public val post: Post = Post(__client, _owner, _repo, _commentId)
 
-              public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(client, owner, repo, commentId, reactionId)
+              public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(__client, _owner, _repo, _commentId, reactionId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
               ) {
                 public suspend operator fun invoke(
                   content: Content? = null,
                   perPage: Long? = 30L,
                   page: Long? = 1L,
                 ): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}/reactions") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/comments/${this._commentId}/reactions") {
                     if (content != null) {
                       this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                     }
@@ -19195,13 +19205,13 @@ public class Repos internal constructor(
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
               ) {
                 public suspend operator fun invoke(content: Content): Response {
-                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}/reactions") {
+                  val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/comments/${this._commentId}/reactions") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(content = content))
                   }
@@ -19255,23 +19265,23 @@ public class Repos internal constructor(
               }
 
               public class ReactionIdPath internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val commentId: Long,
-                private val reactionId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _commentId: Long,
+                private val _reactionId: Long,
               ) {
-                public val delete: Delete = Delete(client, owner, repo, commentId, reactionId)
+                public val delete: Delete = Delete(__client, _owner, _repo, _commentId, _reactionId)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val commentId: Long,
-                  private val reactionId: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _commentId: Long,
+                  private val _reactionId: Long,
                 ) {
                   public suspend operator fun invoke() {
-                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}/reactions/${this.reactionId}")
+                    val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/comments/${this._commentId}/reactions/${this._reactionId}")
                     if (response.status.value != 204) throw ResponseException(response, "")
                   }
                 }
@@ -19281,40 +19291,40 @@ public class Repos internal constructor(
         }
 
         public class PullNumberPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val pullNumber: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _pullNumber: Long,
         ) {
-          public val `get`: Get = Get(client, owner, repo, pullNumber)
+          public val `get`: Get = Get(__client, _owner, _repo, _pullNumber)
 
-          public val patch: Patch = Patch(client, owner, repo, pullNumber)
+          public val patch: Patch = Patch(__client, _owner, _repo, _pullNumber)
 
-          public val codespaces: Codespaces = Codespaces(client, owner, repo, pullNumber)
+          public val codespaces: Codespaces = Codespaces(__client, _owner, _repo, _pullNumber)
 
-          public val comments: Comments = Comments(client, owner, repo, pullNumber)
+          public val comments: Comments = Comments(__client, _owner, _repo, _pullNumber)
 
-          public val commits: Commits = Commits(client, owner, repo, pullNumber)
+          public val commits: Commits = Commits(__client, _owner, _repo, _pullNumber)
 
-          public val files: Files = Files(client, owner, repo, pullNumber)
+          public val files: Files = Files(__client, _owner, _repo, _pullNumber)
 
-          public val merge: Merge = Merge(client, owner, repo, pullNumber)
+          public val merge: Merge = Merge(__client, _owner, _repo, _pullNumber)
 
           public val requestedReviewers: RequestedReviewers =
-              RequestedReviewers(client, owner, repo, pullNumber)
+              RequestedReviewers(__client, _owner, _repo, _pullNumber)
 
-          public val reviews: Reviews = Reviews(client, owner, repo, pullNumber)
+          public val reviews: Reviews = Reviews(__client, _owner, _repo, _pullNumber)
 
-          public val updateBranch: UpdateBranch = UpdateBranch(client, owner, repo, pullNumber)
+          public val updateBranch: UpdateBranch = UpdateBranch(__client, _owner, _repo, _pullNumber)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 304 -> Response.NotModified
@@ -19360,13 +19370,13 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}")
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -19382,7 +19392,7 @@ public class Repos internal constructor(
               base: String? = null,
               maintainerCanModify: Boolean? = null,
             ): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(title = title, body = body, state = state, base = base, maintainerCanModify = maintainerCanModify))
               }
@@ -19437,18 +19447,18 @@ public class Repos internal constructor(
           }
 
           public class Codespaces internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
-            public val post: Post = Post(client, owner, repo, pullNumber)
+            public val post: Post = Post(__client, _owner, _repo, _pullNumber)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(
                 location: String? = null,
@@ -19462,7 +19472,7 @@ public class Repos internal constructor(
                 displayName: String? = null,
                 retentionPeriodMinutes: Long? = null,
               ): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/codespaces") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/codespaces") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(location = location, geo = geo, clientIp = clientIp, machine = machine, devcontainerPath = devcontainerPath, multiRepoPermissionsOptOut = multiRepoPermissionsOptOut, workingDirectory = workingDirectory, idleTimeoutMinutes = idleTimeoutMinutes, displayName = displayName, retentionPeriodMinutes = retentionPeriodMinutes))
                 }
@@ -19554,22 +19564,22 @@ public class Repos internal constructor(
           }
 
           public class Comments internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, pullNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _pullNumber)
 
-            public val post: Post = Post(client, owner, repo, pullNumber)
+            public val post: Post = Post(__client, _owner, _repo, _pullNumber)
 
-            public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(client, owner, repo, pullNumber, commentId)
+            public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(__client, _owner, _repo, _pullNumber, commentId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(
                 sort: Sort? = Sort.Created,
@@ -19578,7 +19588,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): List<PullRequestReviewComment> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/comments") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/comments") {
                   if (sort != null) {
                     this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                   }
@@ -19623,10 +19633,10 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(
                 body: String,
@@ -19640,7 +19650,7 @@ public class Repos internal constructor(
                 inReplyTo: Long? = null,
                 subjectType: SubjectType? = null,
               ): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/comments") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/comments") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body, commitId = commitId, path = path, position = position, side = side, line = line, startLine = startLine, startSide = startSide, inReplyTo = inReplyTo, subjectType = subjectType))
                 }
@@ -19723,32 +19733,33 @@ public class Repos internal constructor(
             }
 
             public class CommentIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
-              private val commentId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
+              private val _commentId: Long,
             ) {
-              public val replies: Replies = Replies(client, owner, repo, pullNumber, commentId)
+              public val replies: Replies =
+                  Replies(__client, _owner, _repo, _pullNumber, _commentId)
 
               public class Replies internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val pullNumber: Long,
-                private val commentId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _pullNumber: Long,
+                private val _commentId: Long,
               ) {
-                public val post: Post = Post(client, owner, repo, pullNumber, commentId)
+                public val post: Post = Post(__client, _owner, _repo, _pullNumber, _commentId)
 
                 public class Post internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val pullNumber: Long,
-                  private val commentId: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _pullNumber: Long,
+                  private val _commentId: Long,
                 ) {
                   public suspend operator fun invoke(body: String): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/comments/${this.commentId}/replies") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/comments/${this._commentId}/replies") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(body = body))
                     }
@@ -19779,21 +19790,21 @@ public class Repos internal constructor(
           }
 
           public class Commits internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, pullNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _pullNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Commit> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/commits") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/commits") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -19808,21 +19819,21 @@ public class Repos internal constructor(
           }
 
           public class Files internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, pullNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _pullNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/files") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/files") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -19868,23 +19879,23 @@ public class Repos internal constructor(
           }
 
           public class Merge internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, pullNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _pullNumber)
 
-            public val put: Put = Put(client, owner, repo, pullNumber)
+            public val put: Put = Put(__client, _owner, _repo, _pullNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/merge")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/merge")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound
@@ -19900,13 +19911,13 @@ public class Repos internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/merge")
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/merge")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -19924,7 +19935,7 @@ public class Repos internal constructor(
                 sha: String? = null,
                 mergeMethod: MergeMethod? = null,
               ): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/merge") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/merge") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(commitTitle = commitTitle, commitMessage = commitMessage, sha = sha, mergeMethod = mergeMethod))
                 }
@@ -20009,25 +20020,25 @@ public class Repos internal constructor(
           }
 
           public class RequestedReviewers internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, pullNumber)
+            public val delete: Delete = Delete(__client, _owner, _repo, _pullNumber)
 
-            public val `get`: Get = Get(client, owner, repo, pullNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _pullNumber)
 
-            public val post: Post = Post(client, owner, repo, pullNumber)
+            public val post: Post = Post(__client, _owner, _repo, _pullNumber)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(reviewers: List<String>, teamReviewers: List<String>? = null): Response {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/requested_reviewers") {
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/requested_reviewers") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(reviewers = reviewers, teamReviewers = teamReviewers))
                 }
@@ -20059,26 +20070,26 @@ public class Repos internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(): PullRequestReviewRequest {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/requested_reviewers")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/requested_reviewers")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/requested_reviewers")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/requested_reviewers")
                 return when (response.status.value) {
                   201 -> Response.Created(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -20088,7 +20099,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(reviewers: List<String>? = null, teamReviewers: List<String>? = null): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/requested_reviewers") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/requested_reviewers") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(reviewers = reviewers, teamReviewers = teamReviewers))
                 }
@@ -20125,25 +20136,25 @@ public class Repos internal constructor(
           }
 
           public class Reviews internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, pullNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _pullNumber)
 
-            public val post: Post = Post(client, owner, repo, pullNumber)
+            public val post: Post = Post(__client, _owner, _repo, _pullNumber)
 
-            public fun reviewId(reviewId: Long): ReviewIdPath = ReviewIdPath(client, owner, repo, pullNumber, reviewId)
+            public fun reviewId(reviewId: Long): ReviewIdPath = ReviewIdPath(__client, _owner, _repo, _pullNumber, reviewId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<PullRequestReview> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -20157,13 +20168,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -20178,7 +20189,7 @@ public class Repos internal constructor(
                 event: Event? = null,
                 comments: List<Comments>? = null,
               ): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(commitId = commitId, body = body, event = event, comments = comments))
                 }
@@ -20250,34 +20261,35 @@ public class Repos internal constructor(
             }
 
             public class ReviewIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
-              private val reviewId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
+              private val _reviewId: Long,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, pullNumber, reviewId)
+              public val delete: Delete = Delete(__client, _owner, _repo, _pullNumber, _reviewId)
 
-              public val `get`: Get = Get(client, owner, repo, pullNumber, reviewId)
+              public val `get`: Get = Get(__client, _owner, _repo, _pullNumber, _reviewId)
 
-              public val put: Put = Put(client, owner, repo, pullNumber, reviewId)
+              public val put: Put = Put(__client, _owner, _repo, _pullNumber, _reviewId)
 
-              public val comments: Comments = Comments(client, owner, repo, pullNumber, reviewId)
+              public val comments: Comments =
+                  Comments(__client, _owner, _repo, _pullNumber, _reviewId)
 
               public val dismissals: Dismissals =
-                  Dismissals(client, owner, repo, pullNumber, reviewId)
+                  Dismissals(__client, _owner, _repo, _pullNumber, _reviewId)
 
-              public val events: Events = Events(client, owner, repo, pullNumber, reviewId)
+              public val events: Events = Events(__client, _owner, _repo, _pullNumber, _reviewId)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val pullNumber: Long,
-                private val reviewId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _pullNumber: Long,
+                private val _reviewId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews/${this._reviewId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -20302,14 +20314,14 @@ public class Repos internal constructor(
               }
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val pullNumber: Long,
-                private val reviewId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _pullNumber: Long,
+                private val _reviewId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews/${this._reviewId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -20329,14 +20341,14 @@ public class Repos internal constructor(
               }
 
               public class Put internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val pullNumber: Long,
-                private val reviewId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _pullNumber: Long,
+                private val _reviewId: Long,
               ) {
                 public suspend operator fun invoke(body: String): Response {
-                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}") {
+                  val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews/${this._reviewId}") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(body = body))
                   }
@@ -20364,23 +20376,23 @@ public class Repos internal constructor(
               }
 
               public class Comments internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val pullNumber: Long,
-                private val reviewId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _pullNumber: Long,
+                private val _reviewId: Long,
               ) {
-                public val `get`: Get = Get(client, owner, repo, pullNumber, reviewId)
+                public val `get`: Get = Get(__client, _owner, _repo, _pullNumber, _reviewId)
 
                 public class Get internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val pullNumber: Long,
-                  private val reviewId: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _pullNumber: Long,
+                  private val _reviewId: Long,
                 ) {
                   public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}/comments") {
+                    val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews/${this._reviewId}/comments") {
                       if (perPage != null) {
                         this.url.encodedParameters.append("per_page", perPage.toString())
                       }
@@ -20408,23 +20420,23 @@ public class Repos internal constructor(
               }
 
               public class Dismissals internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val pullNumber: Long,
-                private val reviewId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _pullNumber: Long,
+                private val _reviewId: Long,
               ) {
-                public val put: Put = Put(client, owner, repo, pullNumber, reviewId)
+                public val put: Put = Put(__client, _owner, _repo, _pullNumber, _reviewId)
 
                 public class Put internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val pullNumber: Long,
-                  private val reviewId: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _pullNumber: Long,
+                  private val _reviewId: Long,
                 ) {
                   public suspend operator fun invoke(message: String, event: Event? = null): Response {
-                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}/dismissals") {
+                    val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews/${this._reviewId}/dismissals") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(message = message, event = event))
                     }
@@ -20466,23 +20478,23 @@ public class Repos internal constructor(
               }
 
               public class Events internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val pullNumber: Long,
-                private val reviewId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _pullNumber: Long,
+                private val _reviewId: Long,
               ) {
-                public val post: Post = Post(client, owner, repo, pullNumber, reviewId)
+                public val post: Post = Post(__client, _owner, _repo, _pullNumber, _reviewId)
 
                 public class Post internal constructor(
-                  private val client: HttpClient,
-                  private val owner: String,
-                  private val repo: String,
-                  private val pullNumber: Long,
-                  private val reviewId: Long,
+                  private val __client: HttpClient,
+                  private val _owner: String,
+                  private val _repo: String,
+                  private val _pullNumber: Long,
+                  private val _reviewId: Long,
                 ) {
                   public suspend operator fun invoke(body: String? = null, event: Event): Response {
-                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}/events") {
+                    val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/reviews/${this._reviewId}/events") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(body = body, event = event))
                     }
@@ -20537,21 +20549,21 @@ public class Repos internal constructor(
           }
 
           public class UpdateBranch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val pullNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _pullNumber: Long,
           ) {
-            public val put: Put = Put(client, owner, repo, pullNumber)
+            public val put: Put = Put(__client, _owner, _repo, _pullNumber)
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val pullNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/update-branch")
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/update-branch")
                 return when (response.status.value) {
                   202 -> response.body<Response.Accepted>()
                   403 -> Response.Forbidden(response.body())
@@ -20561,7 +20573,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(expectedHeadSha: String? = null): Response {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/update-branch") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pulls/${this._pullNumber}/update-branch") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(expectedHeadSha = expectedHeadSha))
                 }
@@ -20605,21 +20617,21 @@ public class Repos internal constructor(
       }
 
       public class Readme internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public fun dir(dir: String): DirPath = DirPath(client, owner, repo, dir)
+        public fun dir(dir: String): DirPath = DirPath(__client, _owner, _repo, dir)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(ref: String? = null): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/readme") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/readme") {
               if (ref != null) {
                 this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
@@ -20651,21 +20663,21 @@ public class Repos internal constructor(
         }
 
         public class DirPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val dir: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _dir: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, dir)
+          public val `get`: Get = Get(__client, _owner, _repo, _dir)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val dir: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _dir: String,
           ) {
             public suspend operator fun invoke(ref: String? = null): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/readme/${this.dir.encodeURLParameter()}") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/readme/${this._dir.encodeURLParameter()}") {
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
@@ -20696,31 +20708,31 @@ public class Repos internal constructor(
       }
 
       public class Releases internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public val assets: Assets = Assets(client, owner, repo)
+        public val assets: Assets = Assets(__client, _owner, _repo)
 
-        public val generateNotes: GenerateNotes = GenerateNotes(client, owner, repo)
+        public val generateNotes: GenerateNotes = GenerateNotes(__client, _owner, _repo)
 
-        public val latest: Latest = Latest(client, owner, repo)
+        public val latest: Latest = Latest(__client, _owner, _repo)
 
-        public val tags: Tags = Tags(client, owner, repo)
+        public val tags: Tags = Tags(__client, _owner, _repo)
 
-        public fun releaseId(releaseId: Long): ReleaseIdPath = ReleaseIdPath(client, owner, repo, releaseId)
+        public fun releaseId(releaseId: Long): ReleaseIdPath = ReleaseIdPath(__client, _owner, _repo, releaseId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -20747,9 +20759,9 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             tagName: String,
@@ -20762,7 +20774,7 @@ public class Repos internal constructor(
             generateReleaseNotes: Boolean? = null,
             makeLatest: MakeLatest? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases") {
               contentType(ContentType.Application.Json)
               setBody(Body(tagName = tagName, targetCommitish = targetCommitish, name = name, body = body, draft = draft, prerelease = prerelease, discussionCategoryName = discussionCategoryName, generateReleaseNotes = generateReleaseNotes, makeLatest = makeLatest))
             }
@@ -20830,44 +20842,44 @@ public class Repos internal constructor(
         }
 
         public class Assets internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public fun assetId(assetId: Long): AssetIdPath = AssetIdPath(client, owner, repo, assetId)
+          public fun assetId(assetId: Long): AssetIdPath = AssetIdPath(__client, _owner, _repo, assetId)
 
           public class AssetIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val assetId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _assetId: Long,
           ) {
-            public val delete: Delete = Delete(client, owner, repo, assetId)
+            public val delete: Delete = Delete(__client, _owner, _repo, _assetId)
 
-            public val `get`: Get = Get(client, owner, repo, assetId)
+            public val `get`: Get = Get(__client, _owner, _repo, _assetId)
 
-            public val patch: Patch = Patch(client, owner, repo, assetId)
+            public val patch: Patch = Patch(__client, _owner, _repo, _assetId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val assetId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _assetId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/assets/${this.assetId}")
+                val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/assets/${this._assetId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val assetId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _assetId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/assets/${this.assetId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/assets/${this._assetId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   302 -> Response.Found
@@ -20890,13 +20902,13 @@ public class Repos internal constructor(
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val assetId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _assetId: Long,
             ) {
               public suspend operator fun invoke(): ReleaseAsset {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/assets/${this.assetId}")
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/assets/${this._assetId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -20906,7 +20918,7 @@ public class Repos internal constructor(
                 label: String? = null,
                 state: String? = null,
               ): ReleaseAsset {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/assets/${this.assetId}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/assets/${this._assetId}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(name = name, label = label, state = state))
                 }
@@ -20929,16 +20941,16 @@ public class Repos internal constructor(
         }
 
         public class GenerateNotes internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               tagName: String,
@@ -20946,7 +20958,7 @@ public class Repos internal constructor(
               previousTagName: String? = null,
               configurationFilePath: String? = null,
             ): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/generate-notes") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/generate-notes") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(tagName = tagName, targetCommitish = targetCommitish, previousTagName = previousTagName, configurationFilePath = configurationFilePath))
               }
@@ -20986,19 +20998,19 @@ public class Repos internal constructor(
         }
 
         public class Latest internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Release {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/latest")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/latest")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -21006,28 +21018,28 @@ public class Repos internal constructor(
         }
 
         public class Tags internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public fun tag(tag: String): TagPath = TagPath(client, owner, repo, tag)
+          public fun tag(tag: String): TagPath = TagPath(__client, _owner, _repo, tag)
 
           public class TagPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val tag: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _tag: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, tag)
+            public val `get`: Get = Get(__client, _owner, _repo, _tag)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val tag: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _tag: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/tags/${this.tag.encodeURLParameter()}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/tags/${this._tag.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -21049,41 +21061,41 @@ public class Repos internal constructor(
         }
 
         public class ReleaseIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val releaseId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _releaseId: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, releaseId)
+          public val delete: Delete = Delete(__client, _owner, _repo, _releaseId)
 
-          public val `get`: Get = Get(client, owner, repo, releaseId)
+          public val `get`: Get = Get(__client, _owner, _repo, _releaseId)
 
-          public val patch: Patch = Patch(client, owner, repo, releaseId)
+          public val patch: Patch = Patch(__client, _owner, _repo, _releaseId)
 
-          public val assets: Assets = Assets(client, owner, repo, releaseId)
+          public val assets: Assets = Assets(__client, _owner, _repo, _releaseId)
 
-          public val reactions: Reactions = Reactions(client, owner, repo, releaseId)
+          public val reactions: Reactions = Reactions(__client, _owner, _repo, _releaseId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val releaseId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _releaseId: Long,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val releaseId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _releaseId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 401 -> Response.Unauthorized
@@ -21101,13 +21113,13 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val releaseId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _releaseId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}")
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -21125,7 +21137,7 @@ public class Repos internal constructor(
               makeLatest: MakeLatest? = null,
               discussionCategoryName: String? = null,
             ): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(tagName = tagName, targetCommitish = targetCommitish, name = name, body = body, draft = draft, prerelease = prerelease, makeLatest = makeLatest, discussionCategoryName = discussionCategoryName))
               }
@@ -21186,23 +21198,23 @@ public class Repos internal constructor(
           }
 
           public class Assets internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val releaseId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _releaseId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, releaseId)
+            public val `get`: Get = Get(__client, _owner, _repo, _releaseId)
 
-            public val post: Post = Post(client, owner, repo, releaseId)
+            public val post: Post = Post(__client, _owner, _repo, _releaseId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val releaseId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _releaseId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<ReleaseAsset> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/assets") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}/assets") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -21216,17 +21228,17 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val releaseId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _releaseId: Long,
             ) {
               public suspend operator fun invoke(
                 name: String,
                 label: String? = null,
                 body: ByteArray? = null,
               ): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/assets") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}/assets") {
                   this.url.encodedParameters.append("name", name.encodeURLParameter())
                   if (label != null) {
                     this.url.encodedParameters.append("label", label.encodeURLParameter())
@@ -21254,29 +21266,29 @@ public class Repos internal constructor(
           }
 
           public class Reactions internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val releaseId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _releaseId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, releaseId)
+            public val `get`: Get = Get(__client, _owner, _repo, _releaseId)
 
-            public val post: Post = Post(client, owner, repo, releaseId)
+            public val post: Post = Post(__client, _owner, _repo, _releaseId)
 
-            public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(client, owner, repo, releaseId, reactionId)
+            public fun reactionId(reactionId: Long): ReactionIdPath = ReactionIdPath(__client, _owner, _repo, _releaseId, reactionId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val releaseId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _releaseId: Long,
             ) {
               public suspend operator fun invoke(
                 content: Content? = null,
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/reactions") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}/reactions") {
                   if (content != null) {
                     this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
@@ -21324,13 +21336,13 @@ public class Repos internal constructor(
             }
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val releaseId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _releaseId: Long,
             ) {
               public suspend operator fun invoke(content: Content): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/reactions") {
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}/reactions") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(content = content))
                 }
@@ -21381,23 +21393,23 @@ public class Repos internal constructor(
             }
 
             public class ReactionIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val releaseId: Long,
-              private val reactionId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _releaseId: Long,
+              private val _reactionId: Long,
             ) {
-              public val delete: Delete = Delete(client, owner, repo, releaseId, reactionId)
+              public val delete: Delete = Delete(__client, _owner, _repo, _releaseId, _reactionId)
 
               public class Delete internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val releaseId: Long,
-                private val reactionId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _releaseId: Long,
+                private val _reactionId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/reactions/${this.reactionId}")
+                  val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/releases/${this._releaseId}/reactions/${this._reactionId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -21407,35 +21419,35 @@ public class Repos internal constructor(
       }
 
       public class Rules internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val branches: Branches = Branches(client, owner, repo)
+        public val branches: Branches = Branches(__client, _owner, _repo)
 
         public class Branches internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public fun branch(branch: String): BranchPath = BranchPath(client, owner, repo, branch)
+          public fun branch(branch: String): BranchPath = BranchPath(__client, _owner, _repo, branch)
 
           public class BranchPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val branch: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _branch: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo, branch)
+            public val `get`: Get = Get(__client, _owner, _repo, _branch)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val branch: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _branch: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<RepositoryRuleDetailed> {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rules/branches/${this.branch.encodeURLParameter()}") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rules/branches/${this._branch.encodeURLParameter()}") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -21452,22 +21464,22 @@ public class Repos internal constructor(
       }
 
       public class Rulesets internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public val ruleSuites: RuleSuites = RuleSuites(client, owner, repo)
+        public val ruleSuites: RuleSuites = RuleSuites(__client, _owner, _repo)
 
-        public fun rulesetId(rulesetId: Long): RulesetIdPath = RulesetIdPath(client, owner, repo, rulesetId)
+        public fun rulesetId(rulesetId: Long): RulesetIdPath = RulesetIdPath(__client, _owner, _repo, rulesetId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             perPage: Long? = 30L,
@@ -21475,7 +21487,7 @@ public class Repos internal constructor(
             includesParents: Boolean? = true,
             targets: String? = null,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -21513,9 +21525,9 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             name: String,
@@ -21525,7 +21537,7 @@ public class Repos internal constructor(
             conditions: RepositoryRulesetConditions? = null,
             rules: List<RepositoryRule>? = null,
           ): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, target = target, enforcement = enforcement, bypassActors = bypassActors, conditions = conditions, rules = rules))
             }
@@ -21587,18 +21599,18 @@ public class Repos internal constructor(
         }
 
         public class RuleSuites internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun ruleSuiteId(ruleSuiteId: Long): RuleSuiteIdPath = RuleSuiteIdPath(client, owner, repo, ruleSuiteId)
+          public fun ruleSuiteId(ruleSuiteId: Long): RuleSuiteIdPath = RuleSuiteIdPath(__client, _owner, _repo, ruleSuiteId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               ref: String? = null,
@@ -21608,7 +21620,7 @@ public class Repos internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/rule-suites") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets/rule-suites") {
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
@@ -21682,21 +21694,21 @@ public class Repos internal constructor(
           }
 
           public class RuleSuiteIdPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ruleSuiteId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ruleSuiteId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, ruleSuiteId)
+            public val `get`: Get = Get(__client, _owner, _repo, _ruleSuiteId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ruleSuiteId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ruleSuiteId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/rule-suites/${this.ruleSuiteId}")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets/rule-suites/${this._ruleSuiteId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -21723,27 +21735,27 @@ public class Repos internal constructor(
         }
 
         public class RulesetIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val rulesetId: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _rulesetId: Long,
         ) {
-          public val delete: Delete = Delete(client, owner, repo, rulesetId)
+          public val delete: Delete = Delete(__client, _owner, _repo, _rulesetId)
 
-          public val `get`: Get = Get(client, owner, repo, rulesetId)
+          public val `get`: Get = Get(__client, _owner, _repo, _rulesetId)
 
-          public val put: Put = Put(client, owner, repo, rulesetId)
+          public val put: Put = Put(__client, _owner, _repo, _rulesetId)
 
-          public val history: History = History(client, owner, repo, rulesetId)
+          public val history: History = History(__client, _owner, _repo, _rulesetId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val rulesetId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _rulesetId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}")
+              val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets/${this._rulesetId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -21766,13 +21778,13 @@ public class Repos internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val rulesetId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _rulesetId: Long,
           ) {
             public suspend operator fun invoke(includesParents: Boolean? = true): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets/${this._rulesetId}") {
                 if (includesParents != null) {
                   this.url.encodedParameters.append("includes_parents", includesParents.toString())
                 }
@@ -21801,13 +21813,13 @@ public class Repos internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val rulesetId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _rulesetId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}")
+              val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets/${this._rulesetId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -21825,7 +21837,7 @@ public class Repos internal constructor(
               conditions: RepositoryRulesetConditions? = null,
               rules: List<RepositoryRule>? = null,
             ): Response {
-              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}") {
+              val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets/${this._rulesetId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, target = target, enforcement = enforcement, bypassActors = bypassActors, conditions = conditions, rules = rules))
               }
@@ -21889,23 +21901,23 @@ public class Repos internal constructor(
           }
 
           public class History internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val rulesetId: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _rulesetId: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, rulesetId)
+            public val `get`: Get = Get(__client, _owner, _repo, _rulesetId)
 
-            public fun versionId(versionId: Long): VersionIdPath = VersionIdPath(client, owner, repo, rulesetId, versionId)
+            public fun versionId(versionId: Long): VersionIdPath = VersionIdPath(__client, _owner, _repo, _rulesetId, versionId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val rulesetId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _rulesetId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}/history") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets/${this._rulesetId}/history") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -21937,23 +21949,23 @@ public class Repos internal constructor(
             }
 
             public class VersionIdPath internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val rulesetId: Long,
-              private val versionId: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _rulesetId: Long,
+              private val _versionId: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, rulesetId, versionId)
+              public val `get`: Get = Get(__client, _owner, _repo, _rulesetId, _versionId)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val rulesetId: Long,
-                private val versionId: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _rulesetId: Long,
+                private val _versionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}/history/${this.versionId}")
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/rulesets/${this._rulesetId}/history/${this._versionId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -21982,30 +21994,30 @@ public class Repos internal constructor(
       }
 
       public class SecretScanning internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val alerts: Alerts = Alerts(client, owner, repo)
+        public val alerts: Alerts = Alerts(__client, _owner, _repo)
 
         public val pushProtectionBypasses: PushProtectionBypasses =
-            PushProtectionBypasses(client, owner, repo)
+            PushProtectionBypasses(__client, _owner, _repo)
 
-        public val scanHistory: ScanHistory = ScanHistory(client, owner, repo)
+        public val scanHistory: ScanHistory = ScanHistory(__client, _owner, _repo)
 
         public class Alerts internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
-          public fun alertNumber(alertNumber: Long): AlertNumberPath = AlertNumberPath(client, owner, repo, alertNumber)
+          public fun alertNumber(alertNumber: Long): AlertNumberPath = AlertNumberPath(__client, _owner, _repo, alertNumber)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(
               state: State? = null,
@@ -22023,7 +22035,7 @@ public class Repos internal constructor(
               isMultiRepo: Boolean? = false,
               hideSecret: Boolean? = false,
             ): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/secret-scanning/alerts") {
                 if (state != null) {
                   this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
@@ -22130,25 +22142,25 @@ public class Repos internal constructor(
           }
 
           public class AlertNumberPath internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val alertNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _alertNumber: Long,
           ) {
-            public val `get`: Get = Get(client, owner, repo, alertNumber)
+            public val `get`: Get = Get(__client, _owner, _repo, _alertNumber)
 
-            public val patch: Patch = Patch(client, owner, repo, alertNumber)
+            public val patch: Patch = Patch(__client, _owner, _repo, _alertNumber)
 
-            public val locations: Locations = Locations(client, owner, repo, alertNumber)
+            public val locations: Locations = Locations(__client, _owner, _repo, _alertNumber)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
               public suspend operator fun invoke(hideSecret: Boolean? = false): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts/${this.alertNumber}") {
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/secret-scanning/alerts/${this._alertNumber}") {
                   if (hideSecret != null) {
                     this.url.encodedParameters.append("hide_secret", hideSecret.toString())
                   }
@@ -22186,10 +22198,10 @@ public class Repos internal constructor(
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
               public suspend operator fun invoke(
                 state: SecretScanningAlertState? = null,
@@ -22197,7 +22209,7 @@ public class Repos internal constructor(
                 resolutionComment: Optional<SecretScanningAlertResolutionComment> = Optional.Absent,
                 assignee: Optional<SecretScanningAlertAssignee> = Optional.Absent,
               ): Response {
-                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts/${this.alertNumber}") {
+                val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/secret-scanning/alerts/${this._alertNumber}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(state = state, resolution = resolution, resolutionComment = resolutionComment, assignee = assignee))
                 }
@@ -22252,21 +22264,21 @@ public class Repos internal constructor(
             }
 
             public class Locations internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val alertNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _alertNumber: Long,
             ) {
-              public val `get`: Get = Get(client, owner, repo, alertNumber)
+              public val `get`: Get = Get(__client, _owner, _repo, _alertNumber)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val owner: String,
-                private val repo: String,
-                private val alertNumber: Long,
+                private val __client: HttpClient,
+                private val _owner: String,
+                private val _repo: String,
+                private val _alertNumber: Long,
               ) {
                 public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts/${this.alertNumber}/locations") {
+                  val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/secret-scanning/alerts/${this._alertNumber}/locations") {
                     if (page != null) {
                       this.url.encodedParameters.append("page", page.toString())
                     }
@@ -22307,19 +22319,19 @@ public class Repos internal constructor(
         }
 
         public class PushProtectionBypasses internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(reason: SecretScanningPushProtectionBypassReason, placeholderId: SecretScanningPushProtectionBypassPlaceholderId): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/push-protection-bypasses") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/secret-scanning/push-protection-bypasses") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(reason = reason, placeholderId = placeholderId))
               }
@@ -22367,19 +22379,19 @@ public class Repos internal constructor(
         }
 
         public class ScanHistory internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/scan-history")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/secret-scanning/scan-history")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound
@@ -22412,22 +22424,22 @@ public class Repos internal constructor(
       }
 
       public class SecurityAdvisories internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
-        public val reports: Reports = Reports(client, owner, repo)
+        public val reports: Reports = Reports(__client, _owner, _repo)
 
-        public fun ghsaId(ghsaId: String): GhsaIdPath = GhsaIdPath(client, owner, repo, ghsaId)
+        public fun ghsaId(ghsaId: String): GhsaIdPath = GhsaIdPath(__client, _owner, _repo, ghsaId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             direction: Direction? = Direction.Desc,
@@ -22437,7 +22449,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             state: State? = null,
           ): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/security-advisories") {
               if (direction != null) {
                 this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
@@ -22520,12 +22532,12 @@ public class Repos internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(body: RepositoryAdvisoryCreate): Response {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/security-advisories") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -22558,19 +22570,19 @@ public class Repos internal constructor(
         }
 
         public class Reports internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val post: Post = Post(client, owner, repo)
+          public val post: Post = Post(__client, _owner, _repo)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(body: PrivateVulnerabilityReportCreate): Response {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/reports") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/security-advisories/reports") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -22604,27 +22616,27 @@ public class Repos internal constructor(
         }
 
         public class GhsaIdPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val ghsaId: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _ghsaId: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, ghsaId)
+          public val `get`: Get = Get(__client, _owner, _repo, _ghsaId)
 
-          public val patch: Patch = Patch(client, owner, repo, ghsaId)
+          public val patch: Patch = Patch(__client, _owner, _repo, _ghsaId)
 
-          public val cve: Cve = Cve(client, owner, repo, ghsaId)
+          public val cve: Cve = Cve(__client, _owner, _repo, _ghsaId)
 
-          public val forks: Forks = Forks(client, owner, repo, ghsaId)
+          public val forks: Forks = Forks(__client, _owner, _repo, _ghsaId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ghsaId: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ghsaId: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/${this.ghsaId.encodeURLParameter()}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/security-advisories/${this._ghsaId.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -22649,13 +22661,13 @@ public class Repos internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ghsaId: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ghsaId: String,
           ) {
             public suspend operator fun invoke(body: RepositoryAdvisoryUpdate): Response {
-              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/${this.ghsaId.encodeURLParameter()}") {
+              val response = __client.patch("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/security-advisories/${this._ghsaId.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -22688,21 +22700,21 @@ public class Repos internal constructor(
           }
 
           public class Cve internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ghsaId: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ghsaId: String,
           ) {
-            public val post: Post = Post(client, owner, repo, ghsaId)
+            public val post: Post = Post(__client, _owner, _repo, _ghsaId)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ghsaId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ghsaId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/${this.ghsaId.encodeURLParameter()}/cve")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/security-advisories/${this._ghsaId.encodeURLParameter()}/cve")
                 return when (response.status.value) {
                   202 -> Response.Accepted(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -22738,21 +22750,21 @@ public class Repos internal constructor(
           }
 
           public class Forks internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ghsaId: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ghsaId: String,
           ) {
-            public val post: Post = Post(client, owner, repo, ghsaId)
+            public val post: Post = Post(__client, _owner, _repo, _ghsaId)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val ghsaId: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _ghsaId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/${this.ghsaId.encodeURLParameter()}/forks")
+                val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/security-advisories/${this._ghsaId.encodeURLParameter()}/forks")
                 return when (response.status.value) {
                   202 -> Response.Accepted(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -22790,19 +22802,19 @@ public class Repos internal constructor(
       }
 
       public class Stargazers internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stargazers") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/stargazers") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -22870,34 +22882,34 @@ public class Repos internal constructor(
       }
 
       public class Stats internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val codeFrequency: CodeFrequency = CodeFrequency(client, owner, repo)
+        public val codeFrequency: CodeFrequency = CodeFrequency(__client, _owner, _repo)
 
-        public val commitActivity: CommitActivity = CommitActivity(client, owner, repo)
+        public val commitActivity: CommitActivity = CommitActivity(__client, _owner, _repo)
 
-        public val contributors: Contributors = Contributors(client, owner, repo)
+        public val contributors: Contributors = Contributors(__client, _owner, _repo)
 
-        public val participation: Participation = Participation(client, owner, repo)
+        public val participation: Participation = Participation(__client, _owner, _repo)
 
-        public val punchCard: PunchCard = PunchCard(client, owner, repo)
+        public val punchCard: PunchCard = PunchCard(__client, _owner, _repo)
 
         public class CodeFrequency internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/code_frequency")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/stats/code_frequency")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 202 -> Response.Accepted(response.body())
@@ -22924,19 +22936,19 @@ public class Repos internal constructor(
         }
 
         public class CommitActivity internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/commit_activity")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/stats/commit_activity")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 202 -> Response.Accepted(response.body())
@@ -22960,19 +22972,19 @@ public class Repos internal constructor(
         }
 
         public class Contributors internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/contributors")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/stats/contributors")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 202 -> Response.Accepted(response.body())
@@ -22996,19 +23008,19 @@ public class Repos internal constructor(
         }
 
         public class Participation internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/participation")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/stats/participation")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -23029,19 +23041,19 @@ public class Repos internal constructor(
         }
 
         public class PunchCard internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/punch_card")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/stats/punch_card")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 204 -> Response.NoContent
@@ -23061,25 +23073,25 @@ public class Repos internal constructor(
       }
 
       public class Statuses internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public fun sha(sha: String): ShaPath = ShaPath(client, owner, repo, sha)
+        public fun sha(sha: String): ShaPath = ShaPath(__client, _owner, _repo, sha)
 
         public class ShaPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val sha: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _sha: String,
         ) {
-          public val post: Post = Post(client, owner, repo, sha)
+          public val post: Post = Post(__client, _owner, _repo, _sha)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val sha: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _sha: String,
           ) {
             public suspend operator fun invoke(
               state: State,
@@ -23087,7 +23099,7 @@ public class Repos internal constructor(
               description: Optional<String> = Optional.Absent,
               context: String? = null,
             ): Status {
-              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/statuses/${this.sha.encodeURLParameter()}") {
+              val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/statuses/${this._sha.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(state = state, targetUrl = targetUrl, description = description, context = context))
               }
@@ -23127,19 +23139,19 @@ public class Repos internal constructor(
       }
 
       public class Subscribers internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscribers") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/subscribers") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -23154,34 +23166,34 @@ public class Repos internal constructor(
       }
 
       public class Subscription internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscription")
+            val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/subscription")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscription")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/subscription")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden(response.body())
@@ -23204,18 +23216,18 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): RepositorySubscription {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscription")
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/subscription")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
 
           public suspend operator fun invoke(subscribed: Boolean? = null, ignored: Boolean? = null): RepositorySubscription {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscription") {
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/subscription") {
               contentType(ContentType.Application.Json)
               setBody(Body(subscribed = subscribed, ignored = ignored))
             }
@@ -23235,19 +23247,19 @@ public class Repos internal constructor(
       }
 
       public class Tags internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Tag> {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/tags") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/tags") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -23262,28 +23274,28 @@ public class Repos internal constructor(
       }
 
       public class Tarball internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public fun ref(ref: String): RefPath = RefPath(client, owner, repo, ref)
+        public fun ref(ref: String): RefPath = RefPath(__client, _owner, _repo, ref)
 
         public class RefPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val ref: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _ref: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, ref)
+          public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/tarball/${this.ref.encodeURLParameter()}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/tarball/${this._ref.encodeURLParameter()}")
               if (response.status.value != 302) throw ResponseException(response, "")
             }
           }
@@ -23291,19 +23303,19 @@ public class Repos internal constructor(
       }
 
       public class Teams internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/teams") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/teams") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -23331,21 +23343,21 @@ public class Repos internal constructor(
       }
 
       public class Topics internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/topics") {
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/topics") {
               if (page != null) {
                 this.url.encodedParameters.append("page", page.toString())
               }
@@ -23372,12 +23384,12 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(names: List<String>): Response {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/topics") {
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/topics") {
               contentType(ContentType.Application.Json)
               setBody(Body(names = names))
             }
@@ -23411,30 +23423,30 @@ public class Repos internal constructor(
       }
 
       public class Traffic internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val clones: Clones = Clones(client, owner, repo)
+        public val clones: Clones = Clones(__client, _owner, _repo)
 
-        public val popular: Popular = Popular(client, owner, repo)
+        public val popular: Popular = Popular(__client, _owner, _repo)
 
-        public val views: Views = Views(client, owner, repo)
+        public val views: Views = Views(__client, _owner, _repo)
 
         public class Clones internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(per: Per? = Per.Day): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/traffic/clones") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/traffic/clones") {
                 if (per != null) {
                   this.url.encodedParameters.append("per", per.value.encodeURLParameter())
                 }
@@ -23470,28 +23482,28 @@ public class Repos internal constructor(
         }
 
         public class Popular internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val paths: Paths = Paths(client, owner, repo)
+          public val paths: Paths = Paths(__client, _owner, _repo)
 
-          public val referrers: Referrers = Referrers(client, owner, repo)
+          public val referrers: Referrers = Referrers(__client, _owner, _repo)
 
           public class Paths internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/traffic/popular/paths")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/traffic/popular/paths")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -23512,19 +23524,19 @@ public class Repos internal constructor(
           }
 
           public class Referrers internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
-            public val `get`: Get = Get(client, owner, repo)
+            public val `get`: Get = Get(__client, _owner, _repo)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/traffic/popular/referrers")
+                val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/traffic/popular/referrers")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -23546,19 +23558,19 @@ public class Repos internal constructor(
         }
 
         public class Views internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo)
+          public val `get`: Get = Get(__client, _owner, _repo)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             public suspend operator fun invoke(per: Per? = Per.Day): Response {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/traffic/views") {
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/traffic/views") {
                 if (per != null) {
                   this.url.encodedParameters.append("per", per.value.encodeURLParameter())
                 }
@@ -23595,23 +23607,23 @@ public class Repos internal constructor(
       }
 
       public class Transfer internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             newOwner: String,
             newName: String? = null,
             teamIds: List<Long>? = null,
           ): MinimalRepository {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/transfer") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/transfer") {
               contentType(ContentType.Application.Json)
               setBody(Body(newOwner = newOwner, newName = newName, teamIds = teamIds))
             }
@@ -23635,34 +23647,34 @@ public class Repos internal constructor(
       }
 
       public class VulnerabilityAlerts internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/vulnerability-alerts")
+            val response = __client.delete("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/vulnerability-alerts")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/vulnerability-alerts")
+            val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/vulnerability-alerts")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound
@@ -23678,40 +23690,40 @@ public class Repos internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/vulnerability-alerts")
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/vulnerability-alerts")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
       }
 
       public class Zipball internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public fun ref(ref: String): RefPath = RefPath(client, owner, repo, ref)
+        public fun ref(ref: String): RefPath = RefPath(__client, _owner, _repo, ref)
 
         public class RefPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val ref: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _ref: String,
         ) {
-          public val `get`: Get = Get(client, owner, repo, ref)
+          public val `get`: Get = Get(__client, _owner, _repo, _ref)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val ref: String,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _ref: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/zipball/${this.ref.encodeURLParameter()}")
+              val response = __client.get("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/zipball/${this._ref.encodeURLParameter()}")
               if (response.status.value != 302) throw ResponseException(response, "")
             }
           }
@@ -23721,29 +23733,29 @@ public class Repos internal constructor(
   }
 
   public class TemplateOwnerPath internal constructor(
-    private val client: HttpClient,
-    private val templateOwner: String,
+    private val __client: HttpClient,
+    private val _templateOwner: String,
   ) {
-    public fun templateRepo(templateRepo: String): TemplateRepoPath = TemplateRepoPath(client, templateOwner, templateRepo)
+    public fun templateRepo(templateRepo: String): TemplateRepoPath = TemplateRepoPath(__client, _templateOwner, templateRepo)
 
     public class TemplateRepoPath internal constructor(
-      private val client: HttpClient,
-      private val templateOwner: String,
-      private val templateRepo: String,
+      private val __client: HttpClient,
+      private val _templateOwner: String,
+      private val _templateRepo: String,
     ) {
-      public val generate: Generate = Generate(client, templateOwner, templateRepo)
+      public val generate: Generate = Generate(__client, _templateOwner, _templateRepo)
 
       public class Generate internal constructor(
-        private val client: HttpClient,
-        private val templateOwner: String,
-        private val templateRepo: String,
+        private val __client: HttpClient,
+        private val _templateOwner: String,
+        private val _templateRepo: String,
       ) {
-        public val post: Post = Post(client, templateOwner, templateRepo)
+        public val post: Post = Post(__client, _templateOwner, _templateRepo)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val templateOwner: String,
-          private val templateRepo: String,
+          private val __client: HttpClient,
+          private val _templateOwner: String,
+          private val _templateRepo: String,
         ) {
           public suspend operator fun invoke(
             owner: String? = null,
@@ -23752,7 +23764,7 @@ public class Repos internal constructor(
             includeAllBranches: Boolean? = null,
             `private`: Boolean? = null,
           ): FullRepository {
-            val response = client.post("repos/${this.templateOwner.encodeURLParameter()}/${this.templateRepo.encodeURLParameter()}/generate") {
+            val response = __client.post("repos/${this._templateOwner.encodeURLParameter()}/${this._templateRepo.encodeURLParameter()}/generate") {
               contentType(ContentType.Application.Json)
               setBody(Body(owner = owner, name = name, description = description, includeAllBranches = includeAllBranches, private = private))
             }

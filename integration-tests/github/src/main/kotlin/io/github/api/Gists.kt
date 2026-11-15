@@ -45,27 +45,27 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 
 public class Gists internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val `public`: Public = Public(client)
+  public val `public`: Public = Public(__client)
 
-  public val starred: Starred = Starred(client)
+  public val starred: Starred = Starred(__client)
 
-  public fun gistId(gistId: String): GistIdPath = GistIdPath(client, gistId)
+  public fun gistId(gistId: String): GistIdPath = GistIdPath(__client, gistId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       since: Instant? = null,
       perPage: Long? = 30L,
       page: Long? = 1L,
     ): Response {
-      val response = client.get("gists") {
+      val response = __client.get("gists") {
         if (since != null) {
           this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
         }
@@ -98,14 +98,14 @@ public class Gists internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       description: String? = null,
       files: Map<String, Files>,
       `public`: Public? = null,
     ): Response {
-      val response = client.post("gists") {
+      val response = __client.post("gists") {
         contentType(ContentType.Application.Json)
         setBody(Body(description = description, files = files, public = public))
       }
@@ -211,19 +211,19 @@ public class Gists internal constructor(
   }
 
   public class Public internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         since: Instant? = null,
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("gists/public") {
+        val response = __client.get("gists/public") {
           if (since != null) {
             this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
           }
@@ -262,19 +262,19 @@ public class Gists internal constructor(
   }
 
   public class Starred internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         since: Instant? = null,
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("gists/starred") {
+        val response = __client.get("gists/starred") {
           if (since != null) {
             this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
           }
@@ -313,31 +313,31 @@ public class Gists internal constructor(
   }
 
   public class GistIdPath internal constructor(
-    private val client: HttpClient,
-    private val gistId: String,
+    private val __client: HttpClient,
+    private val _gistId: String,
   ) {
-    public val delete: Delete = Delete(client, gistId)
+    public val delete: Delete = Delete(__client, _gistId)
 
-    public val `get`: Get = Get(client, gistId)
+    public val `get`: Get = Get(__client, _gistId)
 
-    public val patch: Patch = Patch(client, gistId)
+    public val patch: Patch = Patch(__client, _gistId)
 
-    public val comments: Comments = Comments(client, gistId)
+    public val comments: Comments = Comments(__client, _gistId)
 
-    public val commits: Commits = Commits(client, gistId)
+    public val commits: Commits = Commits(__client, _gistId)
 
-    public val forks: Forks = Forks(client, gistId)
+    public val forks: Forks = Forks(__client, _gistId)
 
-    public val star: Star = Star(client, gistId)
+    public val star: Star = Star(__client, _gistId)
 
-    public fun sha(sha: String): ShaPath = ShaPath(client, gistId, sha)
+    public fun sha(sha: String): ShaPath = ShaPath(__client, _gistId, sha)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val gistId: String,
+      private val __client: HttpClient,
+      private val _gistId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("gists/${this.gistId.encodeURLParameter()}")
+        val response = __client.delete("gists/${this._gistId.encodeURLParameter()}")
         return when (response.status.value) {
           204 -> Response.NoContent
           304 -> Response.NotModified
@@ -363,11 +363,11 @@ public class Gists internal constructor(
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val gistId: String,
+      private val __client: HttpClient,
+      private val _gistId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("gists/${this.gistId.encodeURLParameter()}")
+        val response = __client.get("gists/${this._gistId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified
@@ -416,11 +416,11 @@ public class Gists internal constructor(
     }
 
     public class Patch internal constructor(
-      private val client: HttpClient,
-      private val gistId: String,
+      private val __client: HttpClient,
+      private val _gistId: String,
     ) {
       public suspend operator fun invoke(description: String? = null, files: Map<String, Files?>? = null): Response {
-        val response = client.patch("gists/${this.gistId.encodeURLParameter()}") {
+        val response = __client.patch("gists/${this._gistId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(Body(description = description, files = files))
         }
@@ -466,21 +466,21 @@ public class Gists internal constructor(
     }
 
     public class Comments internal constructor(
-      private val client: HttpClient,
-      private val gistId: String,
+      private val __client: HttpClient,
+      private val _gistId: String,
     ) {
-      public val `get`: Get = Get(client, gistId)
+      public val `get`: Get = Get(__client, _gistId)
 
-      public val post: Post = Post(client, gistId)
+      public val post: Post = Post(__client, _gistId)
 
-      public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(client, gistId, commentId)
+      public fun commentId(commentId: Long): CommentIdPath = CommentIdPath(__client, _gistId, commentId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("gists/${this.gistId.encodeURLParameter()}/comments") {
+          val response = __client.get("gists/${this._gistId.encodeURLParameter()}/comments") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -515,11 +515,11 @@ public class Gists internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
       ) {
         public suspend operator fun invoke(body: String): Response {
-          val response = client.post("gists/${this.gistId.encodeURLParameter()}/comments") {
+          val response = __client.post("gists/${this._gistId.encodeURLParameter()}/comments") {
             contentType(ContentType.Application.Json)
             setBody(Body(body = body))
           }
@@ -555,23 +555,23 @@ public class Gists internal constructor(
       }
 
       public class CommentIdPath internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
-        private val commentId: Long,
+        private val __client: HttpClient,
+        private val _gistId: String,
+        private val _commentId: Long,
       ) {
-        public val delete: Delete = Delete(client, gistId, commentId)
+        public val delete: Delete = Delete(__client, _gistId, _commentId)
 
-        public val `get`: Get = Get(client, gistId, commentId)
+        public val `get`: Get = Get(__client, _gistId, _commentId)
 
-        public val patch: Patch = Patch(client, gistId, commentId)
+        public val patch: Patch = Patch(__client, _gistId, _commentId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val gistId: String,
-          private val commentId: Long,
+          private val __client: HttpClient,
+          private val _gistId: String,
+          private val _commentId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("gists/${this.gistId.encodeURLParameter()}/comments/${this.commentId}")
+            val response = __client.delete("gists/${this._gistId.encodeURLParameter()}/comments/${this._commentId}")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -597,12 +597,12 @@ public class Gists internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val gistId: String,
-          private val commentId: Long,
+          private val __client: HttpClient,
+          private val _gistId: String,
+          private val _commentId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("gists/${this.gistId.encodeURLParameter()}/comments/${this.commentId}")
+            val response = __client.get("gists/${this._gistId.encodeURLParameter()}/comments/${this._commentId}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -651,12 +651,12 @@ public class Gists internal constructor(
         }
 
         public class Patch internal constructor(
-          private val client: HttpClient,
-          private val gistId: String,
-          private val commentId: Long,
+          private val __client: HttpClient,
+          private val _gistId: String,
+          private val _commentId: Long,
         ) {
           public suspend operator fun invoke(body: String): Response {
-            val response = client.patch("gists/${this.gistId.encodeURLParameter()}/comments/${this.commentId}") {
+            val response = __client.patch("gists/${this._gistId.encodeURLParameter()}/comments/${this._commentId}") {
               contentType(ContentType.Application.Json)
               setBody(Body(body = body))
             }
@@ -686,17 +686,17 @@ public class Gists internal constructor(
     }
 
     public class Commits internal constructor(
-      private val client: HttpClient,
-      private val gistId: String,
+      private val __client: HttpClient,
+      private val _gistId: String,
     ) {
-      public val `get`: Get = Get(client, gistId)
+      public val `get`: Get = Get(__client, _gistId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("gists/${this.gistId.encodeURLParameter()}/commits") {
+          val response = __client.get("gists/${this._gistId.encodeURLParameter()}/commits") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -732,19 +732,19 @@ public class Gists internal constructor(
     }
 
     public class Forks internal constructor(
-      private val client: HttpClient,
-      private val gistId: String,
+      private val __client: HttpClient,
+      private val _gistId: String,
     ) {
-      public val `get`: Get = Get(client, gistId)
+      public val `get`: Get = Get(__client, _gistId)
 
-      public val post: Post = Post(client, gistId)
+      public val post: Post = Post(__client, _gistId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("gists/${this.gistId.encodeURLParameter()}/forks") {
+          val response = __client.get("gists/${this._gistId.encodeURLParameter()}/forks") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -779,11 +779,11 @@ public class Gists internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("gists/${this.gistId.encodeURLParameter()}/forks")
+          val response = __client.post("gists/${this._gistId.encodeURLParameter()}/forks")
           return when (response.status.value) {
             201 -> Response.Created(response.body())
             304 -> Response.NotModified
@@ -817,21 +817,21 @@ public class Gists internal constructor(
     }
 
     public class Star internal constructor(
-      private val client: HttpClient,
-      private val gistId: String,
+      private val __client: HttpClient,
+      private val _gistId: String,
     ) {
-      public val delete: Delete = Delete(client, gistId)
+      public val delete: Delete = Delete(__client, _gistId)
 
-      public val `get`: Get = Get(client, gistId)
+      public val `get`: Get = Get(__client, _gistId)
 
-      public val put: Put = Put(client, gistId)
+      public val put: Put = Put(__client, _gistId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("gists/${this.gistId.encodeURLParameter()}/star")
+          val response = __client.delete("gists/${this._gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -857,11 +857,11 @@ public class Gists internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("gists/${this.gistId.encodeURLParameter()}/star")
+          val response = __client.get("gists/${this._gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -885,11 +885,11 @@ public class Gists internal constructor(
       }
 
       public class Put internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.put("gists/${this.gistId.encodeURLParameter()}/star")
+          val response = __client.put("gists/${this._gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -916,19 +916,19 @@ public class Gists internal constructor(
     }
 
     public class ShaPath internal constructor(
-      private val client: HttpClient,
-      private val gistId: String,
-      private val sha: String,
+      private val __client: HttpClient,
+      private val _gistId: String,
+      private val _sha: String,
     ) {
-      public val `get`: Get = Get(client, gistId, sha)
+      public val `get`: Get = Get(__client, _gistId, _sha)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val gistId: String,
-        private val sha: String,
+        private val __client: HttpClient,
+        private val _gistId: String,
+        private val _sha: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("gists/${this.gistId.encodeURLParameter()}/${this.sha.encodeURLParameter()}")
+          val response = __client.get("gists/${this._gistId.encodeURLParameter()}/${this._sha.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             403 -> Response.Forbidden(response.body())

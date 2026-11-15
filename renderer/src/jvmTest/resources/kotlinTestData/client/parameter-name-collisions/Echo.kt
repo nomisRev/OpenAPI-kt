@@ -12,19 +12,19 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Echo internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       body: String,
       requestBody: List<String>,
       response: String? = null,
     ): String {
-      val response = client.post("echo") {
+      val response = __client.post("echo") {
         this.url.encodedParameters.append("body", body.encodeURLParameter())
         if (response != null) {
           this.url.encodedParameters.append("response", response.encodeURLParameter())

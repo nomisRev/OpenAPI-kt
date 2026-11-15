@@ -21,22 +21,22 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Installation internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val repositories: Repositories = Repositories(client)
+  public val repositories: Repositories = Repositories(__client)
 
-  public val token: Token = Token(client)
+  public val token: Token = Token(__client)
 
   public class Repositories internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("installation/repositories") {
+        val response = __client.get("installation/repositories") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -382,15 +382,15 @@ public class Installation internal constructor(
   }
 
   public class Token internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val delete: Delete = Delete(client)
+    public val delete: Delete = Delete(__client)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("installation/token")
+        val response = __client.delete("installation/token")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

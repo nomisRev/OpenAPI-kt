@@ -61,28 +61,28 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
 
 public class Realtime internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val calls: Calls = Calls(client)
+  public val calls: Calls = Calls(__client)
 
-  public val clientSecrets: ClientSecrets = ClientSecrets(client)
+  public val clientSecrets: ClientSecrets = ClientSecrets(__client)
 
-  public val sessions: Sessions = Sessions(client)
+  public val sessions: Sessions = Sessions(__client)
 
-  public val transcriptionSessions: TranscriptionSessions = TranscriptionSessions(client)
+  public val transcriptionSessions: TranscriptionSessions = TranscriptionSessions(__client)
 
   public class Calls internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
-    public fun callId(callId: String): CallIdPath = CallIdPath(client, callId)
+    public fun callId(callId: String): CallIdPath = CallIdPath(__client, callId)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session? = null): String {
-        val response = client.post("realtime/calls") {
+        val response = __client.post("realtime/calls") {
           setBody(MultiPartFormDataContent(formData {
             append("sdp", sdp, headersOf(HttpHeaders.ContentType, "application/sdp"))
             if (session != null) {
@@ -95,7 +95,7 @@ public class Realtime internal constructor(
       }
 
       public suspend operator fun invoke(body: String): String {
-        val response = client.post("realtime/calls") {
+        val response = __client.post("realtime/calls") {
           contentType(ContentType("application", "sdp"))
           setBody(body)
         }
@@ -558,29 +558,29 @@ public class Realtime internal constructor(
     }
 
     public class CallIdPath internal constructor(
-      private val client: HttpClient,
-      private val callId: String,
+      private val __client: HttpClient,
+      private val _callId: String,
     ) {
-      public val accept: Accept = Accept(client, callId)
+      public val accept: Accept = Accept(__client, _callId)
 
-      public val hangup: Hangup = Hangup(client, callId)
+      public val hangup: Hangup = Hangup(__client, _callId)
 
-      public val refer: Refer = Refer(client, callId)
+      public val refer: Refer = Refer(__client, _callId)
 
-      public val reject: Reject = Reject(client, callId)
+      public val reject: Reject = Reject(__client, _callId)
 
       public class Accept internal constructor(
-        private val client: HttpClient,
-        private val callId: String,
+        private val __client: HttpClient,
+        private val _callId: String,
       ) {
-        public val post: Post = Post(client, callId)
+        public val post: Post = Post(__client, _callId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val callId: String,
+          private val __client: HttpClient,
+          private val _callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeSessionCreateRequestGA) {
-            val response = client.post("realtime/calls/${this.callId.encodeURLParameter()}/accept") {
+            val response = __client.post("realtime/calls/${this._callId.encodeURLParameter()}/accept") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -590,34 +590,34 @@ public class Realtime internal constructor(
       }
 
       public class Hangup internal constructor(
-        private val client: HttpClient,
-        private val callId: String,
+        private val __client: HttpClient,
+        private val _callId: String,
       ) {
-        public val post: Post = Post(client, callId)
+        public val post: Post = Post(__client, _callId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val callId: String,
+          private val __client: HttpClient,
+          private val _callId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.post("realtime/calls/${this.callId.encodeURLParameter()}/hangup")
+            val response = __client.post("realtime/calls/${this._callId.encodeURLParameter()}/hangup")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
       }
 
       public class Refer internal constructor(
-        private val client: HttpClient,
-        private val callId: String,
+        private val __client: HttpClient,
+        private val _callId: String,
       ) {
-        public val post: Post = Post(client, callId)
+        public val post: Post = Post(__client, _callId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val callId: String,
+          private val __client: HttpClient,
+          private val _callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeCallReferRequest) {
-            val response = client.post("realtime/calls/${this.callId.encodeURLParameter()}/refer") {
+            val response = __client.post("realtime/calls/${this._callId.encodeURLParameter()}/refer") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -627,17 +627,17 @@ public class Realtime internal constructor(
       }
 
       public class Reject internal constructor(
-        private val client: HttpClient,
-        private val callId: String,
+        private val __client: HttpClient,
+        private val _callId: String,
       ) {
-        public val post: Post = Post(client, callId)
+        public val post: Post = Post(__client, _callId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val callId: String,
+          private val __client: HttpClient,
+          private val _callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeCallRejectRequest? = null) {
-            val response = client.post("realtime/calls/${this.callId.encodeURLParameter()}/reject") {
+            val response = __client.post("realtime/calls/${this._callId.encodeURLParameter()}/reject") {
               body?.let {
                 contentType(ContentType.Application.Json)
                 setBody(it)
@@ -651,15 +651,15 @@ public class Realtime internal constructor(
   }
 
   public class ClientSecrets internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: RealtimeCreateClientSecretRequest): RealtimeCreateClientSecretResponse {
-        val response = client.post("realtime/client_secrets") {
+        val response = __client.post("realtime/client_secrets") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -670,15 +670,15 @@ public class Realtime internal constructor(
   }
 
   public class Sessions internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: RealtimeSessionCreateRequest): RealtimeSessionCreateResponse {
-        val response = client.post("realtime/sessions") {
+        val response = __client.post("realtime/sessions") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -689,15 +689,15 @@ public class Realtime internal constructor(
   }
 
   public class TranscriptionSessions internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: RealtimeTranscriptionSessionCreateRequest): RealtimeTranscriptionSessionCreateResponse {
-        val response = client.post("realtime/transcription_sessions") {
+        val response = __client.post("realtime/transcription_sessions") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }

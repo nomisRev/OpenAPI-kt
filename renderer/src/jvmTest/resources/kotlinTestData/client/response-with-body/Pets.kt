@@ -13,15 +13,15 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Pets internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String): Response {
-      val response = client.post("pets") {
+      val response = __client.post("pets") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }

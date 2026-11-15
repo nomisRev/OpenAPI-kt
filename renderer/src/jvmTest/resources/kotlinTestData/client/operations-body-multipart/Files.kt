@@ -10,15 +10,15 @@ import kotlin.ByteArray
 import kotlin.String
 
 public class Files internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(`file`: ByteArray, purpose: String) {
-      val response = client.post("files") {
+      val response = __client.post("files") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)
           append("purpose", purpose)

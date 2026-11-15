@@ -14,19 +14,19 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 public class Repos internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun alertNumber(alertNumber: Long): AlertNumberPath = AlertNumberPath(client, alertNumber)
+  public fun alertNumber(alertNumber: Long): AlertNumberPath = AlertNumberPath(__client, alertNumber)
 
   public class AlertNumberPath internal constructor(
-    private val client: HttpClient,
-    private val alertNumber: Long,
+    private val __client: HttpClient,
+    private val _alertNumber: Long,
   ) {
-    public val `get`: Get = Get(client, alertNumber)
+    public val `get`: Get = Get(__client, _alertNumber)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val alertNumber: Long,
+      private val __client: HttpClient,
+      private val _alertNumber: Long,
     ) {
       @OptIn(ExperimentalUuidApi::class)
       public suspend operator fun invoke(
@@ -34,7 +34,7 @@ public class Repos internal constructor(
         toolName: String? = null,
         session: Instant? = null,
       ) {
-        val response = client.get("repos/${this.alertNumber}") {
+        val response = __client.get("repos/${this._alertNumber}") {
           if (toolName != null) {
             this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
           }

@@ -11,17 +11,17 @@ import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val tags: Tags = Tags(client)
+  public val tags: Tags = Tags(__client)
 
-  public val nasa: Nasa = Nasa(client)
+  public val nasa: Nasa = Nasa(__client)
 
-  public val undeclared: Undeclared = Undeclared(client)
+  public val undeclared: Undeclared = Undeclared(__client)
 
-  public val `open`: Open = Open(client)
+  public val `open`: Open = Open(__client)
 
-  public val unmatched: Unmatched = Unmatched(client)
+  public val unmatched: Unmatched = Unmatched(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -40,6 +40,6 @@ public class Api internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

@@ -6,15 +6,15 @@ import io.ktor.client.request.`get`
 import io.ktor.http.encodeURLParameter
 
 public class Filters internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(state: State? = null, selector: Selector? = null) {
-      val response = client.get("filters") {
+      val response = __client.get("filters") {
         if (state != null) {
           this.url.encodedParameters.append("state", state.value.encodeURLParameter())
         }

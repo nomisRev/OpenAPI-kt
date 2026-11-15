@@ -11,15 +11,15 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Users2 internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("users")
+      val response = __client.get("users")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

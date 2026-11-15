@@ -33,12 +33,12 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Items internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       ids: List<Long>,
@@ -66,7 +66,7 @@ public class Items internal constructor(
       prefs: List<String>? = null,
       flags: List<Status>? = null,
     ) {
-      val response = client.get("items") {
+      val response = __client.get("items") {
         ids.forEach { this.url.encodedParameters.append("ids", it.toString()) }
         if (!tags.isNullOrEmpty()) {
           this.url.encodedParameters.append("tags", tags.joinToString(",") { it.encodeURLParameter() })

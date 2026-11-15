@@ -11,21 +11,21 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Groups internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       fields: String? = "${'$'}type,allUsersGroup,id,name,ringId",
       skip: Int? = null,
       top: Int? = null,
     ): List<UserGroupRead> {
-      val response = client.get("groups") {
+      val response = __client.get("groups") {
         if (fields != null) {
           this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
@@ -42,17 +42,17 @@ public class Groups internal constructor(
   }
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,allUsersGroup,id,name,ringId"): UserGroupRead {
-        val response = client.get("groups/${this.id.encodeURLParameter()}") {
+        val response = __client.get("groups/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

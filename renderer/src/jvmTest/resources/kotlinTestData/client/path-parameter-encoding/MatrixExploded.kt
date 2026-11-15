@@ -8,22 +8,22 @@ import kotlin.String
 import kotlin.collections.List
 
 public class MatrixExploded internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun ids(ids: List<String>): IdsPath = IdsPath(client, ids)
+  public fun ids(ids: List<String>): IdsPath = IdsPath(__client, ids)
 
   public class IdsPath internal constructor(
-    private val client: HttpClient,
-    private val ids: List<String>,
+    private val __client: HttpClient,
+    private val _ids: List<String>,
   ) {
-    public val `get`: Get = Get(client, ids)
+    public val `get`: Get = Get(__client, _ids)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val ids: List<String>,
+      private val __client: HttpClient,
+      private val _ids: List<String>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("matrix-exploded/${this.ids.joinToString("") { ";ids=${it.encodeURLParameter()}" }}")
+        val response = __client.get("matrix-exploded/${this._ids.joinToString("") { ";ids=${it.encodeURLParameter()}" }}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

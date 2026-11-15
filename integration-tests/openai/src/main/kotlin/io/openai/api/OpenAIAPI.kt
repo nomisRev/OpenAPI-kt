@@ -11,55 +11,55 @@ import kotlin.String
 import kotlin.Unit
 
 public class OpenAIAPI internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val assistants: Assistants = Assistants(client)
+  public val assistants: Assistants = Assistants(__client)
 
-  public val audio: Audio = Audio(client)
+  public val audio: Audio = Audio(__client)
 
-  public val batches: Batches = Batches(client)
+  public val batches: Batches = Batches(__client)
 
-  public val chat: Chat = Chat(client)
+  public val chat: Chat = Chat(__client)
 
-  public val completions: Completions = Completions(client)
+  public val completions: Completions = Completions(__client)
 
-  public val containers: Containers = Containers(client)
+  public val containers: Containers = Containers(__client)
 
-  public val conversations: Conversations = Conversations(client)
+  public val conversations: Conversations = Conversations(__client)
 
-  public val embeddings: Embeddings = Embeddings(client)
+  public val embeddings: Embeddings = Embeddings(__client)
 
-  public val evals: Evals = Evals(client)
+  public val evals: Evals = Evals(__client)
 
-  public val files: Files = Files(client)
+  public val files: Files = Files(__client)
 
-  public val fineTuning: FineTuning = FineTuning(client)
+  public val fineTuning: FineTuning = FineTuning(__client)
 
-  public val images: Images = Images(client)
+  public val images: Images = Images(__client)
 
-  public val models: Models = Models(client)
+  public val models: Models = Models(__client)
 
-  public val moderations: Moderations = Moderations(client)
+  public val moderations: Moderations = Moderations(__client)
 
-  public val organization: Organization = Organization(client)
+  public val organization: Organization = Organization(__client)
 
-  public val projects: Projects = Projects(client)
+  public val projects: Projects = Projects(__client)
 
-  public val realtime: Realtime = Realtime(client)
+  public val realtime: Realtime = Realtime(__client)
 
-  public val responses: Responses = Responses(client)
+  public val responses: Responses = Responses(__client)
 
-  public val threads: Threads = Threads(client)
+  public val threads: Threads = Threads(__client)
 
-  public val uploads: Uploads = Uploads(client)
+  public val uploads: Uploads = Uploads(__client)
 
-  public val vectorStores: VectorStores = VectorStores(client)
+  public val vectorStores: VectorStores = VectorStores(__client)
 
-  public val videos: Videos = Videos(client)
+  public val videos: Videos = Videos(__client)
 
-  public val skills: Skills = Skills(client)
+  public val skills: Skills = Skills(__client)
 
-  public val chatkit: Chatkit = Chatkit(client)
+  public val chatkit: Chatkit = Chatkit(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -78,6 +78,6 @@ public class OpenAIAPI internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

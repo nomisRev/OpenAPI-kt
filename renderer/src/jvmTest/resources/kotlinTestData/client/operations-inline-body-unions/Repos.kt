@@ -28,41 +28,41 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
 
 public class Repos internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun owner(owner: String): OwnerPath = OwnerPath(client, owner)
+  public fun owner(owner: String): OwnerPath = OwnerPath(__client, owner)
 
   public class OwnerPath internal constructor(
-    private val client: HttpClient,
-    private val owner: String,
+    private val __client: HttpClient,
+    private val _owner: String,
   ) {
-    public fun repo(repo: String): RepoPath = RepoPath(client, owner, repo)
+    public fun repo(repo: String): RepoPath = RepoPath(__client, _owner, repo)
 
     public class RepoPath internal constructor(
-      private val client: HttpClient,
-      private val owner: String,
-      private val repo: String,
+      private val __client: HttpClient,
+      private val _owner: String,
+      private val _repo: String,
     ) {
-      public val issues: Issues = Issues(client, owner, repo)
+      public val issues: Issues = Issues(__client, _owner, _repo)
 
       public class Issues internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val post: Post = Post(client, owner, repo)
+        public val post: Post = Post(__client, _owner, _repo)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(
             title: String,
             body: String? = null,
             milestone: Milestone? = null,
           ) {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseString(title), body = body, milestone = milestone))
             }
@@ -74,7 +74,7 @@ public class Repos internal constructor(
             body: String? = null,
             milestone: Milestone? = null,
           ) {
-            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
+            val response = __client.post("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseLong(title), body = body, milestone = milestone))
             }

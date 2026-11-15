@@ -14,15 +14,15 @@ import kotlin.Unit
 import kotlinx.serialization.json.JsonPrimitive
 
 public class UploadPair internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("upload-pair") {
+      val response = __client.post("upload-pair") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }
@@ -30,7 +30,7 @@ public class UploadPair internal constructor(
     }
 
     public suspend operator fun invoke(block: HttpRequestBuilder.() -> Unit) {
-      val response = client.post("upload-pair") {
+      val response = __client.post("upload-pair") {
         block()
         if (this.body !is EmptyContent && this.contentType() == null && (this.body as? OutgoingContent)?.contentType == null) {
           this.contentType(ContentType.Application.Pdf)

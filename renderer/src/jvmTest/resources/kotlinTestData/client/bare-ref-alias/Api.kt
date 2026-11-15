@@ -11,15 +11,15 @@ import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val owners: Owners = Owners(client)
+  public val owners: Owners = Owners(__client)
 
-  public val uploads: Uploads = Uploads(client)
+  public val uploads: Uploads = Uploads(__client)
 
-  public val chain: Chain = Chain(client)
+  public val chain: Chain = Chain(__client)
 
-  public val holder: Holder = Holder(client)
+  public val holder: Holder = Holder(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -38,6 +38,6 @@ public class Api internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

@@ -12,14 +12,14 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Activities internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       categories: String? = null,
@@ -32,7 +32,7 @@ public class Activities internal constructor(
       skip: Int? = null,
       top: Int? = null,
     ): List<ActivityItem> {
-      val response = client.get("activities") {
+      val response = __client.get("activities") {
         if (categories != null) {
           this.url.encodedParameters.append("categories", categories.encodeURLParameter())
         }
@@ -67,17 +67,17 @@ public class Activities internal constructor(
   }
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp"): ActivityItem {
-        val response = client.get("activities/${this.id.encodeURLParameter()}") {
+        val response = __client.get("activities/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

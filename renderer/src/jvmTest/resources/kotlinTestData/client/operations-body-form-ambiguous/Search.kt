@@ -13,15 +13,15 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Search internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(query: String, filters: Filters? = null) {
-      val response = client.post("search") {
+      val response = __client.post("search") {
         contentType(ContentType.Application.Json)
         setBody(Body(query = query, filters = filters))
       }

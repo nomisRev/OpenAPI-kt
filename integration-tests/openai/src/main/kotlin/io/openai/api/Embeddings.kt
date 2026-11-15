@@ -11,15 +11,15 @@ import io.openai.model.CreateEmbeddingRequest
 import io.openai.model.CreateEmbeddingResponse
 
 public class Embeddings internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateEmbeddingRequest): CreateEmbeddingResponse {
-      val response = client.post("embeddings") {
+      val response = __client.post("embeddings") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

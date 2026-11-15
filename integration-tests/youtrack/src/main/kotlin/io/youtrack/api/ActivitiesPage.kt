@@ -10,12 +10,12 @@ import kotlin.Boolean
 import kotlin.String
 
 public class ActivitiesPage internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       categories: String? = null,
@@ -28,7 +28,7 @@ public class ActivitiesPage internal constructor(
       activityId: String? = null,
       fields: String? = "${'$'}type,activities(${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp),afterCursor,beforeCursor,hasAfter,hasBefore,id",
     ): ActivityCursorPage {
-      val response = client.get("activitiesPage") {
+      val response = __client.get("activitiesPage") {
         if (categories != null) {
           this.url.encodedParameters.append("categories", categories.encodeURLParameter())
         }

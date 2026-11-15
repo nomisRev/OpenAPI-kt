@@ -11,19 +11,19 @@ import kotlin.ByteArray
 import kotlin.String
 
 public class Avatars internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       body: ByteArray,
       contentType: ContentType,
       xRequestId: String? = null,
     ) {
-      val response = client.put("avatars") {
+      val response = __client.put("avatars") {
         if (xRequestId != null) {
           `header`("X-Request-Id", xRequestId)
         }

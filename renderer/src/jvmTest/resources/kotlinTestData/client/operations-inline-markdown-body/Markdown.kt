@@ -15,19 +15,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Markdown internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       text: String,
       mode: Mode? = null,
       context: String? = null,
     ): String {
-      val response = client.post("markdown") {
+      val response = __client.post("markdown") {
         contentType(ContentType.Application.Json)
         setBody(Body(text = text, mode = mode, context = context))
       }

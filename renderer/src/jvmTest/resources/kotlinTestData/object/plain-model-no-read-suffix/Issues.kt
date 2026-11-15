@@ -9,22 +9,22 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Issues internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(): IssueKey {
-        val response = client.get("issues/${this.id.encodeURLParameter()}")
+        val response = __client.get("issues/${this._id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }

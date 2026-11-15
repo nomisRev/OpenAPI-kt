@@ -30,15 +30,15 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 public class ContentExclusions internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body) {
-      val response = client.put("content-exclusions") {
+      val response = __client.put("content-exclusions") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

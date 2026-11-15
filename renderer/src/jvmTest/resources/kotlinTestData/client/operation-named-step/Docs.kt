@@ -13,17 +13,17 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Docs internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val delete: Delete = Delete(client)
+    public val delete: Delete = Delete(__client)
 
     public suspend fun json(): String {
-      val response = client.get("docs") {
+      val response = __client.get("docs") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -31,7 +31,7 @@ public class Docs internal constructor(
     }
 
     public suspend fun textPlain(): String {
-      val response = client.get("docs") {
+      val response = __client.get("docs") {
         `header`(HttpHeaders.Accept, ContentType.Text.Plain)
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -39,10 +39,10 @@ public class Docs internal constructor(
     }
 
     public class Delete internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("docs/get")
+        val response = __client.delete("docs/get")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

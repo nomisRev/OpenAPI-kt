@@ -9,19 +9,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Items internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       ordering: Ordering? = Ordering.MinusLastActivity,
       `operator`: Operator? = Operator.LessThanOrEqual,
       kind: Kind? = Kind.Empty,
     ) {
-      val response = client.get("items") {
+      val response = __client.get("items") {
         if (ordering != null) {
           this.url.encodedParameters.append("ordering", ordering.value.encodeURLParameter())
         }

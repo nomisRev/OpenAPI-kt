@@ -7,22 +7,22 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Pets internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun petId(petId: String): PetIdPath = PetIdPath(client, petId)
+  public fun petId(petId: String): PetIdPath = PetIdPath(__client, petId)
 
   public class PetIdPath internal constructor(
-    private val client: HttpClient,
-    private val petId: String,
+    private val __client: HttpClient,
+    private val _petId: String,
   ) {
-    public val delete: Delete = Delete(client, petId)
+    public val delete: Delete = Delete(__client, _petId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val petId: String,
+      private val __client: HttpClient,
+      private val _petId: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("pets/${this.petId.encodeURLParameter()}")
+        val response = __client.delete("pets/${this._petId.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

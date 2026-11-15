@@ -9,15 +9,15 @@ import kotlin.collections.List
 import kotlinx.serialization.Serializable
 
 public class Names internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): List<Name> {
-      val response = client.get("names")
+      val response = __client.get("names")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

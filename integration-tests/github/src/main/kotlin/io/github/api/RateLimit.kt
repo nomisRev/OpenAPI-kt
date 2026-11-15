@@ -8,15 +8,15 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 
 public class RateLimit internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("rate_limit")
+      val response = __client.get("rate_limit")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         304 -> Response.NotModified

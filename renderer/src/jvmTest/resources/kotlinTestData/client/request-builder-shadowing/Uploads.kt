@@ -11,12 +11,12 @@ import kotlin.ByteArray
 import kotlin.String
 
 public class Uploads internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       url: String,
@@ -24,7 +24,7 @@ public class Uploads internal constructor(
       append: String? = null,
       formData: String? = null,
     ) {
-      val response = client.post("uploads") {
+      val response = __client.post("uploads") {
         this.url.encodedParameters.append("url", url.encodeURLParameter())
         if (formData != null) {
           this.url.encodedParameters.append("formData", formData.encodeURLParameter())

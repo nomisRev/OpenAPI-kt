@@ -25,16 +25,16 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Files internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun fileId(fileId: String): FileIdPath = FileIdPath(client, fileId)
+  public fun fileId(fileId: String): FileIdPath = FileIdPath(__client, fileId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       purpose: String? = null,
@@ -42,7 +42,7 @@ public class Files internal constructor(
       order: Order? = Order.Desc,
       after: String? = null,
     ): ListFilesResponse {
-      val response = client.get("files") {
+      val response = __client.get("files") {
         if (purpose != null) {
           this.url.encodedParameters.append("purpose", purpose.encodeURLParameter())
         }
@@ -73,14 +73,14 @@ public class Files internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       `file`: ByteArray,
       purpose: CreateFileRequest.Purpose,
       expiresAfter: FileExpirationAfter? = null,
     ): OpenAIFile {
-      val response = client.post("files") {
+      val response = __client.post("files") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)
           append("purpose", purpose.value)
@@ -116,49 +116,49 @@ public class Files internal constructor(
   }
 
   public class FileIdPath internal constructor(
-    private val client: HttpClient,
-    private val fileId: String,
+    private val __client: HttpClient,
+    private val _fileId: String,
   ) {
-    public val delete: Delete = Delete(client, fileId)
+    public val delete: Delete = Delete(__client, _fileId)
 
-    public val `get`: Get = Get(client, fileId)
+    public val `get`: Get = Get(__client, _fileId)
 
-    public val content: Content = Content(client, fileId)
+    public val content: Content = Content(__client, _fileId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val fileId: String,
+      private val __client: HttpClient,
+      private val _fileId: String,
     ) {
       public suspend operator fun invoke(): DeleteFileResponse {
-        val response = client.delete("files/${this.fileId.encodeURLParameter()}")
+        val response = __client.delete("files/${this._fileId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val fileId: String,
+      private val __client: HttpClient,
+      private val _fileId: String,
     ) {
       public suspend operator fun invoke(): OpenAIFile {
-        val response = client.get("files/${this.fileId.encodeURLParameter()}")
+        val response = __client.get("files/${this._fileId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Content internal constructor(
-      private val client: HttpClient,
-      private val fileId: String,
+      private val __client: HttpClient,
+      private val _fileId: String,
     ) {
-      public val `get`: Get = Get(client, fileId)
+      public val `get`: Get = Get(__client, _fileId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val fileId: String,
+        private val __client: HttpClient,
+        private val _fileId: String,
       ) {
         public suspend operator fun invoke(): String {
-          val response = client.get("files/${this.fileId.encodeURLParameter()}/content")
+          val response = __client.get("files/${this._fileId.encodeURLParameter()}/content")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
         }

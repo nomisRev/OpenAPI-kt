@@ -9,15 +9,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 public class Names internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: NullableAllOfNames?): NullableAnyOfColor? {
-      val response = client.put("names") {
+      val response = __client.put("names") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

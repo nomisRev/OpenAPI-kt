@@ -40,16 +40,16 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Issues internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       query: String? = null,
@@ -58,7 +58,7 @@ public class Issues internal constructor(
       skip: Int? = null,
       top: Int? = null,
     ): List<IssueRead> {
-      val response = client.get("issues") {
+      val response = __client.get("issues") {
         if (query != null) {
           this.url.encodedParameters.append("query", query.encodeURLParameter())
         }
@@ -81,7 +81,7 @@ public class Issues internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       draftId: String? = null,
@@ -89,7 +89,7 @@ public class Issues internal constructor(
       fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
       body: IssueWrite? = null,
     ): IssueRead {
-      val response = client.post("issues") {
+      val response = __client.post("issues") {
         if (draftId != null) {
           this.url.encodedParameters.append("draftId", draftId.encodeURLParameter())
         }
@@ -110,53 +110,53 @@ public class Issues internal constructor(
   }
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val delete: Delete = Delete(client, id)
+    public val delete: Delete = Delete(__client, _id)
 
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
-    public val post: Post = Post(client, id)
+    public val post: Post = Post(__client, _id)
 
-    public val activities: Activities = Activities(client, id)
+    public val activities: Activities = Activities(__client, _id)
 
-    public val activitiesPage: ActivitiesPage = ActivitiesPage(client, id)
+    public val activitiesPage: ActivitiesPage = ActivitiesPage(__client, _id)
 
-    public val attachments: Attachments = Attachments(client, id)
+    public val attachments: Attachments = Attachments(__client, _id)
 
-    public val comments: Comments = Comments(client, id)
+    public val comments: Comments = Comments(__client, _id)
 
-    public val customFields: CustomFields = CustomFields(client, id)
+    public val customFields: CustomFields = CustomFields(__client, _id)
 
-    public val links: Links = Links(client, id)
+    public val links: Links = Links(__client, _id)
 
-    public val project: Project = Project(client, id)
+    public val project: Project = Project(__client, _id)
 
-    public val sprints: Sprints = Sprints(client, id)
+    public val sprints: Sprints = Sprints(__client, _id)
 
-    public val tags: Tags = Tags(client, id)
+    public val tags: Tags = Tags(__client, _id)
 
-    public val timeTracking: TimeTracking = TimeTracking(client, id)
+    public val timeTracking: TimeTracking = TimeTracking(__client, _id)
 
-    public val vcsChanges: VcsChanges = VcsChanges(client, id)
+    public val vcsChanges: VcsChanges = VcsChanges(__client, _id)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("issues/${this.id.encodeURLParameter()}")
+        val response = __client.delete("issues/${this._id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): IssueRead {
-        val response = client.get("issues/${this.id.encodeURLParameter()}") {
+        val response = __client.get("issues/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -167,15 +167,15 @@ public class Issues internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(
         muteUpdateNotifications: Boolean? = null,
         fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
         body: IssueWrite? = null,
       ): IssueRead {
-        val response = client.post("issues/${this.id.encodeURLParameter()}") {
+        val response = __client.post("issues/${this._id.encodeURLParameter()}") {
           if (muteUpdateNotifications != null) {
             this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
           }
@@ -193,16 +193,16 @@ public class Issues internal constructor(
     }
 
     public class Activities internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public fun activityItemId(activityItemId: String): ActivityItemIdPath = ActivityItemIdPath(client, id, activityItemId)
+      public fun activityItemId(activityItemId: String): ActivityItemIdPath = ActivityItemIdPath(__client, _id, activityItemId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           categories: String? = null,
@@ -214,7 +214,7 @@ public class Issues internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<ActivityItem> {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/activities") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/activities") {
             if (categories != null) {
               this.url.encodedParameters.append("categories", categories.encodeURLParameter())
             }
@@ -246,19 +246,19 @@ public class Issues internal constructor(
       }
 
       public class ActivityItemIdPath internal constructor(
-        private val client: HttpClient,
-        private val id: String,
-        private val activityItemId: String,
+        private val __client: HttpClient,
+        private val _id: String,
+        private val _activityItemId: String,
       ) {
-        public val `get`: Get = Get(client, id, activityItemId)
+        public val `get`: Get = Get(__client, _id, _activityItemId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val activityItemId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _activityItemId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp"): ActivityItem {
-            val response = client.get("issues/${this.id.encodeURLParameter()}/activities/${this.activityItemId.encodeURLParameter()}") {
+            val response = __client.get("issues/${this._id.encodeURLParameter()}/activities/${this._activityItemId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -271,14 +271,14 @@ public class Issues internal constructor(
     }
 
     public class ActivitiesPage internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           categories: String? = null,
@@ -290,7 +290,7 @@ public class Issues internal constructor(
           activityId: String? = null,
           fields: String? = "${'$'}type,activities(${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp),afterCursor,beforeCursor,hasAfter,hasBefore,id",
         ): ActivityCursorPage {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/activitiesPage") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/activitiesPage") {
             if (categories != null) {
               this.url.encodedParameters.append("categories", categories.encodeURLParameter())
             }
@@ -323,25 +323,25 @@ public class Issues internal constructor(
     }
 
     public class Attachments internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public val post: Post = Post(client, id)
+      public val post: Post = Post(__client, _id)
 
-      public fun issueAttachmentId(issueAttachmentId: String): IssueAttachmentIdPath = IssueAttachmentIdPath(client, id, issueAttachmentId)
+      public fun issueAttachmentId(issueAttachmentId: String): IssueAttachmentIdPath = IssueAttachmentIdPath(__client, _id, issueAttachmentId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url",
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueAttachmentRead> {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/attachments") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/attachments") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -358,11 +358,11 @@ public class Issues internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(muteUpdateNotifications: Boolean? = null, fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url"): List<IssueAttachmentRead> {
-          val response = client.post("issues/${this.id.encodeURLParameter()}/attachments") {
+          val response = __client.post("issues/${this._id.encodeURLParameter()}/attachments") {
             if (muteUpdateNotifications != null) {
               this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
@@ -379,7 +379,7 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url",
           files0: ByteArray? = null,
         ): List<IssueAttachmentRead> {
-          val response = client.post("issues/${this.id.encodeURLParameter()}/attachments") {
+          val response = __client.post("issues/${this._id.encodeURLParameter()}/attachments") {
             if (muteUpdateNotifications != null) {
               this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
@@ -398,34 +398,34 @@ public class Issues internal constructor(
       }
 
       public class IssueAttachmentIdPath internal constructor(
-        private val client: HttpClient,
-        private val id: String,
-        private val issueAttachmentId: String,
+        private val __client: HttpClient,
+        private val _id: String,
+        private val _issueAttachmentId: String,
       ) {
-        public val delete: Delete = Delete(client, id, issueAttachmentId)
+        public val delete: Delete = Delete(__client, _id, _issueAttachmentId)
 
-        public val `get`: Get = Get(client, id, issueAttachmentId)
+        public val `get`: Get = Get(__client, _id, _issueAttachmentId)
 
-        public val post: Post = Post(client, id, issueAttachmentId)
+        public val post: Post = Post(__client, _id, _issueAttachmentId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueAttachmentId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueAttachmentId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("issues/${this.id.encodeURLParameter()}/attachments/${this.issueAttachmentId.encodeURLParameter()}")
+            val response = __client.delete("issues/${this._id.encodeURLParameter()}/attachments/${this._issueAttachmentId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueAttachmentId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueAttachmentId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url"): IssueAttachmentRead {
-            val response = client.get("issues/${this.id.encodeURLParameter()}/attachments/${this.issueAttachmentId.encodeURLParameter()}") {
+            val response = __client.get("issues/${this._id.encodeURLParameter()}/attachments/${this._issueAttachmentId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -436,12 +436,12 @@ public class Issues internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueAttachmentId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueAttachmentId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url", body: IssueAttachmentWrite? = null): IssueAttachmentRead {
-            val response = client.post("issues/${this.id.encodeURLParameter()}/attachments/${this.issueAttachmentId.encodeURLParameter()}") {
+            val response = __client.post("issues/${this._id.encodeURLParameter()}/attachments/${this._issueAttachmentId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -458,25 +458,25 @@ public class Issues internal constructor(
     }
 
     public class Comments internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public val post: Post = Post(client, id)
+      public val post: Post = Post(__client, _id)
 
-      public fun issueCommentId(issueCommentId: String): IssueCommentIdPath = IssueCommentIdPath(client, id, issueCommentId)
+      public fun issueCommentId(issueCommentId: String): IssueCommentIdPath = IssueCommentIdPath(__client, _id, issueCommentId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueCommentRead> {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/comments") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/comments") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -493,8 +493,8 @@ public class Issues internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           draftId: String? = null,
@@ -502,7 +502,7 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
           body: IssueCommentWrite? = null,
         ): IssueCommentRead {
-          val response = client.post("issues/${this.id.encodeURLParameter()}/comments") {
+          val response = __client.post("issues/${this._id.encodeURLParameter()}/comments") {
             if (draftId != null) {
               this.url.encodedParameters.append("draftId", draftId.encodeURLParameter())
             }
@@ -523,36 +523,36 @@ public class Issues internal constructor(
       }
 
       public class IssueCommentIdPath internal constructor(
-        private val client: HttpClient,
-        private val id: String,
-        private val issueCommentId: String,
+        private val __client: HttpClient,
+        private val _id: String,
+        private val _issueCommentId: String,
       ) {
-        public val delete: Delete = Delete(client, id, issueCommentId)
+        public val delete: Delete = Delete(__client, _id, _issueCommentId)
 
-        public val `get`: Get = Get(client, id, issueCommentId)
+        public val `get`: Get = Get(__client, _id, _issueCommentId)
 
-        public val post: Post = Post(client, id, issueCommentId)
+        public val post: Post = Post(__client, _id, _issueCommentId)
 
-        public val reactions: Reactions = Reactions(client, id, issueCommentId)
+        public val reactions: Reactions = Reactions(__client, _id, _issueCommentId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueCommentId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueCommentId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("issues/${this.id.encodeURLParameter()}/comments/${this.issueCommentId.encodeURLParameter()}")
+            val response = __client.delete("issues/${this._id.encodeURLParameter()}/comments/${this._issueCommentId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueCommentId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueCommentId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): IssueCommentRead {
-            val response = client.get("issues/${this.id.encodeURLParameter()}/comments/${this.issueCommentId.encodeURLParameter()}") {
+            val response = __client.get("issues/${this._id.encodeURLParameter()}/comments/${this._issueCommentId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -563,16 +563,16 @@ public class Issues internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueCommentId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueCommentId: String,
         ) {
           public suspend operator fun invoke(
             muteUpdateNotifications: Boolean? = null,
             fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
             body: IssueCommentWrite? = null,
           ): IssueCommentRead {
-            val response = client.post("issues/${this.id.encodeURLParameter()}/comments/${this.issueCommentId.encodeURLParameter()}") {
+            val response = __client.post("issues/${this._id.encodeURLParameter()}/comments/${this._issueCommentId.encodeURLParameter()}") {
               if (muteUpdateNotifications != null) {
                 this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
@@ -590,27 +590,27 @@ public class Issues internal constructor(
         }
 
         public class Reactions internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueCommentId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueCommentId: String,
         ) {
-          public val `get`: Get = Get(client, id, issueCommentId)
+          public val `get`: Get = Get(__client, _id, _issueCommentId)
 
-          public val post: Post = Post(client, id, issueCommentId)
+          public val post: Post = Post(__client, _id, _issueCommentId)
 
-          public fun reactionId(reactionId: String): ReactionIdPath = ReactionIdPath(client, id, issueCommentId, reactionId)
+          public fun reactionId(reactionId: String): ReactionIdPath = ReactionIdPath(__client, _id, _issueCommentId, reactionId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueCommentId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueCommentId: String,
           ) {
             public suspend operator fun invoke(
               fields: String? = "${'$'}type,id",
               skip: Int? = null,
               top: Int? = null,
             ): List<ReactionRead> {
-              val response = client.get("issues/${this.id.encodeURLParameter()}/comments/${this.issueCommentId.encodeURLParameter()}/reactions") {
+              val response = __client.get("issues/${this._id.encodeURLParameter()}/comments/${this._issueCommentId.encodeURLParameter()}/reactions") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -627,12 +627,12 @@ public class Issues internal constructor(
           }
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueCommentId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueCommentId: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: ReactionWrite? = null): ReactionRead {
-              val response = client.post("issues/${this.id.encodeURLParameter()}/comments/${this.issueCommentId.encodeURLParameter()}/reactions") {
+              val response = __client.post("issues/${this._id.encodeURLParameter()}/comments/${this._issueCommentId.encodeURLParameter()}/reactions") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -647,35 +647,35 @@ public class Issues internal constructor(
           }
 
           public class ReactionIdPath internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueCommentId: String,
-            private val reactionId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueCommentId: String,
+            private val _reactionId: String,
           ) {
-            public val delete: Delete = Delete(client, id, issueCommentId, reactionId)
+            public val delete: Delete = Delete(__client, _id, _issueCommentId, _reactionId)
 
-            public val `get`: Get = Get(client, id, issueCommentId, reactionId)
+            public val `get`: Get = Get(__client, _id, _issueCommentId, _reactionId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val id: String,
-              private val issueCommentId: String,
-              private val reactionId: String,
+              private val __client: HttpClient,
+              private val _id: String,
+              private val _issueCommentId: String,
+              private val _reactionId: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("issues/${this.id.encodeURLParameter()}/comments/${this.issueCommentId.encodeURLParameter()}/reactions/${this.reactionId.encodeURLParameter()}")
+                val response = __client.delete("issues/${this._id.encodeURLParameter()}/comments/${this._issueCommentId.encodeURLParameter()}/reactions/${this._reactionId.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val id: String,
-              private val issueCommentId: String,
-              private val reactionId: String,
+              private val __client: HttpClient,
+              private val _id: String,
+              private val _issueCommentId: String,
+              private val _reactionId: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,id"): ReactionRead {
-                val response = client.get("issues/${this.id.encodeURLParameter()}/comments/${this.issueCommentId.encodeURLParameter()}/reactions/${this.reactionId.encodeURLParameter()}") {
+                val response = __client.get("issues/${this._id.encodeURLParameter()}/comments/${this._issueCommentId.encodeURLParameter()}/reactions/${this._reactionId.encodeURLParameter()}") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -690,23 +690,23 @@ public class Issues internal constructor(
     }
 
     public class CustomFields internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public fun issueCustomFieldId(issueCustomFieldId: String): IssueCustomFieldIdPath = IssueCustomFieldIdPath(client, id, issueCustomFieldId)
+      public fun issueCustomFieldId(issueCustomFieldId: String): IssueCustomFieldIdPath = IssueCustomFieldIdPath(__client, _id, issueCustomFieldId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,id,name,value(${'$'}type,id,name)",
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueCustomFieldRead> {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/customFields") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/customFields") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -723,21 +723,21 @@ public class Issues internal constructor(
       }
 
       public class IssueCustomFieldIdPath internal constructor(
-        private val client: HttpClient,
-        private val id: String,
-        private val issueCustomFieldId: String,
+        private val __client: HttpClient,
+        private val _id: String,
+        private val _issueCustomFieldId: String,
       ) {
-        public val `get`: Get = Get(client, id, issueCustomFieldId)
+        public val `get`: Get = Get(__client, _id, _issueCustomFieldId)
 
-        public val post: Post = Post(client, id, issueCustomFieldId)
+        public val post: Post = Post(__client, _id, _issueCustomFieldId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueCustomFieldId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueCustomFieldId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,value(${'$'}type,id,name)"): IssueCustomFieldRead {
-            val response = client.get("issues/${this.id.encodeURLParameter()}/customFields/${this.issueCustomFieldId.encodeURLParameter()}") {
+            val response = __client.get("issues/${this._id.encodeURLParameter()}/customFields/${this._issueCustomFieldId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -748,16 +748,16 @@ public class Issues internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueCustomFieldId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueCustomFieldId: String,
         ) {
           public suspend operator fun invoke(
             muteUpdateNotifications: Boolean? = null,
             fields: String? = "${'$'}type,id,name,value(${'$'}type,id,name)",
             body: IssueCustomFieldWrite? = null,
           ): IssueCustomFieldRead {
-            val response = client.post("issues/${this.id.encodeURLParameter()}/customFields/${this.issueCustomFieldId.encodeURLParameter()}") {
+            val response = __client.post("issues/${this._id.encodeURLParameter()}/customFields/${this._issueCustomFieldId.encodeURLParameter()}") {
               if (muteUpdateNotifications != null) {
                 this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
@@ -777,23 +777,23 @@ public class Issues internal constructor(
     }
 
     public class Links internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public fun issueLinkId(issueLinkId: String): IssueLinkIdPath = IssueLinkIdPath(client, id, issueLinkId)
+      public fun issueLinkId(issueLinkId: String): IssueLinkIdPath = IssueLinkIdPath(__client, _id, issueLinkId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)",
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueLink> {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/links") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/links") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -810,21 +810,21 @@ public class Issues internal constructor(
       }
 
       public class IssueLinkIdPath internal constructor(
-        private val client: HttpClient,
-        private val id: String,
-        private val issueLinkId: String,
+        private val __client: HttpClient,
+        private val _id: String,
+        private val _issueLinkId: String,
       ) {
-        public val `get`: Get = Get(client, id, issueLinkId)
+        public val `get`: Get = Get(__client, _id, _issueLinkId)
 
-        public val issues: Issues = Issues(client, id, issueLinkId)
+        public val issues: Issues = Issues(__client, _id, _issueLinkId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueLinkId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueLinkId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)"): IssueLink {
-            val response = client.get("issues/${this.id.encodeURLParameter()}/links/${this.issueLinkId.encodeURLParameter()}") {
+            val response = __client.get("issues/${this._id.encodeURLParameter()}/links/${this._issueLinkId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -835,27 +835,27 @@ public class Issues internal constructor(
         }
 
         public class Issues internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueLinkId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueLinkId: String,
         ) {
-          public val `get`: Get = Get(client, id, issueLinkId)
+          public val `get`: Get = Get(__client, _id, _issueLinkId)
 
-          public val post: Post = Post(client, id, issueLinkId)
+          public val post: Post = Post(__client, _id, _issueLinkId)
 
-          public fun issueId(issueId: String): IssueIdPath = IssueIdPath(client, id, issueLinkId, issueId)
+          public fun issueId(issueId: String): IssueIdPath = IssueIdPath(__client, _id, _issueLinkId, issueId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueLinkId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueLinkId: String,
           ) {
             public suspend operator fun invoke(
               fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
               skip: Int? = null,
               top: Int? = null,
             ): List<IssueRead> {
-              val response = client.get("issues/${this.id.encodeURLParameter()}/links/${this.issueLinkId.encodeURLParameter()}/issues") {
+              val response = __client.get("issues/${this._id.encodeURLParameter()}/links/${this._issueLinkId.encodeURLParameter()}/issues") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -872,16 +872,16 @@ public class Issues internal constructor(
           }
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueLinkId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueLinkId: String,
           ) {
             public suspend operator fun invoke(
               muteUpdateNotifications: Boolean? = null,
               fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
               body: IssueWrite? = null,
             ): IssueRead {
-              val response = client.post("issues/${this.id.encodeURLParameter()}/links/${this.issueLinkId.encodeURLParameter()}/issues") {
+              val response = __client.post("issues/${this._id.encodeURLParameter()}/links/${this._issueLinkId.encodeURLParameter()}/issues") {
                 if (muteUpdateNotifications != null) {
                   this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
                 }
@@ -899,21 +899,21 @@ public class Issues internal constructor(
           }
 
           public class IssueIdPath internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueLinkId: String,
-            private val issueId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueLinkId: String,
+            private val _issueId: String,
           ) {
-            public val delete: Delete = Delete(client, id, issueLinkId, issueId)
+            public val delete: Delete = Delete(__client, _id, _issueLinkId, _issueId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val id: String,
-              private val issueLinkId: String,
-              private val issueId: String,
+              private val __client: HttpClient,
+              private val _id: String,
+              private val _issueLinkId: String,
+              private val _issueId: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("issues/${this.id.encodeURLParameter()}/links/${this.issueLinkId.encodeURLParameter()}/issues/${this.issueId.encodeURLParameter()}")
+                val response = __client.delete("issues/${this._id.encodeURLParameter()}/links/${this._issueLinkId.encodeURLParameter()}/issues/${this._issueId.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
               }
             }
@@ -923,19 +923,19 @@ public class Issues internal constructor(
     }
 
     public class Project internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public val post: Post = Post(client, id)
+      public val post: Post = Post(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName"): IssueFolderRead.Project {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/project") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/project") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -946,15 +946,15 @@ public class Issues internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           muteUpdateNotifications: Boolean? = null,
           fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName",
           body: IssueFolderWrite.Project? = null,
         ): IssueFolderRead.Project {
-          val response = client.post("issues/${this.id.encodeURLParameter()}/project") {
+          val response = __client.post("issues/${this._id.encodeURLParameter()}/project") {
             if (muteUpdateNotifications != null) {
               this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
@@ -973,21 +973,21 @@ public class Issues internal constructor(
     }
 
     public class Sprints internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start",
           skip: Int? = null,
           top: Int? = null,
         ): List<SprintRead> {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/sprints") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/sprints") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -1005,25 +1005,25 @@ public class Issues internal constructor(
     }
 
     public class Tags internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public val post: Post = Post(client, id)
+      public val post: Post = Post(__client, _id)
 
-      public fun tagId(tagId: String): TagIdPath = TagIdPath(client, id, tagId)
+      public fun tagId(tagId: String): TagIdPath = TagIdPath(__client, _id, tagId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)",
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueFolderRead.Tag> {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/tags") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/tags") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -1040,11 +1040,11 @@ public class Issues internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
-          val response = client.post("issues/${this.id.encodeURLParameter()}/tags") {
+          val response = __client.post("issues/${this._id.encodeURLParameter()}/tags") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -1059,32 +1059,32 @@ public class Issues internal constructor(
       }
 
       public class TagIdPath internal constructor(
-        private val client: HttpClient,
-        private val id: String,
-        private val tagId: String,
+        private val __client: HttpClient,
+        private val _id: String,
+        private val _tagId: String,
       ) {
-        public val delete: Delete = Delete(client, id, tagId)
+        public val delete: Delete = Delete(__client, _id, _tagId)
 
-        public val `get`: Get = Get(client, id, tagId)
+        public val `get`: Get = Get(__client, _id, _tagId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val tagId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _tagId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("issues/${this.id.encodeURLParameter()}/tags/${this.tagId.encodeURLParameter()}")
+            val response = __client.delete("issues/${this._id.encodeURLParameter()}/tags/${this._tagId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val tagId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _tagId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag {
-            val response = client.get("issues/${this.id.encodeURLParameter()}/tags/${this.tagId.encodeURLParameter()}") {
+            val response = __client.get("issues/${this._id.encodeURLParameter()}/tags/${this._tagId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -1097,19 +1097,19 @@ public class Issues internal constructor(
     }
 
     public class TimeTracking internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public val workItems: WorkItems = WorkItems(client, id)
+      public val workItems: WorkItems = WorkItems(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(fields: String? = "${'$'}type,enabled,id"): IssueTimeTracker {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/timeTracking") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/timeTracking") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -1120,25 +1120,25 @@ public class Issues internal constructor(
       }
 
       public class WorkItems internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
-        public val `get`: Get = Get(client, id)
+        public val `get`: Get = Get(__client, _id)
 
-        public val post: Post = Post(client, id)
+        public val post: Post = Post(__client, _id)
 
-        public fun issueWorkItemId(issueWorkItemId: String): IssueWorkItemIdPath = IssueWorkItemIdPath(client, id, issueWorkItemId)
+        public fun issueWorkItemId(issueWorkItemId: String): IssueWorkItemIdPath = IssueWorkItemIdPath(__client, _id, issueWorkItemId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
+          private val __client: HttpClient,
+          private val _id: String,
         ) {
           public suspend operator fun invoke(
             fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated",
             skip: Int? = null,
             top: Int? = null,
           ): List<BaseWorkItemRead.IssueWorkItem> {
-            val response = client.get("issues/${this.id.encodeURLParameter()}/timeTracking/workItems") {
+            val response = __client.get("issues/${this._id.encodeURLParameter()}/timeTracking/workItems") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -1155,15 +1155,15 @@ public class Issues internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val id: String,
+          private val __client: HttpClient,
+          private val _id: String,
         ) {
           public suspend operator fun invoke(
             muteUpdateNotifications: Boolean? = null,
             fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated",
             body: BaseWorkItemWrite.IssueWorkItem? = null,
           ): BaseWorkItemRead.IssueWorkItem {
-            val response = client.post("issues/${this.id.encodeURLParameter()}/timeTracking/workItems") {
+            val response = __client.post("issues/${this._id.encodeURLParameter()}/timeTracking/workItems") {
               if (muteUpdateNotifications != null) {
                 this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
@@ -1181,34 +1181,34 @@ public class Issues internal constructor(
         }
 
         public class IssueWorkItemIdPath internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val issueWorkItemId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _issueWorkItemId: String,
         ) {
-          public val delete: Delete = Delete(client, id, issueWorkItemId)
+          public val delete: Delete = Delete(__client, _id, _issueWorkItemId)
 
-          public val `get`: Get = Get(client, id, issueWorkItemId)
+          public val `get`: Get = Get(__client, _id, _issueWorkItemId)
 
-          public val post: Post = Post(client, id, issueWorkItemId)
+          public val post: Post = Post(__client, _id, _issueWorkItemId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueWorkItemId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueWorkItemId: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("issues/${this.id.encodeURLParameter()}/timeTracking/workItems/${this.issueWorkItemId.encodeURLParameter()}")
+              val response = __client.delete("issues/${this._id.encodeURLParameter()}/timeTracking/workItems/${this._issueWorkItemId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueWorkItemId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueWorkItemId: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated"): BaseWorkItemRead.IssueWorkItem {
-              val response = client.get("issues/${this.id.encodeURLParameter()}/timeTracking/workItems/${this.issueWorkItemId.encodeURLParameter()}") {
+              val response = __client.get("issues/${this._id.encodeURLParameter()}/timeTracking/workItems/${this._issueWorkItemId.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -1219,16 +1219,16 @@ public class Issues internal constructor(
           }
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val id: String,
-            private val issueWorkItemId: String,
+            private val __client: HttpClient,
+            private val _id: String,
+            private val _issueWorkItemId: String,
           ) {
             public suspend operator fun invoke(
               muteUpdateNotifications: Boolean? = null,
               fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated",
               body: BaseWorkItemWrite.IssueWorkItem? = null,
             ): BaseWorkItemRead.IssueWorkItem {
-              val response = client.post("issues/${this.id.encodeURLParameter()}/timeTracking/workItems/${this.issueWorkItemId.encodeURLParameter()}") {
+              val response = __client.post("issues/${this._id.encodeURLParameter()}/timeTracking/workItems/${this._issueWorkItemId.encodeURLParameter()}") {
                 if (muteUpdateNotifications != null) {
                   this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
                 }
@@ -1249,25 +1249,25 @@ public class Issues internal constructor(
     }
 
     public class VcsChanges internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
-      public val post: Post = Post(client, id)
+      public val post: Post = Post(__client, _id)
 
-      public fun vcsChangeId(vcsChangeId: String): VcsChangeIdPath = VcsChangeIdPath(client, id, vcsChangeId)
+      public fun vcsChangeId(vcsChangeId: String): VcsChangeIdPath = VcsChangeIdPath(__client, _id, vcsChangeId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,id",
           skip: Int? = null,
           top: Int? = null,
         ): List<VcsChangeRead> {
-          val response = client.get("issues/${this.id.encodeURLParameter()}/vcsChanges") {
+          val response = __client.get("issues/${this._id.encodeURLParameter()}/vcsChanges") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -1284,15 +1284,15 @@ public class Issues internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           muteUpdateNotifications: Boolean? = null,
           fields: String? = "${'$'}type,id",
           body: VcsChangeWrite? = null,
         ): VcsChangeRead {
-          val response = client.post("issues/${this.id.encodeURLParameter()}/vcsChanges") {
+          val response = __client.post("issues/${this._id.encodeURLParameter()}/vcsChanges") {
             if (muteUpdateNotifications != null) {
               this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
@@ -1310,34 +1310,34 @@ public class Issues internal constructor(
       }
 
       public class VcsChangeIdPath internal constructor(
-        private val client: HttpClient,
-        private val id: String,
-        private val vcsChangeId: String,
+        private val __client: HttpClient,
+        private val _id: String,
+        private val _vcsChangeId: String,
       ) {
-        public val delete: Delete = Delete(client, id, vcsChangeId)
+        public val delete: Delete = Delete(__client, _id, _vcsChangeId)
 
-        public val `get`: Get = Get(client, id, vcsChangeId)
+        public val `get`: Get = Get(__client, _id, _vcsChangeId)
 
-        public val post: Post = Post(client, id, vcsChangeId)
+        public val post: Post = Post(__client, _id, _vcsChangeId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val vcsChangeId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _vcsChangeId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("issues/${this.id.encodeURLParameter()}/vcsChanges/${this.vcsChangeId.encodeURLParameter()}")
+            val response = __client.delete("issues/${this._id.encodeURLParameter()}/vcsChanges/${this._vcsChangeId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val vcsChangeId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _vcsChangeId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id"): VcsChangeRead {
-            val response = client.get("issues/${this.id.encodeURLParameter()}/vcsChanges/${this.vcsChangeId.encodeURLParameter()}") {
+            val response = __client.get("issues/${this._id.encodeURLParameter()}/vcsChanges/${this._vcsChangeId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -1348,16 +1348,16 @@ public class Issues internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val id: String,
-          private val vcsChangeId: String,
+          private val __client: HttpClient,
+          private val _id: String,
+          private val _vcsChangeId: String,
         ) {
           public suspend operator fun invoke(
             muteUpdateNotifications: Boolean? = null,
             fields: String? = "${'$'}type,id",
             body: VcsChangeWrite? = null,
           ): VcsChangeRead {
-            val response = client.post("issues/${this.id.encodeURLParameter()}/vcsChanges/${this.vcsChangeId.encodeURLParameter()}") {
+            val response = __client.post("issues/${this._id.encodeURLParameter()}/vcsChanges/${this._vcsChangeId.encodeURLParameter()}") {
               if (muteUpdateNotifications != null) {
                 this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }

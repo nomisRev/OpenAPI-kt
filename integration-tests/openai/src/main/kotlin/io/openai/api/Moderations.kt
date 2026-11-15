@@ -11,15 +11,15 @@ import io.openai.model.CreateModerationRequest
 import io.openai.model.CreateModerationResponse
 
 public class Moderations internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateModerationRequest): CreateModerationResponse {
-      val response = client.post("moderations") {
+      val response = __client.post("moderations") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

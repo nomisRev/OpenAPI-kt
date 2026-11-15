@@ -7,33 +7,33 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Lists internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun format(format: String): FormatPath = FormatPath(client, format)
+  public fun format(format: String): FormatPath = FormatPath(__client, format)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.get("lists")
+      val response = __client.get("lists")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
   }
 
   public class FormatPath internal constructor(
-    private val client: HttpClient,
-    private val format: String,
+    private val __client: HttpClient,
+    private val _format: String,
   ) {
-    public val `get`: Get = Get(client, format)
+    public val `get`: Get = Get(__client, _format)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val format: String,
+      private val __client: HttpClient,
+      private val _format: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("lists.${this.format.encodeURLParameter()}")
+        val response = __client.get("lists.${this._format.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

@@ -11,15 +11,15 @@ import io.ktor.http.formUrlEncode
 import kotlin.String
 
 public class FormOrMultipart internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("form-or-multipart")
+      val response = __client.post("form-or-multipart")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
@@ -28,7 +28,7 @@ public class FormOrMultipart internal constructor(
       note: String? = null,
       requestType: RequestType,
     ) {
-      val response = client.post("form-or-multipart") {
+      val response = __client.post("form-or-multipart") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)

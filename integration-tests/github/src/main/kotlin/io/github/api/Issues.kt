@@ -17,12 +17,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Issues internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       filter: Filter? = Filter.Assigned,
@@ -38,7 +38,7 @@ public class Issues internal constructor(
       perPage: Long? = 30L,
       page: Long? = 1L,
     ): Response {
-      val response = client.get("issues") {
+      val response = __client.get("issues") {
         if (filter != null) {
           this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
         }

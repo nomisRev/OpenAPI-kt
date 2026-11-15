@@ -5,20 +5,20 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 
 public class A internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val b: B = B(client)
+  public val b: B = B(__client)
 
   public class B internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("a//b")
+        val response = __client.get("a//b")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

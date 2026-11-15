@@ -8,15 +8,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 public class Objects internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Pet) {
-      val response = client.post("objects") {
+      val response = __client.post("objects") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

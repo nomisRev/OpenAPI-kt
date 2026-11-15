@@ -18,20 +18,20 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 
 public class User internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val codespaces: Codespaces = Codespaces(client)
+  public val codespaces: Codespaces = Codespaces(__client)
 
   public class Codespaces internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: RepositoryIdAndRef): String {
-        val response = client.post("user/codespaces") {
+        val response = __client.post("user/codespaces") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -40,7 +40,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: PullRequest): String {
-        val response = client.post("user/codespaces") {
+        val response = __client.post("user/codespaces") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }

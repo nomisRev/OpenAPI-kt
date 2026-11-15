@@ -16,26 +16,26 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Users internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
-    public val patch: Patch = Patch(client, id)
+    public val patch: Patch = Patch(__client, _id)
 
-    public val post: Post = Post(client, id)
+    public val post: Post = Post(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(id: String) {
-        val response = client.get("users/${this.id.encodeURLParameter()}") {
+        val response = __client.get("users/${this._id.encodeURLParameter()}") {
           this.url.encodedParameters.append("id", id.encodeURLParameter())
         }
         if (response.status.value != 204) throw ResponseException(response, "")
@@ -43,11 +43,11 @@ public class Users internal constructor(
     }
 
     public class Patch internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(id: String? = null, name: String? = null) {
-        val response = client.patch("users/${this.id.encodeURLParameter()}") {
+        val response = __client.patch("users/${this._id.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(Body(id = id, name = name))
         }
@@ -65,11 +65,11 @@ public class Users internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(id: String, name: String? = null) {
-        val response = client.post("users/${this.id.encodeURLParameter()}") {
+        val response = __client.post("users/${this._id.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(Body(id = id, name = name))
         }

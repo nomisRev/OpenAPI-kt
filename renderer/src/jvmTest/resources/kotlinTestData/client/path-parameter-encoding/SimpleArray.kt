@@ -8,22 +8,22 @@ import kotlin.String
 import kotlin.collections.List
 
 public class SimpleArray internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun ids(ids: List<String>): IdsPath = IdsPath(client, ids)
+  public fun ids(ids: List<String>): IdsPath = IdsPath(__client, ids)
 
   public class IdsPath internal constructor(
-    private val client: HttpClient,
-    private val ids: List<String>,
+    private val __client: HttpClient,
+    private val _ids: List<String>,
   ) {
-    public val `get`: Get = Get(client, ids)
+    public val `get`: Get = Get(__client, _ids)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val ids: List<String>,
+      private val __client: HttpClient,
+      private val _ids: List<String>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("simple-array/${this.ids.joinToString(",") { it.encodeURLParameter() }}")
+        val response = __client.get("simple-array/${this._ids.joinToString(",") { it.encodeURLParameter() }}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

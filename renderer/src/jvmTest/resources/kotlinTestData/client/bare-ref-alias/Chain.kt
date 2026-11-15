@@ -9,15 +9,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 public class Chain internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: ChainOwner): NullableChainOwner? {
-      val response = client.put("chain") {
+      val response = __client.put("chain") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

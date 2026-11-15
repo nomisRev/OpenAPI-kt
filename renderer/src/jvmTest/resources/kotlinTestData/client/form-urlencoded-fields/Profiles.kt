@@ -23,12 +23,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Profiles internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     @OptIn(ExperimentalUuidApi::class)
     public suspend operator fun invoke(
@@ -51,7 +51,7 @@ public class Profiles internal constructor(
       path: List<String>? = null,
       flags: List<Boolean>? = null,
     ) {
-      val response = client.post("profiles") {
+      val response = __client.post("profiles") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)

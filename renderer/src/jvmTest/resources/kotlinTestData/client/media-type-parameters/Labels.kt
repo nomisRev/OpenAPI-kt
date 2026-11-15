@@ -9,15 +9,15 @@ import io.ktor.http.contentType
 import kotlin.String
 
 public class Labels internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String, requestType: RequestType) {
-      val response = client.post("labels") {
+      val response = __client.post("labels") {
         contentType(requestType.contentType)
         setBody(body)
       }

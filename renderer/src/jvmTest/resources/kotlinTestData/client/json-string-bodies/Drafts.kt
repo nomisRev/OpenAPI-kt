@@ -10,15 +10,15 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Drafts internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String, requestType: RequestType) {
-      val response = client.post("drafts") {
+      val response = __client.post("drafts") {
         contentType(requestType.contentType)
         when (requestType) {
           RequestType.Json -> setBody(JsonPrimitive(body))

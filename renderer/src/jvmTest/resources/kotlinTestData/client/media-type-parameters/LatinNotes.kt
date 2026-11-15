@@ -9,15 +9,15 @@ import io.ktor.http.contentType
 import kotlin.String
 
 public class LatinNotes internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("latin-notes") {
+      val response = __client.post("latin-notes") {
         contentType(ContentType.Text.Plain.withParameter("charset", "iso-8859-1"))
         setBody(body)
       }

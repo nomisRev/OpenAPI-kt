@@ -35,21 +35,21 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
 public class Images internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val edits: Edits = Edits(client)
+  public val edits: Edits = Edits(__client)
 
-  public val generations: Generations = Generations(client)
+  public val generations: Generations = Generations(__client)
 
-  public val variations: Variations = Variations(client)
+  public val variations: Variations = Variations(__client)
 
   public class Edits internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend fun json(
         image: CreateImageEditRequest.Image,
@@ -68,7 +68,7 @@ public class Images internal constructor(
         partialImages: PartialImages? = null,
         quality: CreateImageEditRequest.Quality? = null,
       ): ImagesResponse {
-        val response = client.post("images/edits") {
+        val response = __client.post("images/edits") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
           setBody(MultiPartFormDataContent(formData {
             append("image", Json.encodeToString(image))
@@ -119,7 +119,7 @@ public class Images internal constructor(
       }
 
       public suspend fun json(body: EditImageBodyJsonParam): ImagesResponse {
-        val response = client.post("images/edits") {
+        val response = __client.post("images/edits") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
           contentType(ContentType.Application.Json)
           setBody(body)
@@ -145,7 +145,7 @@ public class Images internal constructor(
         partialImages: PartialImages? = null,
         quality: CreateImageEditRequest.Quality? = null,
       ): ImageEditStreamEvent {
-        val response = client.post("images/edits") {
+        val response = __client.post("images/edits") {
           `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
           setBody(MultiPartFormDataContent(formData {
             append("image", Json.encodeToString(image))
@@ -196,7 +196,7 @@ public class Images internal constructor(
       }
 
       public suspend fun textEventStream(body: EditImageBodyJsonParam): ImageEditStreamEvent {
-        val response = client.post("images/edits") {
+        val response = __client.post("images/edits") {
           `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
           contentType(ContentType.Application.Json)
           setBody(body)
@@ -208,15 +208,15 @@ public class Images internal constructor(
   }
 
   public class Generations internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend fun json(body: CreateImageRequest): ImagesResponse {
-        val response = client.post("images/generations") {
+        val response = __client.post("images/generations") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
           contentType(ContentType.Application.Json)
           setBody(body)
@@ -226,7 +226,7 @@ public class Images internal constructor(
       }
 
       public suspend fun textEventStream(body: CreateImageRequest): ImageGenStreamEvent {
-        val response = client.post("images/generations") {
+        val response = __client.post("images/generations") {
           `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
           contentType(ContentType.Application.Json)
           setBody(body)
@@ -238,12 +238,12 @@ public class Images internal constructor(
   }
 
   public class Variations internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         image: ByteArray,
@@ -253,7 +253,7 @@ public class Images internal constructor(
         size: CreateImageVariationRequest.Size? = null,
         user: String? = null,
       ): ImagesResponse {
-        val response = client.post("images/variations") {
+        val response = __client.post("images/variations") {
           setBody(MultiPartFormDataContent(formData {
             append("image", image)
             if (model != null) {

@@ -15,15 +15,15 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Negotiated internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend fun json(): JsonResponse {
-      val response = client.get("negotiated") {
+      val response = __client.get("negotiated") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       return when (response.status.value) {
@@ -49,7 +49,7 @@ public class Negotiated internal constructor(
     }
 
     public suspend fun textPlain(): TextPlainResponse {
-      val response = client.get("negotiated") {
+      val response = __client.get("negotiated") {
         `header`(HttpHeaders.Accept, ContentType.Text.Plain)
       }
       return when (response.status.value) {

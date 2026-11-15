@@ -10,19 +10,19 @@ import kotlin.ByteArray
 import kotlin.Long
 
 public class Thumbnails internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       size: Long? = null,
       body: ByteArray? = null,
       contentType: ContentType? = null,
     ) {
-      val response = client.post("thumbnails") {
+      val response = __client.post("thumbnails") {
         if (size != null) {
           this.url.encodedParameters.append("size", size.toString())
         }

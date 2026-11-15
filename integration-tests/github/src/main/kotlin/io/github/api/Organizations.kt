@@ -45,17 +45,17 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Organizations internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun org(org: String): OrgPath = OrgPath(client, org)
+  public fun org(org: String): OrgPath = OrgPath(__client, org)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(since: Long? = null, perPage: Long? = 30L): Response {
-      val response = client.get("organizations") {
+      val response = __client.get("organizations") {
         if (since != null) {
           this.url.encodedParameters.append("since", since.toString())
         }
@@ -80,43 +80,43 @@ public class Organizations internal constructor(
   }
 
   public class OrgPath internal constructor(
-    private val client: HttpClient,
-    private val org: String,
+    private val __client: HttpClient,
+    private val _org: String,
   ) {
-    public val actions: Actions = Actions(client, org)
+    public val actions: Actions = Actions(__client, _org)
 
-    public val dependabot: Dependabot = Dependabot(client, org)
+    public val dependabot: Dependabot = Dependabot(__client, _org)
 
-    public val settings: Settings = Settings(client, org)
+    public val settings: Settings = Settings(__client, _org)
 
     public class Actions internal constructor(
-      private val client: HttpClient,
-      private val org: String,
+      private val __client: HttpClient,
+      private val _org: String,
     ) {
-      public val cache: Cache = Cache(client, org)
+      public val cache: Cache = Cache(__client, _org)
 
       public class Cache internal constructor(
-        private val client: HttpClient,
-        private val org: String,
+        private val __client: HttpClient,
+        private val _org: String,
       ) {
-        public val retentionLimit: RetentionLimit = RetentionLimit(client, org)
+        public val retentionLimit: RetentionLimit = RetentionLimit(__client, _org)
 
-        public val storageLimit: StorageLimit = StorageLimit(client, org)
+        public val storageLimit: StorageLimit = StorageLimit(__client, _org)
 
         public class RetentionLimit internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
-          public val `get`: Get = Get(client, org)
+          public val `get`: Get = Get(__client, _org)
 
-          public val put: Put = Put(client, org)
+          public val put: Put = Put(__client, _org)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("organizations/${this.org.encodeURLParameter()}/actions/cache/retention-limit")
+              val response = __client.get("organizations/${this._org.encodeURLParameter()}/actions/cache/retention-limit")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -141,11 +141,11 @@ public class Organizations internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
             public suspend operator fun invoke(body: ActionsCacheRetentionLimitForOrganization): Response {
-              val response = client.put("organizations/${this.org.encodeURLParameter()}/actions/cache/retention-limit") {
+              val response = __client.put("organizations/${this._org.encodeURLParameter()}/actions/cache/retention-limit") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -177,19 +177,19 @@ public class Organizations internal constructor(
         }
 
         public class StorageLimit internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
-          public val `get`: Get = Get(client, org)
+          public val `get`: Get = Get(__client, _org)
 
-          public val put: Put = Put(client, org)
+          public val put: Put = Put(__client, _org)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("organizations/${this.org.encodeURLParameter()}/actions/cache/storage-limit")
+              val response = __client.get("organizations/${this._org.encodeURLParameter()}/actions/cache/storage-limit")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -214,11 +214,11 @@ public class Organizations internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
             public suspend operator fun invoke(body: ActionsCacheStorageLimitForOrganization): Response {
-              val response = client.put("organizations/${this.org.encodeURLParameter()}/actions/cache/storage-limit") {
+              val response = __client.put("organizations/${this._org.encodeURLParameter()}/actions/cache/storage-limit") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -252,27 +252,27 @@ public class Organizations internal constructor(
     }
 
     public class Dependabot internal constructor(
-      private val client: HttpClient,
-      private val org: String,
+      private val __client: HttpClient,
+      private val _org: String,
     ) {
-      public val repositoryAccess: RepositoryAccess = RepositoryAccess(client, org)
+      public val repositoryAccess: RepositoryAccess = RepositoryAccess(__client, _org)
 
       public class RepositoryAccess internal constructor(
-        private val client: HttpClient,
-        private val org: String,
+        private val __client: HttpClient,
+        private val _org: String,
       ) {
-        public val `get`: Get = Get(client, org)
+        public val `get`: Get = Get(__client, _org)
 
-        public val patch: Patch = Patch(client, org)
+        public val patch: Patch = Patch(__client, _org)
 
-        public val defaultLevel: DefaultLevel = DefaultLevel(client, org)
+        public val defaultLevel: DefaultLevel = DefaultLevel(__client, _org)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
           public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-            val response = client.get("organizations/${this.org.encodeURLParameter()}/dependabot/repository-access") {
+            val response = __client.get("organizations/${this._org.encodeURLParameter()}/dependabot/repository-access") {
               if (page != null) {
                 this.url.encodedParameters.append("page", page.toString())
               }
@@ -304,11 +304,11 @@ public class Organizations internal constructor(
         }
 
         public class Patch internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
           public suspend operator fun invoke(repositoryIdsToAdd: List<Long>? = null, repositoryIdsToRemove: List<Long>? = null): Response {
-            val response = client.patch("organizations/${this.org.encodeURLParameter()}/dependabot/repository-access") {
+            val response = __client.patch("organizations/${this._org.encodeURLParameter()}/dependabot/repository-access") {
               contentType(ContentType.Application.Json)
               setBody(Body(repositoryIdsToAdd = repositoryIdsToAdd, repositoryIdsToRemove = repositoryIdsToRemove))
             }
@@ -345,17 +345,17 @@ public class Organizations internal constructor(
         }
 
         public class DefaultLevel internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
-          public val put: Put = Put(client, org)
+          public val put: Put = Put(__client, _org)
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
             public suspend operator fun invoke(defaultLevel: DefaultLevel): Response {
-              val response = client.put("organizations/${this.org.encodeURLParameter()}/dependabot/repository-access/default-level") {
+              val response = __client.put("organizations/${this._org.encodeURLParameter()}/dependabot/repository-access/default-level") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(defaultLevel = defaultLevel))
               }
@@ -401,39 +401,39 @@ public class Organizations internal constructor(
     }
 
     public class Settings internal constructor(
-      private val client: HttpClient,
-      private val org: String,
+      private val __client: HttpClient,
+      private val _org: String,
     ) {
-      public val billing: Billing = Billing(client, org)
+      public val billing: Billing = Billing(__client, _org)
 
       public class Billing internal constructor(
-        private val client: HttpClient,
-        private val org: String,
+        private val __client: HttpClient,
+        private val _org: String,
       ) {
-        public val budgets: Budgets = Budgets(client, org)
+        public val budgets: Budgets = Budgets(__client, _org)
 
-        public val premiumRequest: PremiumRequest = PremiumRequest(client, org)
+        public val premiumRequest: PremiumRequest = PremiumRequest(__client, _org)
 
-        public val usage: Usage = Usage(client, org)
+        public val usage: Usage = Usage(__client, _org)
 
         public class Budgets internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
-          public val `get`: Get = Get(client, org)
+          public val `get`: Get = Get(__client, _org)
 
-          public fun budgetId(budgetId: String): BudgetIdPath = BudgetIdPath(client, org, budgetId)
+          public fun budgetId(budgetId: String): BudgetIdPath = BudgetIdPath(__client, _org, budgetId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
             public suspend operator fun invoke(
               page: Long? = 1L,
               perPage: Long? = 10L,
               scope: Scope? = null,
             ): Response {
-              val response = client.get("organizations/${this.org.encodeURLParameter()}/settings/billing/budgets") {
+              val response = __client.get("organizations/${this._org.encodeURLParameter()}/settings/billing/budgets") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -488,23 +488,23 @@ public class Organizations internal constructor(
           }
 
           public class BudgetIdPath internal constructor(
-            private val client: HttpClient,
-            private val org: String,
-            private val budgetId: String,
+            private val __client: HttpClient,
+            private val _org: String,
+            private val _budgetId: String,
           ) {
-            public val delete: Delete = Delete(client, org, budgetId)
+            public val delete: Delete = Delete(__client, _org, _budgetId)
 
-            public val `get`: Get = Get(client, org, budgetId)
+            public val `get`: Get = Get(__client, _org, _budgetId)
 
-            public val patch: Patch = Patch(client, org, budgetId)
+            public val patch: Patch = Patch(__client, _org, _budgetId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val org: String,
-              private val budgetId: String,
+              private val __client: HttpClient,
+              private val _org: String,
+              private val _budgetId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("organizations/${this.org.encodeURLParameter()}/settings/billing/budgets/${this.budgetId.encodeURLParameter()}")
+                val response = __client.delete("organizations/${this._org.encodeURLParameter()}/settings/billing/budgets/${this._budgetId.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -552,12 +552,12 @@ public class Organizations internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val org: String,
-              private val budgetId: String,
+              private val __client: HttpClient,
+              private val _org: String,
+              private val _budgetId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("organizations/${this.org.encodeURLParameter()}/settings/billing/budgets/${this.budgetId.encodeURLParameter()}")
+                val response = __client.get("organizations/${this._org.encodeURLParameter()}/settings/billing/budgets/${this._budgetId.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -605,9 +605,9 @@ public class Organizations internal constructor(
             }
 
             public class Patch internal constructor(
-              private val client: HttpClient,
-              private val org: String,
-              private val budgetId: String,
+              private val __client: HttpClient,
+              private val _org: String,
+              private val _budgetId: String,
             ) {
               public suspend operator fun invoke(
                 budgetAmount: Long? = null,
@@ -618,7 +618,7 @@ public class Organizations internal constructor(
                 budgetType: BudgetType? = null,
                 budgetProductSku: String? = null,
               ): Response {
-                val response = client.patch("organizations/${this.org.encodeURLParameter()}/settings/billing/budgets/${this.budgetId.encodeURLParameter()}") {
+                val response = __client.patch("organizations/${this._org.encodeURLParameter()}/settings/billing/budgets/${this._budgetId.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(budgetAmount = budgetAmount, preventFurtherUsage = preventFurtherUsage, budgetAlerting = budgetAlerting, budgetScope = budgetScope, budgetEntityName = budgetEntityName, budgetType = budgetType, budgetProductSku = budgetProductSku))
                 }
@@ -872,20 +872,20 @@ public class Organizations internal constructor(
         }
 
         public class PremiumRequest internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
-          public val usage: Usage = Usage(client, org)
+          public val usage: Usage = Usage(__client, _org)
 
           public class Usage internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
-            public val `get`: Get = Get(client, org)
+            public val `get`: Get = Get(__client, _org)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val org: String,
+              private val __client: HttpClient,
+              private val _org: String,
             ) {
               public suspend operator fun invoke(
                 year: Long? = null,
@@ -895,7 +895,7 @@ public class Organizations internal constructor(
                 model: String? = null,
                 product: String? = null,
               ): Response {
-                val response = client.get("organizations/${this.org.encodeURLParameter()}/settings/billing/premium_request/usage") {
+                val response = __client.get("organizations/${this._org.encodeURLParameter()}/settings/billing/premium_request/usage") {
                   if (year != null) {
                     this.url.encodedParameters.append("year", year.toString())
                   }
@@ -964,23 +964,23 @@ public class Organizations internal constructor(
         }
 
         public class Usage internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
-          public val `get`: Get = Get(client, org)
+          public val `get`: Get = Get(__client, _org)
 
-          public val summary: Summary = Summary(client, org)
+          public val summary: Summary = Summary(__client, _org)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
             public suspend operator fun invoke(
               year: Long? = null,
               month: Long? = null,
               day: Long? = null,
             ): Response {
-              val response = client.get("organizations/${this.org.encodeURLParameter()}/settings/billing/usage") {
+              val response = __client.get("organizations/${this._org.encodeURLParameter()}/settings/billing/usage") {
                 if (year != null) {
                   this.url.encodedParameters.append("year", year.toString())
                 }
@@ -1033,14 +1033,14 @@ public class Organizations internal constructor(
           }
 
           public class Summary internal constructor(
-            private val client: HttpClient,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _org: String,
           ) {
-            public val `get`: Get = Get(client, org)
+            public val `get`: Get = Get(__client, _org)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val org: String,
+              private val __client: HttpClient,
+              private val _org: String,
             ) {
               public suspend operator fun invoke(
                 year: Long? = null,
@@ -1050,7 +1050,7 @@ public class Organizations internal constructor(
                 product: String? = null,
                 sku: String? = null,
               ): Response {
-                val response = client.get("organizations/${this.org.encodeURLParameter()}/settings/billing/usage/summary") {
+                val response = __client.get("organizations/${this._org.encodeURLParameter()}/settings/billing/usage/summary") {
                   if (year != null) {
                     this.url.encodedParameters.append("year", year.toString())
                   }

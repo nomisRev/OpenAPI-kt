@@ -8,15 +8,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 public class Settings internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val patch: Patch = Patch(client)
+  public val patch: Patch = Patch(__client)
 
   public class Patch internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: UpdateSettingsRequest? = null) {
-      val response = client.patch("settings") {
+      val response = __client.patch("settings") {
         body?.let {
           contentType(ContentType.Application.Json)
           setBody(it)

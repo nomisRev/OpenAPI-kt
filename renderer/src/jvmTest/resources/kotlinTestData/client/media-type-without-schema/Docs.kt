@@ -13,15 +13,15 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Docs internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend fun json(): String {
-      val response = client.get("docs") {
+      val response = __client.get("docs") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -29,7 +29,7 @@ public class Docs internal constructor(
     }
 
     public suspend fun pdf(): HttpResponse {
-      val response = client.get("docs") {
+      val response = __client.get("docs") {
         `header`(HttpHeaders.Accept, ContentType.Application.Pdf)
       }
       if (response.status.value != 200) throw ResponseException(response, "")

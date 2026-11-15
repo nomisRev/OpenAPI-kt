@@ -11,15 +11,15 @@ import io.ktor.http.formUrlEncode
 import kotlin.String
 
 public class Search internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: SearchQuery) {
-      val response = client.post("search") {
+      val response = __client.post("search") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -27,7 +27,7 @@ public class Search internal constructor(
     }
 
     public suspend operator fun invoke(query: String) {
-      val response = client.post("search") {
+      val response = __client.post("search") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("query", query)

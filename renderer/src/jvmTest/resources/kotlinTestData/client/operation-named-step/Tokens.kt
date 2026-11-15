@@ -7,32 +7,32 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Tokens internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public fun uuid(uuid: String): UuidPath = UuidPath(client, uuid)
+    public fun uuid(uuid: String): UuidPath = UuidPath(__client, uuid)
 
     public suspend operator fun invoke() {
-      val response = client.get("tokens")
+      val response = __client.get("tokens")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     public class UuidPath internal constructor(
-      private val client: HttpClient,
-      private val uuid: String,
+      private val __client: HttpClient,
+      private val _uuid: String,
     ) {
-      public val `get`: Get = Get(client, uuid)
+      public val `get`: Get = Get(__client, _uuid)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val uuid: String,
+        private val __client: HttpClient,
+        private val _uuid: String,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("tokens/get/${this.uuid.encodeURLParameter()}")
+          val response = __client.get("tokens/get/${this._uuid.encodeURLParameter()}")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

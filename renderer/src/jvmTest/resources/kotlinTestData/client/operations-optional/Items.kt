@@ -10,12 +10,12 @@ import kotlin.Int
 import kotlin.String
 
 public class Items internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       query: String,
@@ -24,7 +24,7 @@ public class Items internal constructor(
       xTraceId: String? = null,
       preference: String? = null,
     ) {
-      val response = client.get("items") {
+      val response = __client.get("items") {
         this.url.encodedParameters.append("query", query.encodeURLParameter())
         if (limit != null) {
           this.url.encodedParameters.append("limit", limit.toString())

@@ -13,17 +13,17 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Names internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String): String {
-      val response = client.post("names") {
+      val response = __client.post("names") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }
@@ -33,10 +33,10 @@ public class Names internal constructor(
   }
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String): String {
-      val response = client.put("names") {
+      val response = __client.put("names") {
         contentType(ContentType.Text.Plain)
         setBody(body)
       }

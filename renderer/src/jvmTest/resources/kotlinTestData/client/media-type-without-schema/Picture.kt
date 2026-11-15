@@ -9,15 +9,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 
 public class Picture internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): HttpResponse {
-      val response = client.get("picture") {
+      val response = __client.get("picture") {
         `header`(HttpHeaders.Accept, ContentType("image", "*"))
       }
       if (response.status.value != 200) throw ResponseException(response, "")

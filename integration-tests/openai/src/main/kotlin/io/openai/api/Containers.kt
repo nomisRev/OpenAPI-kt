@@ -25,16 +25,16 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Containers internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun containerId(containerId: String): ContainerIdPath = ContainerIdPath(client, containerId)
+  public fun containerId(containerId: String): ContainerIdPath = ContainerIdPath(__client, containerId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       limit: Long? = 20L,
@@ -42,7 +42,7 @@ public class Containers internal constructor(
       after: String? = null,
       name: String? = null,
     ): ContainerListResource {
-      val response = client.get("containers") {
+      val response = __client.get("containers") {
         if (limit != null) {
           this.url.encodedParameters.append("limit", limit.toString())
         }
@@ -73,10 +73,10 @@ public class Containers internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateContainerBody? = null): ContainerResource {
-      val response = client.post("containers") {
+      val response = __client.post("containers") {
         body?.let {
           contentType(ContentType.Application.Json)
           setBody(it)
@@ -88,56 +88,56 @@ public class Containers internal constructor(
   }
 
   public class ContainerIdPath internal constructor(
-    private val client: HttpClient,
-    private val containerId: String,
+    private val __client: HttpClient,
+    private val _containerId: String,
   ) {
-    public val delete: Delete = Delete(client, containerId)
+    public val delete: Delete = Delete(__client, _containerId)
 
-    public val `get`: Get = Get(client, containerId)
+    public val `get`: Get = Get(__client, _containerId)
 
-    public val files: Files = Files(client, containerId)
+    public val files: Files = Files(__client, _containerId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val containerId: String,
+      private val __client: HttpClient,
+      private val _containerId: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("containers/${this.containerId.encodeURLParameter()}")
+        val response = __client.delete("containers/${this._containerId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val containerId: String,
+      private val __client: HttpClient,
+      private val _containerId: String,
     ) {
       public suspend operator fun invoke(): ContainerResource {
-        val response = client.get("containers/${this.containerId.encodeURLParameter()}")
+        val response = __client.get("containers/${this._containerId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Files internal constructor(
-      private val client: HttpClient,
-      private val containerId: String,
+      private val __client: HttpClient,
+      private val _containerId: String,
     ) {
-      public val `get`: Get = Get(client, containerId)
+      public val `get`: Get = Get(__client, _containerId)
 
-      public val post: Post = Post(client, containerId)
+      public val post: Post = Post(__client, _containerId)
 
-      public fun fileId(fileId: String): FileIdPath = FileIdPath(client, containerId, fileId)
+      public fun fileId(fileId: String): FileIdPath = FileIdPath(__client, _containerId, fileId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val containerId: String,
+        private val __client: HttpClient,
+        private val _containerId: String,
       ) {
         public suspend operator fun invoke(
           limit: Long? = 20L,
           order: Order? = Order.Desc,
           after: String? = null,
         ): ContainerFileListResource {
-          val response = client.get("containers/${this.containerId.encodeURLParameter()}/files") {
+          val response = __client.get("containers/${this._containerId.encodeURLParameter()}/files") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -165,11 +165,11 @@ public class Containers internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val containerId: String,
+        private val __client: HttpClient,
+        private val _containerId: String,
       ) {
         public suspend operator fun invoke(body: CreateContainerFileBody): ContainerFileResource {
-          val response = client.post("containers/${this.containerId.encodeURLParameter()}/files") {
+          val response = __client.post("containers/${this._containerId.encodeURLParameter()}/files") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -178,7 +178,7 @@ public class Containers internal constructor(
         }
 
         public suspend operator fun invoke(fileId: String? = null, `file`: ByteArray? = null): ContainerFileResource {
-          val response = client.post("containers/${this.containerId.encodeURLParameter()}/files") {
+          val response = __client.post("containers/${this._containerId.encodeURLParameter()}/files") {
             setBody(MultiPartFormDataContent(formData {
               if (fileId != null) {
                 append("file_id", fileId)
@@ -194,53 +194,53 @@ public class Containers internal constructor(
       }
 
       public class FileIdPath internal constructor(
-        private val client: HttpClient,
-        private val containerId: String,
-        private val fileId: String,
+        private val __client: HttpClient,
+        private val _containerId: String,
+        private val _fileId: String,
       ) {
-        public val delete: Delete = Delete(client, containerId, fileId)
+        public val delete: Delete = Delete(__client, _containerId, _fileId)
 
-        public val `get`: Get = Get(client, containerId, fileId)
+        public val `get`: Get = Get(__client, _containerId, _fileId)
 
-        public val content: Content = Content(client, containerId, fileId)
+        public val content: Content = Content(__client, _containerId, _fileId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val containerId: String,
-          private val fileId: String,
+          private val __client: HttpClient,
+          private val _containerId: String,
+          private val _fileId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("containers/${this.containerId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}")
+            val response = __client.delete("containers/${this._containerId.encodeURLParameter()}/files/${this._fileId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val containerId: String,
-          private val fileId: String,
+          private val __client: HttpClient,
+          private val _containerId: String,
+          private val _fileId: String,
         ) {
           public suspend operator fun invoke(): ContainerFileResource {
-            val response = client.get("containers/${this.containerId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}")
+            val response = __client.get("containers/${this._containerId.encodeURLParameter()}/files/${this._fileId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Content internal constructor(
-          private val client: HttpClient,
-          private val containerId: String,
-          private val fileId: String,
+          private val __client: HttpClient,
+          private val _containerId: String,
+          private val _fileId: String,
         ) {
-          public val `get`: Get = Get(client, containerId, fileId)
+          public val `get`: Get = Get(__client, _containerId, _fileId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val containerId: String,
-            private val fileId: String,
+            private val __client: HttpClient,
+            private val _containerId: String,
+            private val _fileId: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.get("containers/${this.containerId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}/content")
+              val response = __client.get("containers/${this._containerId.encodeURLParameter()}/files/${this._fileId.encodeURLParameter()}/content")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }

@@ -7,59 +7,59 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Hackathons internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
-    public val dotJson: DotJson = DotJson(client, id)
+    public val dotJson: DotJson = DotJson(__client, _id)
 
-    public val json: Json = Json(client, id)
+    public val json: Json = Json(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("hackathons/${this.id.encodeURLParameter()}")
+        val response = __client.get("hackathons/${this._id.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
 
     public class DotJson internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("hackathons/${this.id.encodeURLParameter()}.json")
+          val response = __client.get("hackathons/${this._id.encodeURLParameter()}.json")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
     }
 
     public class Json internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("hackathons/${this.id.encodeURLParameter()}/json")
+          val response = __client.get("hackathons/${this._id.encodeURLParameter()}/json")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

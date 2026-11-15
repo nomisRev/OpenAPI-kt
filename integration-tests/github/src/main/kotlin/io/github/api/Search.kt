@@ -25,29 +25,29 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Search internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val code: Code = Code(client)
+  public val code: Code = Code(__client)
 
-  public val commits: Commits = Commits(client)
+  public val commits: Commits = Commits(__client)
 
-  public val issues: Issues = Issues(client)
+  public val issues: Issues = Issues(__client)
 
-  public val labels: Labels = Labels(client)
+  public val labels: Labels = Labels(__client)
 
-  public val repositories: Repositories = Repositories(client)
+  public val repositories: Repositories = Repositories(__client)
 
-  public val topics: Topics = Topics(client)
+  public val topics: Topics = Topics(__client)
 
-  public val users: Users = Users(client)
+  public val users: Users = Users(__client)
 
   public class Code internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         q: String,
@@ -56,7 +56,7 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("search/code") {
+        val response = __client.get("search/code") {
           this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
             this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
@@ -137,12 +137,12 @@ public class Search internal constructor(
   }
 
   public class Commits internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         q: String,
@@ -151,7 +151,7 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("search/commits") {
+        val response = __client.get("search/commits") {
           this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
             this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
@@ -211,12 +211,12 @@ public class Search internal constructor(
   }
 
   public class Issues internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         q: String,
@@ -226,7 +226,7 @@ public class Search internal constructor(
         page: Long? = 1L,
         advancedSearch: String? = null,
       ): Response {
-        val response = client.get("search/issues") {
+        val response = __client.get("search/issues") {
           this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
             this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
@@ -330,12 +330,12 @@ public class Search internal constructor(
   }
 
   public class Labels internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         repositoryId: Long,
@@ -345,7 +345,7 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("search/labels") {
+        val response = __client.get("search/labels") {
           this.url.encodedParameters.append("repository_id", repositoryId.toString())
           this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
@@ -421,12 +421,12 @@ public class Search internal constructor(
   }
 
   public class Repositories internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         q: String,
@@ -435,7 +435,7 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("search/repositories") {
+        val response = __client.get("search/repositories") {
           this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
             this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
@@ -517,19 +517,19 @@ public class Search internal constructor(
   }
 
   public class Topics internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         q: String,
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("search/topics") {
+        val response = __client.get("search/topics") {
           this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
@@ -561,12 +561,12 @@ public class Search internal constructor(
   }
 
   public class Users internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         q: String,
@@ -575,7 +575,7 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("search/users") {
+        val response = __client.get("search/users") {
           this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
             this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())

@@ -19,60 +19,60 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Repos internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun owner(owner: String): OwnerPath = OwnerPath(client, owner)
+  public fun owner(owner: String): OwnerPath = OwnerPath(__client, owner)
 
   public class OwnerPath internal constructor(
-    private val client: HttpClient,
-    private val owner: String,
+    private val __client: HttpClient,
+    private val _owner: String,
   ) {
-    public fun repo(repo: String): RepoPath = RepoPath(client, owner, repo)
+    public fun repo(repo: String): RepoPath = RepoPath(__client, _owner, repo)
 
     public class RepoPath internal constructor(
-      private val client: HttpClient,
-      private val owner: String,
-      private val repo: String,
+      private val __client: HttpClient,
+      private val _owner: String,
+      private val _repo: String,
     ) {
-      public val issues: Issues = Issues(client, owner, repo)
+      public val issues: Issues = Issues(__client, _owner, _repo)
 
       public class Issues internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public fun issueNumber(issueNumber: Long): IssueNumberPath = IssueNumberPath(client, owner, repo, issueNumber)
+        public fun issueNumber(issueNumber: Long): IssueNumberPath = IssueNumberPath(__client, _owner, _repo, issueNumber)
 
         public class IssueNumberPath internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
-          private val issueNumber: Long,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
+          private val _issueNumber: Long,
         ) {
-          public val labels: Labels = Labels(client, owner, repo, issueNumber)
+          public val labels: Labels = Labels(__client, _owner, _repo, _issueNumber)
 
           public class Labels internal constructor(
-            private val client: HttpClient,
-            private val owner: String,
-            private val repo: String,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _owner: String,
+            private val _repo: String,
+            private val _issueNumber: Long,
           ) {
-            public val put: Put = Put(client, owner, repo, issueNumber)
+            public val put: Put = Put(__client, _owner, _repo, _issueNumber)
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val owner: String,
-              private val repo: String,
-              private val issueNumber: Long,
+              private val __client: HttpClient,
+              private val _owner: String,
+              private val _repo: String,
+              private val _issueNumber: Long,
             ) {
               public suspend operator fun invoke(): List<Name> {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels")
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
 
               public suspend operator fun invoke(body: LabelsStrings): List<Name> {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -82,7 +82,7 @@ public class Repos internal constructor(
 
               @JvmName("StringList")
               public suspend operator fun invoke(body: List<String>): List<Name> {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -91,7 +91,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: LabelsNames): List<Name> {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -101,7 +101,7 @@ public class Repos internal constructor(
 
               @JvmName("NameList")
               public suspend operator fun invoke(body: List<Name>): List<Name> {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -110,7 +110,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: String): List<Name> {
-                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
+                val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/issues/${this._issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(JsonPrimitive(body))
                 }

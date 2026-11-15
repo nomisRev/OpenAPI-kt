@@ -31,16 +31,16 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Evals internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun evalId(evalId: String): EvalIdPath = EvalIdPath(client, evalId)
+  public fun evalId(evalId: String): EvalIdPath = EvalIdPath(__client, evalId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       after: String? = null,
@@ -48,7 +48,7 @@ public class Evals internal constructor(
       order: Order? = Order.Asc,
       orderBy: OrderBy? = OrderBy.CreatedAt,
     ): EvalList {
-      val response = client.get("evals") {
+      val response = __client.get("evals") {
         if (after != null) {
           this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
@@ -90,10 +90,10 @@ public class Evals internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateEvalRequest): Eval {
-      val response = client.post("evals") {
+      val response = __client.post("evals") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -103,23 +103,23 @@ public class Evals internal constructor(
   }
 
   public class EvalIdPath internal constructor(
-    private val client: HttpClient,
-    private val evalId: String,
+    private val __client: HttpClient,
+    private val _evalId: String,
   ) {
-    public val delete: Delete = Delete(client, evalId)
+    public val delete: Delete = Delete(__client, _evalId)
 
-    public val `get`: Get = Get(client, evalId)
+    public val `get`: Get = Get(__client, _evalId)
 
-    public val post: Post = Post(client, evalId)
+    public val post: Post = Post(__client, _evalId)
 
-    public val runs: Runs = Runs(client, evalId)
+    public val runs: Runs = Runs(__client, _evalId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val evalId: String,
+      private val __client: HttpClient,
+      private val _evalId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("evals/${this.evalId.encodeURLParameter()}")
+        val response = __client.delete("evals/${this._evalId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
           404 -> Response.NotFound(response.body())
@@ -143,22 +143,22 @@ public class Evals internal constructor(
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val evalId: String,
+      private val __client: HttpClient,
+      private val _evalId: String,
     ) {
       public suspend operator fun invoke(): Eval {
-        val response = client.get("evals/${this.evalId.encodeURLParameter()}")
+        val response = __client.get("evals/${this._evalId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val evalId: String,
+      private val __client: HttpClient,
+      private val _evalId: String,
     ) {
       public suspend operator fun invoke(name: String? = null, metadata: Optional<Metadata> = Optional.Absent): Eval {
-        val response = client.post("evals/${this.evalId.encodeURLParameter()}") {
+        val response = __client.post("evals/${this._evalId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(Body(name = name, metadata = metadata))
         }
@@ -177,18 +177,18 @@ public class Evals internal constructor(
     }
 
     public class Runs internal constructor(
-      private val client: HttpClient,
-      private val evalId: String,
+      private val __client: HttpClient,
+      private val _evalId: String,
     ) {
-      public val `get`: Get = Get(client, evalId)
+      public val `get`: Get = Get(__client, _evalId)
 
-      public val post: Post = Post(client, evalId)
+      public val post: Post = Post(__client, _evalId)
 
-      public fun runId(runId: String): RunIdPath = RunIdPath(client, evalId, runId)
+      public fun runId(runId: String): RunIdPath = RunIdPath(__client, _evalId, runId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val evalId: String,
+        private val __client: HttpClient,
+        private val _evalId: String,
       ) {
         public suspend operator fun invoke(
           after: String? = null,
@@ -196,7 +196,7 @@ public class Evals internal constructor(
           order: Order? = Order.Asc,
           status: Status? = null,
         ): EvalRunList {
-          val response = client.get("evals/${this.evalId.encodeURLParameter()}/runs") {
+          val response = __client.get("evals/${this._evalId.encodeURLParameter()}/runs") {
             if (after != null) {
               this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
@@ -244,11 +244,11 @@ public class Evals internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val evalId: String,
+        private val __client: HttpClient,
+        private val _evalId: String,
       ) {
         public suspend operator fun invoke(body: CreateEvalRunRequest): Response {
-          val response = client.post("evals/${this.evalId.encodeURLParameter()}/runs") {
+          val response = __client.post("evals/${this._evalId.encodeURLParameter()}/runs") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -271,25 +271,25 @@ public class Evals internal constructor(
       }
 
       public class RunIdPath internal constructor(
-        private val client: HttpClient,
-        private val evalId: String,
-        private val runId: String,
+        private val __client: HttpClient,
+        private val _evalId: String,
+        private val _runId: String,
       ) {
-        public val delete: Delete = Delete(client, evalId, runId)
+        public val delete: Delete = Delete(__client, _evalId, _runId)
 
-        public val `get`: Get = Get(client, evalId, runId)
+        public val `get`: Get = Get(__client, _evalId, _runId)
 
-        public val post: Post = Post(client, evalId, runId)
+        public val post: Post = Post(__client, _evalId, _runId)
 
-        public val outputItems: OutputItems = OutputItems(client, evalId, runId)
+        public val outputItems: OutputItems = OutputItems(__client, _evalId, _runId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val evalId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _evalId: String,
+          private val _runId: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("evals/${this.evalId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}")
+            val response = __client.delete("evals/${this._evalId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> response.body<Response.Ok>()
               404 -> Response.NotFound(response.body())
@@ -317,42 +317,42 @@ public class Evals internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val evalId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _evalId: String,
+          private val _runId: String,
         ) {
           public suspend operator fun invoke(): EvalRun {
-            val response = client.get("evals/${this.evalId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}")
+            val response = __client.get("evals/${this._evalId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val evalId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _evalId: String,
+          private val _runId: String,
         ) {
           public suspend operator fun invoke(): EvalRun {
-            val response = client.post("evals/${this.evalId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}")
+            val response = __client.post("evals/${this._evalId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class OutputItems internal constructor(
-          private val client: HttpClient,
-          private val evalId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _evalId: String,
+          private val _runId: String,
         ) {
-          public val `get`: Get = Get(client, evalId, runId)
+          public val `get`: Get = Get(__client, _evalId, _runId)
 
-          public fun outputItemId(outputItemId: String): OutputItemIdPath = OutputItemIdPath(client, evalId, runId, outputItemId)
+          public fun outputItemId(outputItemId: String): OutputItemIdPath = OutputItemIdPath(__client, _evalId, _runId, outputItemId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val evalId: String,
-            private val runId: String,
+            private val __client: HttpClient,
+            private val _evalId: String,
+            private val _runId: String,
           ) {
             public suspend operator fun invoke(
               after: String? = null,
@@ -360,7 +360,7 @@ public class Evals internal constructor(
               status: Status? = null,
               order: Order? = Order.Asc,
             ): EvalRunOutputItemList {
-              val response = client.get("evals/${this.evalId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}/output_items") {
+              val response = __client.get("evals/${this._evalId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}/output_items") {
                 if (after != null) {
                   this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
@@ -402,21 +402,21 @@ public class Evals internal constructor(
           }
 
           public class OutputItemIdPath internal constructor(
-            private val client: HttpClient,
-            private val evalId: String,
-            private val runId: String,
-            private val outputItemId: String,
+            private val __client: HttpClient,
+            private val _evalId: String,
+            private val _runId: String,
+            private val _outputItemId: String,
           ) {
-            public val `get`: Get = Get(client, evalId, runId, outputItemId)
+            public val `get`: Get = Get(__client, _evalId, _runId, _outputItemId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val evalId: String,
-              private val runId: String,
-              private val outputItemId: String,
+              private val __client: HttpClient,
+              private val _evalId: String,
+              private val _runId: String,
+              private val _outputItemId: String,
             ) {
               public suspend operator fun invoke(): EvalRunOutputItem {
-                val response = client.get("evals/${this.evalId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}/output_items/${this.outputItemId.encodeURLParameter()}")
+                val response = __client.get("evals/${this._evalId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}/output_items/${this._outputItemId.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }

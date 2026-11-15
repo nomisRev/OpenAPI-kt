@@ -14,15 +14,15 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Documents internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(title: String, draft: Boolean? = null) {
-      val response = client.post("documents") {
+      val response = __client.post("documents") {
         contentType(ContentType("application", "vnd.api+json"))
         setBody(Body(title = title, draft = draft))
       }

@@ -11,15 +11,15 @@ import io.openai.model.CreateCompletionRequest
 import io.openai.model.CreateCompletionResponse
 
 public class Completions internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateCompletionRequest): CreateCompletionResponse {
-      val response = client.post("completions") {
+      val response = __client.post("completions") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

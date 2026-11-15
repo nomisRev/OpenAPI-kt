@@ -11,19 +11,19 @@ import kotlin.ByteArray
 import kotlin.String
 
 public class Fonts internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       contentType: String,
       body: ByteArray,
       bodyContentType: ContentType,
     ) {
-      val response = client.post("fonts") {
+      val response = __client.post("fonts") {
         this.url.encodedParameters.append("contentType", contentType.encodeURLParameter())
         require(bodyContentType.match(ContentType("font", "*")) && bodyContentType.contentSubtype != "*") {
           "bodyContentType must be a media type in font/*, but was $bodyContentType"

@@ -10,12 +10,12 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Notes internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       url: String,
@@ -24,7 +24,7 @@ public class Notes internal constructor(
       contentType: String? = null,
       accept: String? = null,
     ) {
-      val response = client.post("notes") {
+      val response = __client.post("notes") {
         this.url.encodedParameters.append("url", url.encodeURLParameter())
         if (setBody != null) {
           this.url.encodedParameters.append("setBody", setBody.encodeURLParameter())

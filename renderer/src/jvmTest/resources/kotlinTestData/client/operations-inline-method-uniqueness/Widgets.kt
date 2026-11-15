@@ -16,17 +16,17 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Widgets internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("widgets")
+      val response = __client.get("widgets")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }
@@ -41,10 +41,10 @@ public class Widgets internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(name: String): Response {
-      val response = client.post("widgets") {
+      val response = __client.post("widgets") {
         contentType(ContentType.Application.Json)
         setBody(Body(name = name))
       }

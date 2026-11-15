@@ -9,15 +9,15 @@ import io.ktor.http.contentType
 import kotlinx.serialization.json.JsonElement
 
 public class Echo internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: JsonElement) {
-      val response = client.post("echo") {
+      val response = __client.post("echo") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

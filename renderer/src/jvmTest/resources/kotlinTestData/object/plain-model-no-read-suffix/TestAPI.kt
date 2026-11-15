@@ -11,11 +11,11 @@ import kotlin.String
 import kotlin.Unit
 
 public class TestAPI internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val issues: Issues = Issues(client)
+  public val issues: Issues = Issues(__client)
 
-  public val folders: Folders = Folders(client)
+  public val folders: Folders = Folders(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -34,6 +34,6 @@ public class TestAPI internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

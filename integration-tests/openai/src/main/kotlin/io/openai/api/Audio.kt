@@ -58,28 +58,28 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Audio internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val speech: Speech = Speech(client)
+  public val speech: Speech = Speech(__client)
 
-  public val transcriptions: Transcriptions = Transcriptions(client)
+  public val transcriptions: Transcriptions = Transcriptions(__client)
 
-  public val translations: Translations = Translations(client)
+  public val translations: Translations = Translations(__client)
 
-  public val voiceConsents: VoiceConsents = VoiceConsents(client)
+  public val voiceConsents: VoiceConsents = VoiceConsents(__client)
 
-  public val voices: Voices = Voices(client)
+  public val voices: Voices = Voices(__client)
 
   public class Speech internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend fun octetStream(body: CreateSpeechRequest): ByteArray {
-        val response = client.post("audio/speech") {
+        val response = __client.post("audio/speech") {
           `header`(HttpHeaders.Accept, ContentType.Application.OctetStream)
           contentType(ContentType.Application.Json)
           setBody(body)
@@ -89,7 +89,7 @@ public class Audio internal constructor(
       }
 
       public suspend fun textEventStream(body: CreateSpeechRequest): CreateSpeechResponseStreamEvent {
-        val response = client.post("audio/speech") {
+        val response = __client.post("audio/speech") {
           `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
           contentType(ContentType.Application.Json)
           setBody(body)
@@ -101,12 +101,12 @@ public class Audio internal constructor(
   }
 
   public class Transcriptions internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend fun json(
         `file`: ByteArray,
@@ -122,7 +122,7 @@ public class Audio internal constructor(
         knownSpeakerNames: List<String>? = null,
         knownSpeakerReferences: List<String>? = null,
       ): JsonResponse {
-        val response = client.post("audio/transcriptions") {
+        val response = __client.post("audio/transcriptions") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
           setBody(MultiPartFormDataContent(formData {
             append("file", file)
@@ -177,7 +177,7 @@ public class Audio internal constructor(
         knownSpeakerNames: List<String>? = null,
         knownSpeakerReferences: List<String>? = null,
       ): CreateTranscriptionResponseStreamEvent {
-        val response = client.post("audio/transcriptions") {
+        val response = __client.post("audio/transcriptions") {
           `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
           setBody(MultiPartFormDataContent(formData {
             append("file", file)
@@ -395,12 +395,12 @@ public class Audio internal constructor(
   }
 
   public class Translations internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         `file`: ByteArray,
@@ -409,7 +409,7 @@ public class Audio internal constructor(
         responseFormat: CreateTranslationRequest.ResponseFormat? = null,
         temperature: Double? = null,
       ): Response {
-        val response = client.post("audio/translations") {
+        val response = __client.post("audio/translations") {
           setBody(MultiPartFormDataContent(formData {
             append("file", file)
             append("model", Json.encodeToString(model))
@@ -530,19 +530,19 @@ public class Audio internal constructor(
   }
 
   public class VoiceConsents internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
-    public fun consentId(consentId: String): ConsentIdPath = ConsentIdPath(client, consentId)
+    public fun consentId(consentId: String): ConsentIdPath = ConsentIdPath(__client, consentId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(after: String? = null, limit: Long? = 20L): VoiceConsentListResource {
-        val response = client.get("audio/voice_consents") {
+        val response = __client.get("audio/voice_consents") {
           if (after != null) {
             this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
@@ -556,14 +556,14 @@ public class Audio internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         name: String,
         recording: ByteArray,
         language: String,
       ): VoiceConsentResource {
-        val response = client.post("audio/voice_consents") {
+        val response = __client.post("audio/voice_consents") {
           setBody(MultiPartFormDataContent(formData {
             append("name", name)
             append("recording", recording)
@@ -576,43 +576,43 @@ public class Audio internal constructor(
     }
 
     public class ConsentIdPath internal constructor(
-      private val client: HttpClient,
-      private val consentId: String,
+      private val __client: HttpClient,
+      private val _consentId: String,
     ) {
-      public val delete: Delete = Delete(client, consentId)
+      public val delete: Delete = Delete(__client, _consentId)
 
-      public val `get`: Get = Get(client, consentId)
+      public val `get`: Get = Get(__client, _consentId)
 
-      public val post: Post = Post(client, consentId)
+      public val post: Post = Post(__client, _consentId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val consentId: String,
+        private val __client: HttpClient,
+        private val _consentId: String,
       ) {
         public suspend operator fun invoke(): VoiceConsentDeletedResource {
-          val response = client.delete("audio/voice_consents/${this.consentId.encodeURLParameter()}")
+          val response = __client.delete("audio/voice_consents/${this._consentId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val consentId: String,
+        private val __client: HttpClient,
+        private val _consentId: String,
       ) {
         public suspend operator fun invoke(): VoiceConsentResource {
-          val response = client.get("audio/voice_consents/${this.consentId.encodeURLParameter()}")
+          val response = __client.get("audio/voice_consents/${this._consentId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val consentId: String,
+        private val __client: HttpClient,
+        private val _consentId: String,
       ) {
         public suspend operator fun invoke(body: UpdateVoiceConsentRequest): VoiceConsentResource {
-          val response = client.post("audio/voice_consents/${this.consentId.encodeURLParameter()}") {
+          val response = __client.post("audio/voice_consents/${this._consentId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -624,19 +624,19 @@ public class Audio internal constructor(
   }
 
   public class Voices internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         name: String,
         audioSample: ByteArray,
         consent: String,
       ): VoiceResource {
-        val response = client.post("audio/voices") {
+        val response = __client.post("audio/voices") {
           setBody(MultiPartFormDataContent(formData {
             append("name", name)
             append("audio_sample", audioSample)

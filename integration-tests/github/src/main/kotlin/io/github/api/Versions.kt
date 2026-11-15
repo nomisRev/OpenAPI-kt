@@ -9,15 +9,15 @@ import kotlin.collections.List
 import kotlinx.datetime.LocalDate
 
 public class Versions internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("versions")
+      val response = __client.get("versions")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         404 -> Response.NotFound(response.body())

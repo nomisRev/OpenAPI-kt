@@ -25,17 +25,17 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Conversations internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun conversationId(conversationId: String): ConversationIdPath = ConversationIdPath(client, conversationId)
+  public fun conversationId(conversationId: String): ConversationIdPath = ConversationIdPath(__client, conversationId)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateConversationBody? = null): ConversationResource {
-      val response = client.post("conversations") {
+      val response = __client.post("conversations") {
         body?.let {
           contentType(ContentType.Application.Json)
           setBody(it)
@@ -47,45 +47,45 @@ public class Conversations internal constructor(
   }
 
   public class ConversationIdPath internal constructor(
-    private val client: HttpClient,
-    private val conversationId: String,
+    private val __client: HttpClient,
+    private val _conversationId: String,
   ) {
-    public val delete: Delete = Delete(client, conversationId)
+    public val delete: Delete = Delete(__client, _conversationId)
 
-    public val `get`: Get = Get(client, conversationId)
+    public val `get`: Get = Get(__client, _conversationId)
 
-    public val post: Post = Post(client, conversationId)
+    public val post: Post = Post(__client, _conversationId)
 
-    public val items: Items = Items(client, conversationId)
+    public val items: Items = Items(__client, _conversationId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val conversationId: String,
+      private val __client: HttpClient,
+      private val _conversationId: String,
     ) {
       public suspend operator fun invoke(): DeletedConversationResource {
-        val response = client.delete("conversations/${this.conversationId.encodeURLParameter()}")
+        val response = __client.delete("conversations/${this._conversationId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val conversationId: String,
+      private val __client: HttpClient,
+      private val _conversationId: String,
     ) {
       public suspend operator fun invoke(): ConversationResource {
-        val response = client.get("conversations/${this.conversationId.encodeURLParameter()}")
+        val response = __client.get("conversations/${this._conversationId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val conversationId: String,
+      private val __client: HttpClient,
+      private val _conversationId: String,
     ) {
       public suspend operator fun invoke(body: UpdateConversationBody? = null): ConversationResource {
-        val response = client.post("conversations/${this.conversationId.encodeURLParameter()}") {
+        val response = __client.post("conversations/${this._conversationId.encodeURLParameter()}") {
           body?.let {
             contentType(ContentType.Application.Json)
             setBody(it)
@@ -97,18 +97,18 @@ public class Conversations internal constructor(
     }
 
     public class Items internal constructor(
-      private val client: HttpClient,
-      private val conversationId: String,
+      private val __client: HttpClient,
+      private val _conversationId: String,
     ) {
-      public val `get`: Get = Get(client, conversationId)
+      public val `get`: Get = Get(__client, _conversationId)
 
-      public val post: Post = Post(client, conversationId)
+      public val post: Post = Post(__client, _conversationId)
 
-      public fun itemId(itemId: String): ItemIdPath = ItemIdPath(client, conversationId, itemId)
+      public fun itemId(itemId: String): ItemIdPath = ItemIdPath(__client, _conversationId, itemId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val conversationId: String,
+        private val __client: HttpClient,
+        private val _conversationId: String,
       ) {
         public suspend operator fun invoke(
           limit: Long? = 20L,
@@ -116,7 +116,7 @@ public class Conversations internal constructor(
           after: String? = null,
           include: List<IncludeEnum>? = null,
         ): ConversationItemList {
-          val response = client.get("conversations/${this.conversationId.encodeURLParameter()}/items") {
+          val response = __client.get("conversations/${this._conversationId.encodeURLParameter()}/items") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -145,11 +145,11 @@ public class Conversations internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val conversationId: String,
+        private val __client: HttpClient,
+        private val _conversationId: String,
       ) {
         public suspend operator fun invoke(items: List<InputItem>, include: List<IncludeEnum>? = null): ConversationItemList {
-          val response = client.post("conversations/${this.conversationId.encodeURLParameter()}/items") {
+          val response = __client.post("conversations/${this._conversationId.encodeURLParameter()}/items") {
             include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
             contentType(ContentType.Application.Json)
             setBody(Body(items = items))
@@ -165,33 +165,33 @@ public class Conversations internal constructor(
       }
 
       public class ItemIdPath internal constructor(
-        private val client: HttpClient,
-        private val conversationId: String,
-        private val itemId: String,
+        private val __client: HttpClient,
+        private val _conversationId: String,
+        private val _itemId: String,
       ) {
-        public val delete: Delete = Delete(client, conversationId, itemId)
+        public val delete: Delete = Delete(__client, _conversationId, _itemId)
 
-        public val `get`: Get = Get(client, conversationId, itemId)
+        public val `get`: Get = Get(__client, _conversationId, _itemId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val conversationId: String,
-          private val itemId: String,
+          private val __client: HttpClient,
+          private val _conversationId: String,
+          private val _itemId: String,
         ) {
           public suspend operator fun invoke(): ConversationResource {
-            val response = client.delete("conversations/${this.conversationId.encodeURLParameter()}/items/${this.itemId.encodeURLParameter()}")
+            val response = __client.delete("conversations/${this._conversationId.encodeURLParameter()}/items/${this._itemId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val conversationId: String,
-          private val itemId: String,
+          private val __client: HttpClient,
+          private val _conversationId: String,
+          private val _itemId: String,
         ) {
           public suspend operator fun invoke(include: List<IncludeEnum>? = null): ConversationItem {
-            val response = client.get("conversations/${this.conversationId.encodeURLParameter()}/items/${this.itemId.encodeURLParameter()}") {
+            val response = __client.get("conversations/${this._conversationId.encodeURLParameter()}/items/${this._itemId.encodeURLParameter()}") {
               include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
             }
             if (response.status.value != 200) throw ResponseException(response, "")

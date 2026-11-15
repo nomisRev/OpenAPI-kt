@@ -34,19 +34,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Threads internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val runs: Runs = Runs(client)
+  public val runs: Runs = Runs(__client)
 
-  public fun threadId(threadId: String): ThreadIdPath = ThreadIdPath(client, threadId)
+  public fun threadId(threadId: String): ThreadIdPath = ThreadIdPath(__client, threadId)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateThreadRequest? = null): ThreadObject {
-      val response = client.post("threads") {
+      val response = __client.post("threads") {
         body?.let {
           contentType(ContentType.Application.Json)
           setBody(it)
@@ -58,15 +58,15 @@ public class Threads internal constructor(
   }
 
   public class Runs internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: CreateThreadAndRunRequest): RunObject {
-        val response = client.post("threads/runs") {
+        val response = __client.post("threads/runs") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -77,47 +77,47 @@ public class Threads internal constructor(
   }
 
   public class ThreadIdPath internal constructor(
-    private val client: HttpClient,
-    private val threadId: String,
+    private val __client: HttpClient,
+    private val _threadId: String,
   ) {
-    public val delete: Delete = Delete(client, threadId)
+    public val delete: Delete = Delete(__client, _threadId)
 
-    public val `get`: Get = Get(client, threadId)
+    public val `get`: Get = Get(__client, _threadId)
 
-    public val post: Post = Post(client, threadId)
+    public val post: Post = Post(__client, _threadId)
 
-    public val messages: Messages = Messages(client, threadId)
+    public val messages: Messages = Messages(__client, _threadId)
 
-    public val runs: Runs = Runs(client, threadId)
+    public val runs: Runs = Runs(__client, _threadId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val threadId: String,
+      private val __client: HttpClient,
+      private val _threadId: String,
     ) {
       public suspend operator fun invoke(): DeleteThreadResponse {
-        val response = client.delete("threads/${this.threadId.encodeURLParameter()}")
+        val response = __client.delete("threads/${this._threadId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val threadId: String,
+      private val __client: HttpClient,
+      private val _threadId: String,
     ) {
       public suspend operator fun invoke(): ThreadObject {
-        val response = client.get("threads/${this.threadId.encodeURLParameter()}")
+        val response = __client.get("threads/${this._threadId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val threadId: String,
+      private val __client: HttpClient,
+      private val _threadId: String,
     ) {
       public suspend operator fun invoke(body: ModifyThreadRequest): ThreadObject {
-        val response = client.post("threads/${this.threadId.encodeURLParameter()}") {
+        val response = __client.post("threads/${this._threadId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -127,18 +127,18 @@ public class Threads internal constructor(
     }
 
     public class Messages internal constructor(
-      private val client: HttpClient,
-      private val threadId: String,
+      private val __client: HttpClient,
+      private val _threadId: String,
     ) {
-      public val `get`: Get = Get(client, threadId)
+      public val `get`: Get = Get(__client, _threadId)
 
-      public val post: Post = Post(client, threadId)
+      public val post: Post = Post(__client, _threadId)
 
-      public fun messageId(messageId: String): MessageIdPath = MessageIdPath(client, threadId, messageId)
+      public fun messageId(messageId: String): MessageIdPath = MessageIdPath(__client, _threadId, messageId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val threadId: String,
+        private val __client: HttpClient,
+        private val _threadId: String,
       ) {
         public suspend operator fun invoke(
           limit: Long? = 20L,
@@ -147,7 +147,7 @@ public class Threads internal constructor(
           before: String? = null,
           runId: String? = null,
         ): ListMessagesResponse {
-          val response = client.get("threads/${this.threadId.encodeURLParameter()}/messages") {
+          val response = __client.get("threads/${this._threadId.encodeURLParameter()}/messages") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -181,11 +181,11 @@ public class Threads internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val threadId: String,
+        private val __client: HttpClient,
+        private val _threadId: String,
       ) {
         public suspend operator fun invoke(body: CreateMessageRequest): MessageObject {
-          val response = client.post("threads/${this.threadId.encodeURLParameter()}/messages") {
+          val response = __client.post("threads/${this._threadId.encodeURLParameter()}/messages") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -195,47 +195,47 @@ public class Threads internal constructor(
       }
 
       public class MessageIdPath internal constructor(
-        private val client: HttpClient,
-        private val threadId: String,
-        private val messageId: String,
+        private val __client: HttpClient,
+        private val _threadId: String,
+        private val _messageId: String,
       ) {
-        public val delete: Delete = Delete(client, threadId, messageId)
+        public val delete: Delete = Delete(__client, _threadId, _messageId)
 
-        public val `get`: Get = Get(client, threadId, messageId)
+        public val `get`: Get = Get(__client, _threadId, _messageId)
 
-        public val post: Post = Post(client, threadId, messageId)
+        public val post: Post = Post(__client, _threadId, _messageId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val threadId: String,
-          private val messageId: String,
+          private val __client: HttpClient,
+          private val _threadId: String,
+          private val _messageId: String,
         ) {
           public suspend operator fun invoke(): DeleteMessageResponse {
-            val response = client.delete("threads/${this.threadId.encodeURLParameter()}/messages/${this.messageId.encodeURLParameter()}")
+            val response = __client.delete("threads/${this._threadId.encodeURLParameter()}/messages/${this._messageId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val threadId: String,
-          private val messageId: String,
+          private val __client: HttpClient,
+          private val _threadId: String,
+          private val _messageId: String,
         ) {
           public suspend operator fun invoke(): MessageObject {
-            val response = client.get("threads/${this.threadId.encodeURLParameter()}/messages/${this.messageId.encodeURLParameter()}")
+            val response = __client.get("threads/${this._threadId.encodeURLParameter()}/messages/${this._messageId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val threadId: String,
-          private val messageId: String,
+          private val __client: HttpClient,
+          private val _threadId: String,
+          private val _messageId: String,
         ) {
           public suspend operator fun invoke(body: ModifyMessageRequest): MessageObject {
-            val response = client.post("threads/${this.threadId.encodeURLParameter()}/messages/${this.messageId.encodeURLParameter()}") {
+            val response = __client.post("threads/${this._threadId.encodeURLParameter()}/messages/${this._messageId.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -247,18 +247,18 @@ public class Threads internal constructor(
     }
 
     public class Runs internal constructor(
-      private val client: HttpClient,
-      private val threadId: String,
+      private val __client: HttpClient,
+      private val _threadId: String,
     ) {
-      public val `get`: Get = Get(client, threadId)
+      public val `get`: Get = Get(__client, _threadId)
 
-      public val post: Post = Post(client, threadId)
+      public val post: Post = Post(__client, _threadId)
 
-      public fun runId(runId: String): RunIdPath = RunIdPath(client, threadId, runId)
+      public fun runId(runId: String): RunIdPath = RunIdPath(__client, _threadId, runId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val threadId: String,
+        private val __client: HttpClient,
+        private val _threadId: String,
       ) {
         public suspend operator fun invoke(
           limit: Long? = 20L,
@@ -266,7 +266,7 @@ public class Threads internal constructor(
           after: String? = null,
           before: String? = null,
         ): ListRunsResponse {
-          val response = client.get("threads/${this.threadId.encodeURLParameter()}/runs") {
+          val response = __client.get("threads/${this._threadId.encodeURLParameter()}/runs") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -297,11 +297,11 @@ public class Threads internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val threadId: String,
+        private val __client: HttpClient,
+        private val _threadId: String,
       ) {
         public suspend operator fun invoke(body: CreateRunRequest, include: List<Include>? = null): RunObject {
-          val response = client.post("threads/${this.threadId.encodeURLParameter()}/runs") {
+          val response = __client.post("threads/${this._threadId.encodeURLParameter()}/runs") {
             include?.forEach { this.url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
             contentType(ContentType.Application.Json)
             setBody(body)
@@ -321,39 +321,40 @@ public class Threads internal constructor(
       }
 
       public class RunIdPath internal constructor(
-        private val client: HttpClient,
-        private val threadId: String,
-        private val runId: String,
+        private val __client: HttpClient,
+        private val _threadId: String,
+        private val _runId: String,
       ) {
-        public val `get`: Get = Get(client, threadId, runId)
+        public val `get`: Get = Get(__client, _threadId, _runId)
 
-        public val post: Post = Post(client, threadId, runId)
+        public val post: Post = Post(__client, _threadId, _runId)
 
-        public val cancel: Cancel = Cancel(client, threadId, runId)
+        public val cancel: Cancel = Cancel(__client, _threadId, _runId)
 
-        public val steps: Steps = Steps(client, threadId, runId)
+        public val steps: Steps = Steps(__client, _threadId, _runId)
 
-        public val submitToolOutputs: SubmitToolOutputs = SubmitToolOutputs(client, threadId, runId)
+        public val submitToolOutputs: SubmitToolOutputs =
+            SubmitToolOutputs(__client, _threadId, _runId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val threadId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _threadId: String,
+          private val _runId: String,
         ) {
           public suspend operator fun invoke(): RunObject {
-            val response = client.get("threads/${this.threadId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}")
+            val response = __client.get("threads/${this._threadId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val threadId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _threadId: String,
+          private val _runId: String,
         ) {
           public suspend operator fun invoke(body: ModifyRunRequest): RunObject {
-            val response = client.post("threads/${this.threadId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}") {
+            val response = __client.post("threads/${this._threadId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -363,19 +364,19 @@ public class Threads internal constructor(
         }
 
         public class Cancel internal constructor(
-          private val client: HttpClient,
-          private val threadId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _threadId: String,
+          private val _runId: String,
         ) {
-          public val post: Post = Post(client, threadId, runId)
+          public val post: Post = Post(__client, _threadId, _runId)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val threadId: String,
-            private val runId: String,
+            private val __client: HttpClient,
+            private val _threadId: String,
+            private val _runId: String,
           ) {
             public suspend operator fun invoke(): RunObject {
-              val response = client.post("threads/${this.threadId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}/cancel")
+              val response = __client.post("threads/${this._threadId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}/cancel")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -383,18 +384,18 @@ public class Threads internal constructor(
         }
 
         public class Steps internal constructor(
-          private val client: HttpClient,
-          private val threadId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _threadId: String,
+          private val _runId: String,
         ) {
-          public val `get`: Get = Get(client, threadId, runId)
+          public val `get`: Get = Get(__client, _threadId, _runId)
 
-          public fun stepId(stepId: String): StepIdPath = StepIdPath(client, threadId, runId, stepId)
+          public fun stepId(stepId: String): StepIdPath = StepIdPath(__client, _threadId, _runId, stepId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val threadId: String,
-            private val runId: String,
+            private val __client: HttpClient,
+            private val _threadId: String,
+            private val _runId: String,
           ) {
             public suspend operator fun invoke(
               limit: Long? = 20L,
@@ -403,7 +404,7 @@ public class Threads internal constructor(
               before: String? = null,
               include: List<Include>? = null,
             ): ListRunStepsResponse {
-              val response = client.get("threads/${this.threadId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}/steps") {
+              val response = __client.get("threads/${this._threadId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}/steps") {
                 if (limit != null) {
                   this.url.encodedParameters.append("limit", limit.toString())
                 }
@@ -444,21 +445,21 @@ public class Threads internal constructor(
           }
 
           public class StepIdPath internal constructor(
-            private val client: HttpClient,
-            private val threadId: String,
-            private val runId: String,
-            private val stepId: String,
+            private val __client: HttpClient,
+            private val _threadId: String,
+            private val _runId: String,
+            private val _stepId: String,
           ) {
-            public val `get`: Get = Get(client, threadId, runId, stepId)
+            public val `get`: Get = Get(__client, _threadId, _runId, _stepId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val threadId: String,
-              private val runId: String,
-              private val stepId: String,
+              private val __client: HttpClient,
+              private val _threadId: String,
+              private val _runId: String,
+              private val _stepId: String,
             ) {
               public suspend operator fun invoke(include: List<Include>? = null): RunStepObject {
-                val response = client.get("threads/${this.threadId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}/steps/${this.stepId.encodeURLParameter()}") {
+                val response = __client.get("threads/${this._threadId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}/steps/${this._stepId.encodeURLParameter()}") {
                   include?.forEach { this.url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -478,19 +479,19 @@ public class Threads internal constructor(
         }
 
         public class SubmitToolOutputs internal constructor(
-          private val client: HttpClient,
-          private val threadId: String,
-          private val runId: String,
+          private val __client: HttpClient,
+          private val _threadId: String,
+          private val _runId: String,
         ) {
-          public val post: Post = Post(client, threadId, runId)
+          public val post: Post = Post(__client, _threadId, _runId)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val threadId: String,
-            private val runId: String,
+            private val __client: HttpClient,
+            private val _threadId: String,
+            private val _runId: String,
           ) {
             public suspend operator fun invoke(body: SubmitToolOutputsRunRequest): RunObject {
-              val response = client.post("threads/${this.threadId.encodeURLParameter()}/runs/${this.runId.encodeURLParameter()}/submit_tool_outputs") {
+              val response = __client.post("threads/${this._threadId.encodeURLParameter()}/runs/${this._runId.encodeURLParameter()}/submit_tool_outputs") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }

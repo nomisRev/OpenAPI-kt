@@ -38,17 +38,17 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
 
 public class Repositories internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun repositoryId(repositoryId: Long): RepositoryIdPath = RepositoryIdPath(client, repositoryId)
+  public fun repositoryId(repositoryId: Long): RepositoryIdPath = RepositoryIdPath(__client, repositoryId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(since: Long? = null): Response {
-      val response = client.get("repositories") {
+      val response = __client.get("repositories") {
         if (since != null) {
           this.url.encodedParameters.append("since", since.toString())
         }
@@ -75,43 +75,43 @@ public class Repositories internal constructor(
   }
 
   public class RepositoryIdPath internal constructor(
-    private val client: HttpClient,
-    private val repositoryId: Long,
+    private val __client: HttpClient,
+    private val _repositoryId: Long,
   ) {
-    public val issues: Issues = Issues(client, repositoryId)
+    public val issues: Issues = Issues(__client, _repositoryId)
 
     public class Issues internal constructor(
-      private val client: HttpClient,
-      private val repositoryId: Long,
+      private val __client: HttpClient,
+      private val _repositoryId: Long,
     ) {
-      public fun issueNumber(issueNumber: Long): IssueNumberPath = IssueNumberPath(client, repositoryId, issueNumber)
+      public fun issueNumber(issueNumber: Long): IssueNumberPath = IssueNumberPath(__client, _repositoryId, issueNumber)
 
       public class IssueNumberPath internal constructor(
-        private val client: HttpClient,
-        private val repositoryId: Long,
-        private val issueNumber: Long,
+        private val __client: HttpClient,
+        private val _repositoryId: Long,
+        private val _issueNumber: Long,
       ) {
         public val issueFieldValues: IssueFieldValues =
-            IssueFieldValues(client, repositoryId, issueNumber)
+            IssueFieldValues(__client, _repositoryId, _issueNumber)
 
         public class IssueFieldValues internal constructor(
-          private val client: HttpClient,
-          private val repositoryId: Long,
-          private val issueNumber: Long,
+          private val __client: HttpClient,
+          private val _repositoryId: Long,
+          private val _issueNumber: Long,
         ) {
-          public val post: Post = Post(client, repositoryId, issueNumber)
+          public val post: Post = Post(__client, _repositoryId, _issueNumber)
 
-          public val put: Put = Put(client, repositoryId, issueNumber)
+          public val put: Put = Put(__client, _repositoryId, _issueNumber)
 
-          public fun issueFieldId(issueFieldId: Long): IssueFieldIdPath = IssueFieldIdPath(client, repositoryId, issueNumber, issueFieldId)
+          public fun issueFieldId(issueFieldId: Long): IssueFieldIdPath = IssueFieldIdPath(__client, _repositoryId, _issueNumber, issueFieldId)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val repositoryId: Long,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _repositoryId: Long,
+            private val _issueNumber: Long,
           ) {
             public suspend operator fun invoke(issueFieldValues: List<IssueFieldValues>? = null): Response {
-              val response = client.post("repositories/${this.repositoryId}/issues/${this.issueNumber}/issue-field-values") {
+              val response = __client.post("repositories/${this._repositoryId}/issues/${this._issueNumber}/issue-field-values") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(issueFieldValues = issueFieldValues))
               }
@@ -234,12 +234,12 @@ public class Repositories internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val repositoryId: Long,
-            private val issueNumber: Long,
+            private val __client: HttpClient,
+            private val _repositoryId: Long,
+            private val _issueNumber: Long,
           ) {
             public suspend operator fun invoke(issueFieldValues: List<IssueFieldValues>? = null): Response {
-              val response = client.put("repositories/${this.repositoryId}/issues/${this.issueNumber}/issue-field-values") {
+              val response = __client.put("repositories/${this._repositoryId}/issues/${this._issueNumber}/issue-field-values") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(issueFieldValues = issueFieldValues))
               }
@@ -362,21 +362,21 @@ public class Repositories internal constructor(
           }
 
           public class IssueFieldIdPath internal constructor(
-            private val client: HttpClient,
-            private val repositoryId: Long,
-            private val issueNumber: Long,
-            private val issueFieldId: Long,
+            private val __client: HttpClient,
+            private val _repositoryId: Long,
+            private val _issueNumber: Long,
+            private val _issueFieldId: Long,
           ) {
-            public val delete: Delete = Delete(client, repositoryId, issueNumber, issueFieldId)
+            public val delete: Delete = Delete(__client, _repositoryId, _issueNumber, _issueFieldId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val repositoryId: Long,
-              private val issueNumber: Long,
-              private val issueFieldId: Long,
+              private val __client: HttpClient,
+              private val _repositoryId: Long,
+              private val _issueNumber: Long,
+              private val _issueFieldId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repositories/${this.repositoryId}/issues/${this.issueNumber}/issue-field-values/${this.issueFieldId}")
+                val response = __client.delete("repositories/${this._repositoryId}/issues/${this._issueNumber}/issue-field-values/${this._issueFieldId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())

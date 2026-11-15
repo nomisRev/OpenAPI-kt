@@ -447,12 +447,12 @@ private fun expansionCode(
 }
 
 /**
- * The path parameter [this] as the operation reads it, `this.id` (a keyword as ``this.`object` ``). A path parameter is
- * a property of the operation class, and the `invoke` parameters (a query parameter, the property of a flattened body
+ * The path parameter [this] as the operation reads it, `this._id`. A path parameter is a private property of the
+ * operation class ([toStateName]), and the `invoke` parameters (a query parameter, the property of a flattened body
  * or form) are nearer declarations of the same name, so a bare `id` could be one of those.
  */
 private fun String.pathProperty(): String {
-    val name = toCamelCase()
+    val name = toStateName()
     return "this.${if (name.isValidParamName()) name else "`$name`"}"
 }
 

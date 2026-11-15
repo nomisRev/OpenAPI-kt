@@ -15,79 +15,79 @@ import kotlin.String
 import kotlin.Unit
 
 public class GitHubV3RESTAPI internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val advisories: Advisories = Advisories(client)
+  public val advisories: Advisories = Advisories(__client)
 
-  public val app: App = App(client)
+  public val app: App = App(__client)
 
-  public val appManifests: AppManifests = AppManifests(client)
+  public val appManifests: AppManifests = AppManifests(__client)
 
-  public val applications: Applications = Applications(client)
+  public val applications: Applications = Applications(__client)
 
-  public val apps: Apps = Apps(client)
+  public val apps: Apps = Apps(__client)
 
-  public val assignments: Assignments = Assignments(client)
+  public val assignments: Assignments = Assignments(__client)
 
-  public val classrooms: Classrooms = Classrooms(client)
+  public val classrooms: Classrooms = Classrooms(__client)
 
-  public val codesOfConduct: CodesOfConduct = CodesOfConduct(client)
+  public val codesOfConduct: CodesOfConduct = CodesOfConduct(__client)
 
-  public val credentials: Credentials = Credentials(client)
+  public val credentials: Credentials = Credentials(__client)
 
-  public val emojis: Emojis = Emojis(client)
+  public val emojis: Emojis = Emojis(__client)
 
-  public val enterprises: Enterprises = Enterprises(client)
+  public val enterprises: Enterprises = Enterprises(__client)
 
-  public val events: Events = Events(client)
+  public val events: Events = Events(__client)
 
-  public val feeds: Feeds = Feeds(client)
+  public val feeds: Feeds = Feeds(__client)
 
-  public val gists: Gists = Gists(client)
+  public val gists: Gists = Gists(__client)
 
-  public val gitignore: Gitignore = Gitignore(client)
+  public val gitignore: Gitignore = Gitignore(__client)
 
-  public val installation: Installation = Installation(client)
+  public val installation: Installation = Installation(__client)
 
-  public val issues: Issues = Issues(client)
+  public val issues: Issues = Issues(__client)
 
-  public val licenses: Licenses = Licenses(client)
+  public val licenses: Licenses = Licenses(__client)
 
-  public val markdown: Markdown = Markdown(client)
+  public val markdown: Markdown = Markdown(__client)
 
-  public val marketplaceListing: MarketplaceListing = MarketplaceListing(client)
+  public val marketplaceListing: MarketplaceListing = MarketplaceListing(__client)
 
-  public val meta: Meta = Meta(client)
+  public val meta: Meta = Meta(__client)
 
-  public val networks: Networks = Networks(client)
+  public val networks: Networks = Networks(__client)
 
-  public val notifications: Notifications = Notifications(client)
+  public val notifications: Notifications = Notifications(__client)
 
-  public val octocat: Octocat = Octocat(client)
+  public val octocat: Octocat = Octocat(__client)
 
-  public val organizations: Organizations = Organizations(client)
+  public val organizations: Organizations = Organizations(__client)
 
-  public val orgs: Orgs = Orgs(client)
+  public val orgs: Orgs = Orgs(__client)
 
-  public val rateLimit: RateLimit = RateLimit(client)
+  public val rateLimit: RateLimit = RateLimit(__client)
 
-  public val repos: Repos = Repos(client)
+  public val repos: Repos = Repos(__client)
 
-  public val repositories: Repositories = Repositories(client)
+  public val repositories: Repositories = Repositories(__client)
 
-  public val search: Search = Search(client)
+  public val search: Search = Search(__client)
 
-  public val teams: Teams = Teams(client)
+  public val teams: Teams = Teams(__client)
 
-  public val user: User = User(client)
+  public val user: User = User(__client)
 
-  public val users: Users = Users(client)
+  public val users: Users = Users(__client)
 
-  public val versions: Versions = Versions(client)
+  public val versions: Versions = Versions(__client)
 
-  public val zen: Zen = Zen(client)
+  public val zen: Zen = Zen(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -106,14 +106,14 @@ public class GitHubV3RESTAPI internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Root {
-      val response = client.get("")
+      val response = __client.get("")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

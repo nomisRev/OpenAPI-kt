@@ -9,15 +9,15 @@ import io.ktor.http.contentType
 import kotlin.String
 
 public class Reports internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("reports") {
+      val response = __client.post("reports") {
         contentType(ContentType("text", "csv"))
         setBody(body)
       }

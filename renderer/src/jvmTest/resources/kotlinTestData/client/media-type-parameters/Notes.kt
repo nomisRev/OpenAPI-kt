@@ -10,15 +10,15 @@ import io.ktor.http.contentType
 import kotlin.String
 
 public class Notes internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String): String {
-      val response = client.post("notes") {
+      val response = __client.post("notes") {
         contentType(ContentType.Text.Plain.withParameter("charset", "iso-8859-1"))
         setBody(body)
       }

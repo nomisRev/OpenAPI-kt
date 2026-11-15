@@ -22,23 +22,23 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Users internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val me: Me = Me(client)
+  public val me: Me = Me(__client)
 
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId",
       skip: Int? = null,
       top: Int? = null,
     ): List<UserRead> {
-      val response = client.get("users") {
+      val response = __client.get("users") {
         if (fields != null) {
           this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
@@ -55,23 +55,23 @@ public class Users internal constructor(
   }
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
-    public val profiles: Profiles = Profiles(client, id)
+    public val profiles: Profiles = Profiles(__client, _id)
 
-    public val savedQueries: SavedQueries = SavedQueries(client, id)
+    public val savedQueries: SavedQueries = SavedQueries(__client, _id)
 
-    public val tags: Tags = Tags(client, id)
+    public val tags: Tags = Tags(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId"): UserRead {
-        val response = client.get("users/${this.id.encodeURLParameter()}") {
+        val response = __client.get("users/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -82,29 +82,29 @@ public class Users internal constructor(
     }
 
     public class Profiles internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val general: General = General(client, id)
+      public val general: General = General(__client, _id)
 
-      public val notifications: Notifications = Notifications(client, id)
+      public val notifications: Notifications = Notifications(__client, _id)
 
-      public val timetracking: Timetracking = Timetracking(client, id)
+      public val timetracking: Timetracking = Timetracking(__client, _id)
 
       public class General internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
-        public val `get`: Get = Get(client, id)
+        public val `get`: Get = Get(__client, _id)
 
-        public val post: Post = Post(client, id)
+        public val post: Post = Post(__client, _id)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
+          private val __client: HttpClient,
+          private val _id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,locale(${'$'}type,community,id,language,locale,name),timezone(${'$'}type,id,offset,presentation)"): GeneralUserProfileRead {
-            val response = client.get("users/${this.id.encodeURLParameter()}/profiles/general") {
+            val response = __client.get("users/${this._id.encodeURLParameter()}/profiles/general") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -115,11 +115,11 @@ public class Users internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val id: String,
+          private val __client: HttpClient,
+          private val _id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,locale(${'$'}type,community,id,language,locale,name),timezone(${'$'}type,id,offset,presentation)", body: GeneralUserProfileWrite? = null): GeneralUserProfileRead {
-            val response = client.post("users/${this.id.encodeURLParameter()}/profiles/general") {
+            val response = __client.post("users/${this._id.encodeURLParameter()}/profiles/general") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -135,19 +135,19 @@ public class Users internal constructor(
       }
 
       public class Notifications internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
-        public val `get`: Get = Get(client, id)
+        public val `get`: Get = Get(__client, _id)
 
-        public val post: Post = Post(client, id)
+        public val post: Post = Post(__client, _id)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
+          private val __client: HttpClient,
+          private val _id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id"): NotificationsUserProfileRead {
-            val response = client.get("users/${this.id.encodeURLParameter()}/profiles/notifications") {
+            val response = __client.get("users/${this._id.encodeURLParameter()}/profiles/notifications") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -158,11 +158,11 @@ public class Users internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val id: String,
+          private val __client: HttpClient,
+          private val _id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: NotificationsUserProfileWrite? = null): NotificationsUserProfileRead {
-            val response = client.post("users/${this.id.encodeURLParameter()}/profiles/notifications") {
+            val response = __client.post("users/${this._id.encodeURLParameter()}/profiles/notifications") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -178,19 +178,19 @@ public class Users internal constructor(
       }
 
       public class Timetracking internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
-        public val `get`: Get = Get(client, id)
+        public val `get`: Get = Get(__client, _id)
 
-        public val post: Post = Post(client, id)
+        public val post: Post = Post(__client, _id)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val id: String,
+          private val __client: HttpClient,
+          private val _id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,periodFormat(${'$'}type,id)"): TimeTrackingUserProfileRead {
-            val response = client.get("users/${this.id.encodeURLParameter()}/profiles/timetracking") {
+            val response = __client.get("users/${this._id.encodeURLParameter()}/profiles/timetracking") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -201,11 +201,11 @@ public class Users internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val id: String,
+          private val __client: HttpClient,
+          private val _id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,periodFormat(${'$'}type,id)", body: TimeTrackingUserProfileWrite? = null): TimeTrackingUserProfileRead {
-            val response = client.post("users/${this.id.encodeURLParameter()}/profiles/timetracking") {
+            val response = __client.post("users/${this._id.encodeURLParameter()}/profiles/timetracking") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -222,21 +222,21 @@ public class Users internal constructor(
     }
 
     public class SavedQueries internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query",
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueFolderRead.SavedQuery> {
-          val response = client.get("users/${this.id.encodeURLParameter()}/savedQueries") {
+          val response = __client.get("users/${this._id.encodeURLParameter()}/savedQueries") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -254,21 +254,21 @@ public class Users internal constructor(
     }
 
     public class Tags internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)",
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueFolderRead.Tag> {
-          val response = client.get("users/${this.id.encodeURLParameter()}/tags") {
+          val response = __client.get("users/${this._id.encodeURLParameter()}/tags") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -287,15 +287,15 @@ public class Users internal constructor(
   }
 
   public class Me internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId"): UserRead.Me {
-        val response = client.get("users/me") {
+        val response = __client.get("users/me") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

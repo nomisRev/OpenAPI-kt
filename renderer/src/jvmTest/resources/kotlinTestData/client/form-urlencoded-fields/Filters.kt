@@ -15,15 +15,15 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Filters internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(filter: Body.Filter, range: Body.Range? = null) {
-      val response = client.post("filters") {
+      val response = __client.post("filters") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("status", filter.status.toString())

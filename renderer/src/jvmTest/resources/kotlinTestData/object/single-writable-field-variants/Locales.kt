@@ -11,15 +11,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 public class Locales internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: LocaleDescriptorWrite): LocaleDescriptorRead {
-      val response = client.post("locales") {
+      val response = __client.post("locales") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

@@ -11,35 +11,35 @@ import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val certificate: Certificate = Certificate(client)
+  public val certificate: Certificate = Certificate(__client)
 
-  public val report: Report = Report(client)
+  public val report: Report = Report(__client)
 
-  public val `data`: Data = Data(client)
+  public val `data`: Data = Data(__client)
 
-  public val note: Note = Note(client)
+  public val note: Note = Note(__client)
 
-  public val picture: Picture = Picture(client)
+  public val picture: Picture = Picture(__client)
 
-  public val docs: Docs = Docs(client)
+  public val docs: Docs = Docs(__client)
 
-  public val upload: Upload = Upload(client)
+  public val upload: Upload = Upload(__client)
 
-  public val uploadOptional: UploadOptional = UploadOptional(client)
+  public val uploadOptional: UploadOptional = UploadOptional(__client)
 
-  public val uploadPair: UploadPair = UploadPair(client)
+  public val uploadPair: UploadPair = UploadPair(__client)
 
-  public val uploadPairOptional: UploadPairOptional = UploadPairOptional(client)
+  public val uploadPairOptional: UploadPairOptional = UploadPairOptional(__client)
 
-  public val uploadImage: UploadImage = UploadImage(client)
+  public val uploadImage: UploadImage = UploadImage(__client)
 
-  public val uploadAny: UploadAny = UploadAny(client)
+  public val uploadAny: UploadAny = UploadAny(__client)
 
-  public val echo: Echo = Echo(client)
+  public val echo: Echo = Echo(__client)
 
-  public val echoText: EchoText = EchoText(client)
+  public val echoText: EchoText = EchoText(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -58,6 +58,6 @@ public class Api internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

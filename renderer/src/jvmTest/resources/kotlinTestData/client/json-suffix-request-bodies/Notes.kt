@@ -10,15 +10,15 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Notes internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String? = null) {
-      val response = client.put("notes") {
+      val response = __client.put("notes") {
         body?.let {
           contentType(ContentType("application", "merge-patch+json"))
           setBody(JsonPrimitive(it))

@@ -31,16 +31,16 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class VectorStores internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun vectorStoreId(vectorStoreId: String): VectorStoreIdPath = VectorStoreIdPath(client, vectorStoreId)
+  public fun vectorStoreId(vectorStoreId: String): VectorStoreIdPath = VectorStoreIdPath(__client, vectorStoreId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       limit: Long? = 20L,
@@ -48,7 +48,7 @@ public class VectorStores internal constructor(
       after: String? = null,
       before: String? = null,
     ): ListVectorStoresResponse {
-      val response = client.get("vector_stores") {
+      val response = __client.get("vector_stores") {
         if (limit != null) {
           this.url.encodedParameters.append("limit", limit.toString())
         }
@@ -79,10 +79,10 @@ public class VectorStores internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateVectorStoreRequest): VectorStoreObject {
-      val response = client.post("vector_stores") {
+      val response = __client.post("vector_stores") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -92,49 +92,49 @@ public class VectorStores internal constructor(
   }
 
   public class VectorStoreIdPath internal constructor(
-    private val client: HttpClient,
-    private val vectorStoreId: String,
+    private val __client: HttpClient,
+    private val _vectorStoreId: String,
   ) {
-    public val delete: Delete = Delete(client, vectorStoreId)
+    public val delete: Delete = Delete(__client, _vectorStoreId)
 
-    public val `get`: Get = Get(client, vectorStoreId)
+    public val `get`: Get = Get(__client, _vectorStoreId)
 
-    public val post: Post = Post(client, vectorStoreId)
+    public val post: Post = Post(__client, _vectorStoreId)
 
-    public val fileBatches: FileBatches = FileBatches(client, vectorStoreId)
+    public val fileBatches: FileBatches = FileBatches(__client, _vectorStoreId)
 
-    public val files: Files = Files(client, vectorStoreId)
+    public val files: Files = Files(__client, _vectorStoreId)
 
-    public val search: Search = Search(client, vectorStoreId)
+    public val search: Search = Search(__client, _vectorStoreId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val vectorStoreId: String,
+      private val __client: HttpClient,
+      private val _vectorStoreId: String,
     ) {
       public suspend operator fun invoke(): DeleteVectorStoreResponse {
-        val response = client.delete("vector_stores/${this.vectorStoreId.encodeURLParameter()}")
+        val response = __client.delete("vector_stores/${this._vectorStoreId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val vectorStoreId: String,
+      private val __client: HttpClient,
+      private val _vectorStoreId: String,
     ) {
       public suspend operator fun invoke(): VectorStoreObject {
-        val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}")
+        val response = __client.get("vector_stores/${this._vectorStoreId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val vectorStoreId: String,
+      private val __client: HttpClient,
+      private val _vectorStoreId: String,
     ) {
       public suspend operator fun invoke(body: UpdateVectorStoreRequest): VectorStoreObject {
-        val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}") {
+        val response = __client.post("vector_stores/${this._vectorStoreId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -144,19 +144,19 @@ public class VectorStores internal constructor(
     }
 
     public class FileBatches internal constructor(
-      private val client: HttpClient,
-      private val vectorStoreId: String,
+      private val __client: HttpClient,
+      private val _vectorStoreId: String,
     ) {
-      public val post: Post = Post(client, vectorStoreId)
+      public val post: Post = Post(__client, _vectorStoreId)
 
-      public fun batchId(batchId: String): BatchIdPath = BatchIdPath(client, vectorStoreId, batchId)
+      public fun batchId(batchId: String): BatchIdPath = BatchIdPath(__client, _vectorStoreId, batchId)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val vectorStoreId: String,
+        private val __client: HttpClient,
+        private val _vectorStoreId: String,
       ) {
         public suspend operator fun invoke(body: CreateVectorStoreFileBatchRequest): VectorStoreFileBatchObject {
-          val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/file_batches") {
+          val response = __client.post("vector_stores/${this._vectorStoreId.encodeURLParameter()}/file_batches") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -166,42 +166,42 @@ public class VectorStores internal constructor(
       }
 
       public class BatchIdPath internal constructor(
-        private val client: HttpClient,
-        private val vectorStoreId: String,
-        private val batchId: String,
+        private val __client: HttpClient,
+        private val _vectorStoreId: String,
+        private val _batchId: String,
       ) {
-        public val `get`: Get = Get(client, vectorStoreId, batchId)
+        public val `get`: Get = Get(__client, _vectorStoreId, _batchId)
 
-        public val cancel: Cancel = Cancel(client, vectorStoreId, batchId)
+        public val cancel: Cancel = Cancel(__client, _vectorStoreId, _batchId)
 
-        public val files: Files = Files(client, vectorStoreId, batchId)
+        public val files: Files = Files(__client, _vectorStoreId, _batchId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val vectorStoreId: String,
-          private val batchId: String,
+          private val __client: HttpClient,
+          private val _vectorStoreId: String,
+          private val _batchId: String,
         ) {
           public suspend operator fun invoke(): VectorStoreFileBatchObject {
-            val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/file_batches/${this.batchId.encodeURLParameter()}")
+            val response = __client.get("vector_stores/${this._vectorStoreId.encodeURLParameter()}/file_batches/${this._batchId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Cancel internal constructor(
-          private val client: HttpClient,
-          private val vectorStoreId: String,
-          private val batchId: String,
+          private val __client: HttpClient,
+          private val _vectorStoreId: String,
+          private val _batchId: String,
         ) {
-          public val post: Post = Post(client, vectorStoreId, batchId)
+          public val post: Post = Post(__client, _vectorStoreId, _batchId)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val vectorStoreId: String,
-            private val batchId: String,
+            private val __client: HttpClient,
+            private val _vectorStoreId: String,
+            private val _batchId: String,
           ) {
             public suspend operator fun invoke(): VectorStoreFileBatchObject {
-              val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/file_batches/${this.batchId.encodeURLParameter()}/cancel")
+              val response = __client.post("vector_stores/${this._vectorStoreId.encodeURLParameter()}/file_batches/${this._batchId.encodeURLParameter()}/cancel")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -209,16 +209,16 @@ public class VectorStores internal constructor(
         }
 
         public class Files internal constructor(
-          private val client: HttpClient,
-          private val vectorStoreId: String,
-          private val batchId: String,
+          private val __client: HttpClient,
+          private val _vectorStoreId: String,
+          private val _batchId: String,
         ) {
-          public val `get`: Get = Get(client, vectorStoreId, batchId)
+          public val `get`: Get = Get(__client, _vectorStoreId, _batchId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val vectorStoreId: String,
-            private val batchId: String,
+            private val __client: HttpClient,
+            private val _vectorStoreId: String,
+            private val _batchId: String,
           ) {
             public suspend operator fun invoke(
               limit: Long? = 20L,
@@ -227,7 +227,7 @@ public class VectorStores internal constructor(
               before: String? = null,
               filter: Filter? = null,
             ): ListVectorStoreFilesResponse {
-              val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/file_batches/${this.batchId.encodeURLParameter()}/files") {
+              val response = __client.get("vector_stores/${this._vectorStoreId.encodeURLParameter()}/file_batches/${this._batchId.encodeURLParameter()}/files") {
                 if (limit != null) {
                   this.url.encodedParameters.append("limit", limit.toString())
                 }
@@ -279,18 +279,18 @@ public class VectorStores internal constructor(
     }
 
     public class Files internal constructor(
-      private val client: HttpClient,
-      private val vectorStoreId: String,
+      private val __client: HttpClient,
+      private val _vectorStoreId: String,
     ) {
-      public val `get`: Get = Get(client, vectorStoreId)
+      public val `get`: Get = Get(__client, _vectorStoreId)
 
-      public val post: Post = Post(client, vectorStoreId)
+      public val post: Post = Post(__client, _vectorStoreId)
 
-      public fun fileId(fileId: String): FileIdPath = FileIdPath(client, vectorStoreId, fileId)
+      public fun fileId(fileId: String): FileIdPath = FileIdPath(__client, _vectorStoreId, fileId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val vectorStoreId: String,
+        private val __client: HttpClient,
+        private val _vectorStoreId: String,
       ) {
         public suspend operator fun invoke(
           limit: Long? = 20L,
@@ -299,7 +299,7 @@ public class VectorStores internal constructor(
           before: String? = null,
           filter: Filter? = null,
         ): ListVectorStoreFilesResponse {
-          val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files") {
+          val response = __client.get("vector_stores/${this._vectorStoreId.encodeURLParameter()}/files") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -348,11 +348,11 @@ public class VectorStores internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val vectorStoreId: String,
+        private val __client: HttpClient,
+        private val _vectorStoreId: String,
       ) {
         public suspend operator fun invoke(body: CreateVectorStoreFileRequest): VectorStoreFileObject {
-          val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files") {
+          val response = __client.post("vector_stores/${this._vectorStoreId.encodeURLParameter()}/files") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -362,49 +362,49 @@ public class VectorStores internal constructor(
       }
 
       public class FileIdPath internal constructor(
-        private val client: HttpClient,
-        private val vectorStoreId: String,
-        private val fileId: String,
+        private val __client: HttpClient,
+        private val _vectorStoreId: String,
+        private val _fileId: String,
       ) {
-        public val delete: Delete = Delete(client, vectorStoreId, fileId)
+        public val delete: Delete = Delete(__client, _vectorStoreId, _fileId)
 
-        public val `get`: Get = Get(client, vectorStoreId, fileId)
+        public val `get`: Get = Get(__client, _vectorStoreId, _fileId)
 
-        public val post: Post = Post(client, vectorStoreId, fileId)
+        public val post: Post = Post(__client, _vectorStoreId, _fileId)
 
-        public val content: Content = Content(client, vectorStoreId, fileId)
+        public val content: Content = Content(__client, _vectorStoreId, _fileId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val vectorStoreId: String,
-          private val fileId: String,
+          private val __client: HttpClient,
+          private val _vectorStoreId: String,
+          private val _fileId: String,
         ) {
           public suspend operator fun invoke(): DeleteVectorStoreFileResponse {
-            val response = client.delete("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}")
+            val response = __client.delete("vector_stores/${this._vectorStoreId.encodeURLParameter()}/files/${this._fileId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val vectorStoreId: String,
-          private val fileId: String,
+          private val __client: HttpClient,
+          private val _vectorStoreId: String,
+          private val _fileId: String,
         ) {
           public suspend operator fun invoke(): VectorStoreFileObject {
-            val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}")
+            val response = __client.get("vector_stores/${this._vectorStoreId.encodeURLParameter()}/files/${this._fileId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val vectorStoreId: String,
-          private val fileId: String,
+          private val __client: HttpClient,
+          private val _vectorStoreId: String,
+          private val _fileId: String,
         ) {
           public suspend operator fun invoke(body: UpdateVectorStoreFileAttributesRequest): VectorStoreFileObject {
-            val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}") {
+            val response = __client.post("vector_stores/${this._vectorStoreId.encodeURLParameter()}/files/${this._fileId.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -414,19 +414,19 @@ public class VectorStores internal constructor(
         }
 
         public class Content internal constructor(
-          private val client: HttpClient,
-          private val vectorStoreId: String,
-          private val fileId: String,
+          private val __client: HttpClient,
+          private val _vectorStoreId: String,
+          private val _fileId: String,
         ) {
-          public val `get`: Get = Get(client, vectorStoreId, fileId)
+          public val `get`: Get = Get(__client, _vectorStoreId, _fileId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val vectorStoreId: String,
-            private val fileId: String,
+            private val __client: HttpClient,
+            private val _vectorStoreId: String,
+            private val _fileId: String,
           ) {
             public suspend operator fun invoke(): VectorStoreFileContentResponse {
-              val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}/content")
+              val response = __client.get("vector_stores/${this._vectorStoreId.encodeURLParameter()}/files/${this._fileId.encodeURLParameter()}/content")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -436,17 +436,17 @@ public class VectorStores internal constructor(
     }
 
     public class Search internal constructor(
-      private val client: HttpClient,
-      private val vectorStoreId: String,
+      private val __client: HttpClient,
+      private val _vectorStoreId: String,
     ) {
-      public val post: Post = Post(client, vectorStoreId)
+      public val post: Post = Post(__client, _vectorStoreId)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val vectorStoreId: String,
+        private val __client: HttpClient,
+        private val _vectorStoreId: String,
       ) {
         public suspend operator fun invoke(body: VectorStoreSearchRequest): VectorStoreSearchResultsPage {
-          val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/search") {
+          val response = __client.post("vector_stores/${this._vectorStoreId.encodeURLParameter()}/search") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }

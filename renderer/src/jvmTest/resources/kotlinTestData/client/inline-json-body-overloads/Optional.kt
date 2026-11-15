@@ -12,20 +12,20 @@ import kotlin.String
 import kotlinx.serialization.Serializable
 
 public class Optional internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("optional")
+      val response = __client.post("optional")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     public suspend operator fun invoke(body: Body? = null) {
-      val response = client.post("optional") {
+      val response = __client.post("optional") {
         body?.let {
           contentType(ContentType.Application.Json)
           setBody(it)
@@ -35,7 +35,7 @@ public class Optional internal constructor(
     }
 
     public suspend operator fun invoke(name: String) {
-      val response = client.post("optional") {
+      val response = __client.post("optional") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)

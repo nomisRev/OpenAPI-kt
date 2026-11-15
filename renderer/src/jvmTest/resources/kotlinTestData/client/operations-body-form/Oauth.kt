@@ -11,24 +11,24 @@ import io.ktor.http.formUrlEncode
 import kotlin.String
 
 public class Oauth internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val token: Token = Token(client)
+  public val token: Token = Token(__client)
 
   public class Token internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         grantType: String,
         code: String,
         redirectUri: String,
       ) {
-        val response = client.post("oauth/token") {
+        val response = __client.post("oauth/token") {
           contentType(ContentType.Application.FormUrlEncoded)
           setBody(Parameters.build {
             append("grant_type", grantType)

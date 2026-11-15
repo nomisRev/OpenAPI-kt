@@ -8,51 +8,51 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Detector internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun detectorId(detectorId: String): DetectorIdPath = DetectorIdPath(client, detectorId)
+  public fun detectorId(detectorId: String): DetectorIdPath = DetectorIdPath(__client, detectorId)
 
   public class DetectorIdPath internal constructor(
-    private val client: HttpClient,
-    private val detectorId: String,
+    private val __client: HttpClient,
+    private val _detectorId: String,
   ) {
-    public val member: Member = Member(client, detectorId)
+    public val member: Member = Member(__client, _detectorId)
 
     public class Member internal constructor(
-      private val client: HttpClient,
-      private val detectorId: String,
+      private val __client: HttpClient,
+      private val _detectorId: String,
     ) {
-      public val `get`: Get = Get(client, detectorId)
+      public val `get`: Get = Get(__client, _detectorId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val detectorId: String,
+        private val __client: HttpClient,
+        private val _detectorId: String,
       ) {
-        public val `get`: Get = Get(client, detectorId)
+        public val `get`: Get = Get(__client, _detectorId)
 
-        public val post: Post = Post(client, detectorId)
+        public val post: Post = Post(__client, _detectorId)
 
         public suspend operator fun invoke() {
-          val response = client.get("detector/${this.detectorId.encodeURLParameter()}/member")
+          val response = __client.get("detector/${this._detectorId.encodeURLParameter()}/member")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val detectorId: String,
+          private val __client: HttpClient,
+          private val _detectorId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.get("detector/${this.detectorId.encodeURLParameter()}/member/get")
+            val response = __client.get("detector/${this._detectorId.encodeURLParameter()}/member/get")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val detectorId: String,
+          private val __client: HttpClient,
+          private val _detectorId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.post("detector/${this.detectorId.encodeURLParameter()}/member/get")
+            val response = __client.post("detector/${this._detectorId.encodeURLParameter()}/member/get")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }

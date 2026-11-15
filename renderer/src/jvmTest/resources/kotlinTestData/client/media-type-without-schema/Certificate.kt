@@ -9,15 +9,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 
 public class Certificate internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): HttpResponse {
-      val response = client.get("certificate") {
+      val response = __client.get("certificate") {
         `header`(HttpHeaders.Accept, ContentType.Application.Pdf)
       }
       if (response.status.value != 200) throw ResponseException(response, "")

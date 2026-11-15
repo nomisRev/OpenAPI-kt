@@ -24,21 +24,21 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 public class Meters internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val _300: `300` = `300`(client)
+  public val _300: `300` = `300`(__client)
 
-  public val _600: `600` = `600`(client)
+  public val _600: `600` = `600`(__client)
 
-  public val _1200: `1200` = `1200`(client)
+  public val _1200: `1200` = `1200`(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(rate: Baudrate) {
-      val response = client.post("meters") {
+      val response = __client.post("meters") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("rate", rate.value.toString())
@@ -49,12 +49,12 @@ public class Meters internal constructor(
   }
 
   public class `300` internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         speed: Baudrate? = null,
@@ -62,7 +62,7 @@ public class Meters internal constructor(
         on: On? = null,
         xLevel: XLevel? = null,
       ) {
-        val response = client.get("meters/300") {
+        val response = __client.get("meters/300") {
           if (speed != null) {
             this.url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
           }
@@ -154,12 +154,12 @@ public class Meters internal constructor(
   }
 
   public class `600` internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         speed: Baudrate? = null,
@@ -167,7 +167,7 @@ public class Meters internal constructor(
         on: On? = null,
         xLevel: XLevel? = null,
       ) {
-        val response = client.get("meters/600") {
+        val response = __client.get("meters/600") {
           if (speed != null) {
             this.url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
           }
@@ -259,12 +259,12 @@ public class Meters internal constructor(
   }
 
   public class `1200` internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         speed: Baudrate? = null,
@@ -272,7 +272,7 @@ public class Meters internal constructor(
         on: On? = null,
         xLevel: XLevel? = null,
       ) {
-        val response = client.get("meters/1200") {
+        val response = __client.get("meters/1200") {
           if (speed != null) {
             this.url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
           }

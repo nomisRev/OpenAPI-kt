@@ -5,25 +5,25 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 
 public class Apps internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val dash: Dash = Dash(client)
+  public val dash: Dash = Dash(__client)
 
   public class Dash internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val config: Config = Config(client)
+    public val config: Config = Config(__client)
 
     public class Config internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("apps/-/config")
+          val response = __client.get("apps/-/config")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

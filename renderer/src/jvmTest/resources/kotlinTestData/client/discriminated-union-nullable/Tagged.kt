@@ -9,15 +9,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 public class Tagged internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: TaggedNullableMemberPet?): TaggedNullableMemberPet? {
-      val response = client.put("tagged") {
+      val response = __client.put("tagged") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

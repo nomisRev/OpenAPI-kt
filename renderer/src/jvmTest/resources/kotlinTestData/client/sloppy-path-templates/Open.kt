@@ -5,20 +5,20 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 
 public class Open internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val brace: Brace = Brace(client)
+  public val brace: Brace = Brace(__client)
 
   public class Brace internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("open/{brace")
+        val response = __client.get("open/{brace")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

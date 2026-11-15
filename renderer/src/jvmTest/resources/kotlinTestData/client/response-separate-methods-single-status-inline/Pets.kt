@@ -12,15 +12,15 @@ import kotlin.String
 import kotlinx.serialization.Serializable
 
 public class Pets internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend fun json(): JsonResponse {
-      val response = client.get("pets") {
+      val response = __client.get("pets") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -28,7 +28,7 @@ public class Pets internal constructor(
     }
 
     public suspend fun textPlain(): String {
-      val response = client.get("pets") {
+      val response = __client.get("pets") {
         `header`(HttpHeaders.Accept, ContentType.Text.Plain)
       }
       if (response.status.value != 200) throw ResponseException(response, "")

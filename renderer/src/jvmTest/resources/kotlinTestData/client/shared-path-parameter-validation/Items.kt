@@ -7,59 +7,59 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Items internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
-    public val parts: Parts = Parts(client, id)
+    public val parts: Parts = Parts(__client, _id)
 
-    public val tags: Tags = Tags(client, id)
+    public val tags: Tags = Tags(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("items/${this.id.encodeURLParameter()}")
+        val response = __client.get("items/${this._id.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
 
     public class Parts internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("items/${this.id.encodeURLParameter()}/parts")
+          val response = __client.get("items/${this._id.encodeURLParameter()}/parts")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
     }
 
     public class Tags internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("items/${this.id.encodeURLParameter()}/tags")
+          val response = __client.get("items/${this._id.encodeURLParameter()}/tags")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

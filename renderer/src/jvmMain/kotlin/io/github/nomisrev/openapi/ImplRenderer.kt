@@ -89,21 +89,21 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
 
     val constructor = FunSpec.constructorBuilder()
         .addModifiers(KModifier.INTERNAL)
-        .addParameter("client", HttpClientType)
+        .addParameter(ClientStateName, HttpClientType)
     for ([index, param] in accumulatedParams.withIndex()) {
         val typeName = accumulatedTypeNames[index]
-        constructor.addParameter(param.name.toCamelCase(), typeName)
+        constructor.addParameter(param.name.toStateName(), typeName)
     }
     primaryConstructor(constructor.build())
 
     addProperty(
-        PropertySpec.builder("client", HttpClientType)
+        PropertySpec.builder(ClientStateName, HttpClientType)
             .addModifiers(KModifier.PRIVATE)
-            .initializer("client")
+            .initializer("%N", ClientStateName)
             .build()
     )
     for ([index, param] in accumulatedParams.withIndex()) {
-        val paramName = param.name.toCamelCase()
+        val paramName = param.name.toStateName()
         val typeName = accumulatedTypeNames[index]
         addProperty(
             PropertySpec.builder(paramName, typeName)
@@ -324,10 +324,7 @@ private data class OperationRequestInvocationContext(
     val pathLiteral: CodeBlock,
     val needsRequestConfig: Boolean,
     val bodyMayBeNull: Boolean,
-    /**
-     * The `HttpClient` property of the operation class: `client`, or `this.client` when an argument of that name is
-     * nearer.
-     */
+    /** The `HttpClient` property of the operation class ([ClientStateName]). */
     val client: String,
 )
 
@@ -345,7 +342,7 @@ private fun Route.operationRequestInvocationContext(
     arguments: OperationArguments,
 ): OperationRequestInvocationContext =
     OperationRequestInvocationContext(
-        client = if (arguments.shadowsClient) "this.client" else "client",
+        client = ClientStateName,
         httpMethodName = method.value.lowercase(),
         pathLiteral = pathLiteral(config),
         needsRequestConfig = hasRequestConfig(includeBody) || contentType != null,
@@ -1256,7 +1253,7 @@ private fun CodeBlock.Builder.addMultipartRefBodyCode(bodyMayBeNull: Boolean, bo
  * identifier is escaped), then [extraArgs].
  */
 private fun List<AccumulatedParam>.constructorArgs(extraArgs: List<CodeBlock> = emptyList()): CodeBlock =
-    (listOf(CodeBlock.of("client")) + map { CodeBlock.of("%N", it.name.toCamelCase()) } + extraArgs).joinToCode(", ")
+    (listOf(CodeBlock.of("%N", ClientStateName)) + map { CodeBlock.of("%N", it.name.toStateName()) } + extraArgs).joinToCode(", ")
 
 private fun Route.Body.Multipart.FormData.multipartValueExpr(config: RenderConfig, paramName: String): CodeBlock =
     when {

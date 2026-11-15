@@ -12,17 +12,17 @@ import kotlin.Long
 import kotlin.collections.List
 
 public class Classrooms internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun classroomId(classroomId: Long): ClassroomIdPath = ClassroomIdPath(client, classroomId)
+  public fun classroomId(classroomId: Long): ClassroomIdPath = ClassroomIdPath(__client, classroomId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroom> {
-      val response = client.get("classrooms") {
+      val response = __client.get("classrooms") {
         if (page != null) {
           this.url.encodedParameters.append("page", page.toString())
         }
@@ -36,19 +36,19 @@ public class Classrooms internal constructor(
   }
 
   public class ClassroomIdPath internal constructor(
-    private val client: HttpClient,
-    private val classroomId: Long,
+    private val __client: HttpClient,
+    private val _classroomId: Long,
   ) {
-    public val `get`: Get = Get(client, classroomId)
+    public val `get`: Get = Get(__client, _classroomId)
 
-    public val assignments: Assignments = Assignments(client, classroomId)
+    public val assignments: Assignments = Assignments(__client, _classroomId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val classroomId: Long,
+      private val __client: HttpClient,
+      private val _classroomId: Long,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("classrooms/${this.classroomId}")
+        val response = __client.get("classrooms/${this._classroomId}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())
@@ -68,17 +68,17 @@ public class Classrooms internal constructor(
     }
 
     public class Assignments internal constructor(
-      private val client: HttpClient,
-      private val classroomId: Long,
+      private val __client: HttpClient,
+      private val _classroomId: Long,
     ) {
-      public val `get`: Get = Get(client, classroomId)
+      public val `get`: Get = Get(__client, _classroomId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val classroomId: Long,
+        private val __client: HttpClient,
+        private val _classroomId: Long,
       ) {
         public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroomAssignment> {
-          val response = client.get("classrooms/${this.classroomId}/assignments") {
+          val response = __client.get("classrooms/${this._classroomId}/assignments") {
             if (page != null) {
               this.url.encodedParameters.append("page", page.toString())
             }

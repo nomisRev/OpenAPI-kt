@@ -11,9 +11,9 @@ import kotlin.String
 import kotlin.Unit
 
 public class CSGOV3Scores internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val scores: Scores = Scores(client)
+  public val scores: Scores = Scores(__client)
 
   public constructor(server: CSGOV3ScoresServer, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(server.url) }
@@ -32,7 +32,7 @@ public class CSGOV3Scores internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }
 

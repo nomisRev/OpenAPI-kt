@@ -18,19 +18,19 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Uploads internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun uploadId(uploadId: String): UploadIdPath = UploadIdPath(client, uploadId)
+  public fun uploadId(uploadId: String): UploadIdPath = UploadIdPath(__client, uploadId)
 
   public class UploadIdPath internal constructor(
-    private val client: HttpClient,
-    private val uploadId: String,
+    private val __client: HttpClient,
+    private val _uploadId: String,
   ) {
-    public val post: Post = Post(client, uploadId)
+    public val post: Post = Post(__client, _uploadId)
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val uploadId: String,
+      private val __client: HttpClient,
+      private val _uploadId: String,
     ) {
       public suspend operator fun invoke(
         `file`: ByteArray,
@@ -38,7 +38,7 @@ public class Uploads internal constructor(
         retries: Int? = null,
         tags: List<String>,
       ): Response {
-        val response = client.post("uploads/${this.uploadId.encodeURLParameter()}") {
+        val response = __client.post("uploads/${this._uploadId.encodeURLParameter()}") {
           setBody(MultiPartFormDataContent(formData {
             append("file", file)
             append("checksum", checksum)

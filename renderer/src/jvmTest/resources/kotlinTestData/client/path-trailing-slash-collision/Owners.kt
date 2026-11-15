@@ -13,19 +13,19 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Owners internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val slash: Slash = Slash(client)
+  public val slash: Slash = Slash(__client)
 
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("owners")
+      val response = __client.get("owners")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }
@@ -39,17 +39,17 @@ public class Owners internal constructor(
   }
 
   public class Slash internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("owners/")
+        val response = __client.get("owners/")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -63,27 +63,27 @@ public class Owners internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.post("owners/")
+        val response = __client.post("owners/")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
   }
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("owners/${this.id.encodeURLParameter()}")
+        val response = __client.get("owners/${this._id.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

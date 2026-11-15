@@ -13,19 +13,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Tokens internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       grantType: Body.GrantType,
       code: String,
       redirectUri: String,
     ) {
-      val response = client.post("tokens") {
+      val response = __client.post("tokens") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("grant_type", grantType.value)

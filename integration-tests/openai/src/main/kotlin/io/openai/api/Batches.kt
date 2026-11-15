@@ -23,19 +23,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Batches internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun batchId(batchId: String): BatchIdPath = BatchIdPath(client, batchId)
+  public fun batchId(batchId: String): BatchIdPath = BatchIdPath(__client, batchId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(after: String? = null, limit: Long? = 20L): ListBatchesResponse {
-      val response = client.get("batches") {
+      val response = __client.get("batches") {
         if (after != null) {
           this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
@@ -49,7 +49,7 @@ public class Batches internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       inputFileId: String,
@@ -58,7 +58,7 @@ public class Batches internal constructor(
       metadata: Optional<Metadata> = Optional.Absent,
       outputExpiresAfter: BatchFileExpirationAfter? = null,
     ): Batch {
-      val response = client.post("batches") {
+      val response = __client.post("batches") {
         contentType(ContentType.Application.Json)
         setBody(Body(inputFileId = inputFileId, endpoint = endpoint, completionWindow = completionWindow, metadata = metadata, outputExpiresAfter = outputExpiresAfter))
       }
@@ -109,36 +109,36 @@ public class Batches internal constructor(
   }
 
   public class BatchIdPath internal constructor(
-    private val client: HttpClient,
-    private val batchId: String,
+    private val __client: HttpClient,
+    private val _batchId: String,
   ) {
-    public val `get`: Get = Get(client, batchId)
+    public val `get`: Get = Get(__client, _batchId)
 
-    public val cancel: Cancel = Cancel(client, batchId)
+    public val cancel: Cancel = Cancel(__client, _batchId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val batchId: String,
+      private val __client: HttpClient,
+      private val _batchId: String,
     ) {
       public suspend operator fun invoke(): Batch {
-        val response = client.get("batches/${this.batchId.encodeURLParameter()}")
+        val response = __client.get("batches/${this._batchId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Cancel internal constructor(
-      private val client: HttpClient,
-      private val batchId: String,
+      private val __client: HttpClient,
+      private val _batchId: String,
     ) {
-      public val post: Post = Post(client, batchId)
+      public val post: Post = Post(__client, _batchId)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val batchId: String,
+        private val __client: HttpClient,
+        private val _batchId: String,
       ) {
         public suspend operator fun invoke(): Batch {
-          val response = client.post("batches/${this.batchId.encodeURLParameter()}/cancel")
+          val response = __client.post("batches/${this._batchId.encodeURLParameter()}/cancel")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }

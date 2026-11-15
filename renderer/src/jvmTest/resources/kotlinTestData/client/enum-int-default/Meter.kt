@@ -17,12 +17,12 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 public class Meter internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       rate: Rate? = Rate.`300`,
@@ -30,7 +30,7 @@ public class Meter internal constructor(
       ratio: Double? = 1.5,
       on: Boolean? = true,
     ) {
-      val response = client.get("meter") {
+      val response = __client.get("meter") {
         if (rate != null) {
           this.url.encodedParameters.append("rate", rate.value.toString().encodeURLParameter())
         }

@@ -13,19 +13,19 @@ import kotlin.String
 import kotlin.Unit
 
 public class UploadAny internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       block: String? = null,
       contentType: ContentType? = null,
       requestBlock: HttpRequestBuilder.() -> Unit = {},
     ) {
-      val response = client.post("upload-any") {
+      val response = __client.post("upload-any") {
         if (block != null) {
           this.url.encodedParameters.append("block", block.encodeURLParameter())
         }

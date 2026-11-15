@@ -9,15 +9,15 @@ import io.ktor.http.contentType
 import kotlin.String
 
 public class Feeds internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("feeds") {
+      val response = __client.post("feeds") {
         contentType(ContentType("application", "atom+xml"))
         setBody(body)
       }

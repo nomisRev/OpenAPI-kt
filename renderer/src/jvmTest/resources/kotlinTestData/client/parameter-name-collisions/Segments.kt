@@ -8,15 +8,15 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Segments internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(xList: List<String>? = null, x: String? = null) {
-      val response = client.get("segments") {
+      val response = __client.get("segments") {
         xList?.forEach { this.url.encodedParameters.append("x%5B%5D", it.encodeURLParameter()) }
         if (x != null) {
           this.url.encodedParameters.append("x", x.encodeURLParameter())

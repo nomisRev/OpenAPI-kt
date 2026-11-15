@@ -7,36 +7,36 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Packages internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun `package`(`package`: String): PackagePath = PackagePath(client, `package`)
+  public fun `package`(`package`: String): PackagePath = PackagePath(__client, `package`)
 
   public class PackagePath internal constructor(
-    private val client: HttpClient,
-    private val `package`: String,
+    private val __client: HttpClient,
+    private val _package: String,
   ) {
-    public val `in`: In = In(client, `package`)
+    public val `in`: In = In(__client, _package)
 
     public class In internal constructor(
-      private val client: HttpClient,
-      private val `package`: String,
+      private val __client: HttpClient,
+      private val _package: String,
     ) {
-      public fun `in`(`in`: String): InPath = InPath(client, `package`, `in`)
+      public fun `in`(`in`: String): InPath = InPath(__client, _package, `in`)
 
       public class InPath internal constructor(
-        private val client: HttpClient,
-        private val `package`: String,
-        private val `in`: String,
+        private val __client: HttpClient,
+        private val _package: String,
+        private val _in: String,
       ) {
-        public val `get`: Get = Get(client, `package`, `in`)
+        public val `get`: Get = Get(__client, _package, _in)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val `package`: String,
-          private val `in`: String,
+          private val __client: HttpClient,
+          private val _package: String,
+          private val _in: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.get("packages/${this.`package`.encodeURLParameter()}/in/${this.`in`.encodeURLParameter()}")
+            val response = __client.get("packages/${this._package.encodeURLParameter()}/in/${this._in.encodeURLParameter()}")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }

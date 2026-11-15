@@ -11,31 +11,31 @@ import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val objects: Objects = Objects(client)
+  public val objects: Objects = Objects(__client)
 
-  public val texts: Texts = Texts(client)
+  public val texts: Texts = Texts(__client)
 
-  public val files: Files = Files(client)
+  public val files: Files = Files(__client)
 
-  public val appObjects: AppObjects = AppObjects(client)
+  public val appObjects: AppObjects = AppObjects(__client)
 
-  public val appTexts: AppTexts = AppTexts(client)
+  public val appTexts: AppTexts = AppTexts(__client)
 
-  public val appFiles: AppFiles = AppFiles(client)
+  public val appFiles: AppFiles = AppFiles(__client)
 
-  public val notes: Notes = Notes(client)
+  public val notes: Notes = Notes(__client)
 
-  public val labels: Labels = Labels(client)
+  public val labels: Labels = Labels(__client)
 
-  public val greeting: Greeting = Greeting(client)
+  public val greeting: Greeting = Greeting(__client)
 
-  public val appGreeting: AppGreeting = AppGreeting(client)
+  public val appGreeting: AppGreeting = AppGreeting(__client)
 
-  public val textGreeting: TextGreeting = TextGreeting(client)
+  public val textGreeting: TextGreeting = TextGreeting(__client)
 
-  public val animal: Animal = Animal(client)
+  public val animal: Animal = Animal(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -54,6 +54,6 @@ public class Api internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

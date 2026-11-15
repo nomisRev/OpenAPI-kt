@@ -14,17 +14,17 @@ import kotlin.collections.List
 import kotlinx.serialization.Serializable
 
 public class Standards internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public suspend operator fun invoke(limit: Int? = null): Response {
-      val response = client.get("standards") {
+      val response = __client.get("standards") {
         if (limit != null) {
           this.url.encodedParameters.append("limit", limit.toString())
         }
@@ -34,10 +34,10 @@ public class Standards internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(ids: List<String>): Response {
-        val response = client.post("standards/get") {
+        val response = __client.post("standards/get") {
           contentType(ContentType.Application.Json)
           setBody(Body(ids = ids))
         }

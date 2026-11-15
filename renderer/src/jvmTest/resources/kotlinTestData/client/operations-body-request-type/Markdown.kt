@@ -14,15 +14,15 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Markdown internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend fun json(body: String, requestType: RequestType): String {
-      val response = client.post("markdown") {
+      val response = __client.post("markdown") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
         contentType(requestType.contentType)
         setBody(body)
@@ -32,7 +32,7 @@ public class Markdown internal constructor(
     }
 
     public suspend fun xml(body: String, requestType: RequestType): String {
-      val response = client.post("markdown") {
+      val response = __client.post("markdown") {
         `header`(HttpHeaders.Accept, ContentType.Application.Xml)
         contentType(requestType.contentType)
         setBody(body)

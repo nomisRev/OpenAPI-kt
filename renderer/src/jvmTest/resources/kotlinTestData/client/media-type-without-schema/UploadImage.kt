@@ -11,15 +11,15 @@ import io.ktor.http.contentType
 import kotlin.Unit
 
 public class UploadImage internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(contentType: ContentType, block: HttpRequestBuilder.() -> Unit) {
-      val response = client.post("upload-image") {
+      val response = __client.post("upload-image") {
         require(contentType.match(ContentType("image", "*")) && contentType.contentSubtype != "*") {
           "contentType must be a media type in image/*, but was $contentType"
         }

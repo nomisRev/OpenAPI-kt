@@ -13,17 +13,17 @@ import io.ktor.http.formUrlEncode
 import kotlinx.serialization.Serializable
 
 public class Jobs internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(status: Status? = null) {
-      val response = client.get("jobs") {
+      val response = __client.get("jobs") {
         if (status != null) {
           this.url.encodedParameters.append("status", status.toString().encodeURLParameter())
         }
@@ -39,10 +39,10 @@ public class Jobs internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(mode: Body.Mode) {
-      val response = client.post("jobs") {
+      val response = __client.post("jobs") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("mode", mode.toString())

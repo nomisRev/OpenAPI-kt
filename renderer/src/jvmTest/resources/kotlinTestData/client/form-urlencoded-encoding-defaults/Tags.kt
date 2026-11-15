@@ -13,19 +13,19 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Tags internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       tags: List<String>,
       labels: List<String>? = null,
       ids: List<Long>? = null,
     ) {
-      val response = client.post("tags") {
+      val response = __client.post("tags") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           appendAll("tags", tags)

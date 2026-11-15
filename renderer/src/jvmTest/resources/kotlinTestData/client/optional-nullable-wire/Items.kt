@@ -15,19 +15,19 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Items internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val patch: Patch = Patch(client, id)
+    public val patch: Patch = Patch(__client, _id)
 
     public class Patch internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(
         name: Optional<String> = Optional.Absent,
@@ -35,7 +35,7 @@ public class Items internal constructor(
         count: Int? = null,
         settings: Settings? = null,
       ) {
-        val response = client.patch("items/${this.id.encodeURLParameter()}") {
+        val response = __client.patch("items/${this._id.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(Body(name = name, description = description, count = count, settings = settings))
         }

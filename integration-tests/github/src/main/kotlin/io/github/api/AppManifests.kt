@@ -35,28 +35,28 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 
 public class AppManifests internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun code(code: String): CodePath = CodePath(client, code)
+  public fun code(code: String): CodePath = CodePath(__client, code)
 
   public class CodePath internal constructor(
-    private val client: HttpClient,
-    private val code: String,
+    private val __client: HttpClient,
+    private val _code: String,
   ) {
-    public val conversions: Conversions = Conversions(client, code)
+    public val conversions: Conversions = Conversions(__client, _code)
 
     public class Conversions internal constructor(
-      private val client: HttpClient,
-      private val code: String,
+      private val __client: HttpClient,
+      private val _code: String,
     ) {
-      public val post: Post = Post(client, code)
+      public val post: Post = Post(__client, _code)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val code: String,
+        private val __client: HttpClient,
+        private val _code: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("app-manifests/${this.code.encodeURLParameter()}/conversions")
+          val response = __client.post("app-manifests/${this._code.encodeURLParameter()}/conversions")
           return when (response.status.value) {
             201 -> response.body<Response.Created>()
             404 -> Response.NotFound(response.body())

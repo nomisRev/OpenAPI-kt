@@ -18,15 +18,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Widgets internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend fun json(): JsonResponse {
-      val response = client.get("widgets") {
+      val response = __client.get("widgets") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       return when (response.status.value) {
@@ -39,7 +39,7 @@ public class Widgets internal constructor(
     }
 
     public suspend fun xml(): XmlResponse {
-      val response = client.get("widgets") {
+      val response = __client.get("widgets") {
         `header`(HttpHeaders.Accept, ContentType.Application.Xml)
       }
       return when (response.status.value) {

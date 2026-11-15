@@ -16,15 +16,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Form internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body) {
-      val response = client.post("form") {
+      val response = __client.post("form") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -32,7 +32,7 @@ public class Form internal constructor(
     }
 
     public suspend operator fun invoke(name: String) {
-      val response = client.post("form") {
+      val response = __client.post("form") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)

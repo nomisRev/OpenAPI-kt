@@ -33,23 +33,23 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Videos internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun videoId(videoId: String): VideoIdPath = VideoIdPath(client, videoId)
+  public fun videoId(videoId: String): VideoIdPath = VideoIdPath(__client, videoId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       limit: Long? = null,
       order: OrderEnum? = null,
       after: String? = null,
     ): VideoListResource {
-      val response = client.get("videos") {
+      val response = __client.get("videos") {
         if (limit != null) {
           this.url.encodedParameters.append("limit", limit.toString())
         }
@@ -66,10 +66,10 @@ public class Videos internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): VideoResource {
-      val response = client.post("videos")
+      val response = __client.post("videos")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }
@@ -82,7 +82,7 @@ public class Videos internal constructor(
       seconds: VideoSeconds? = null,
       size: VideoSize? = null,
     ): VideoResource {
-      val response = client.post("videos") {
+      val response = __client.post("videos") {
         setBody(MultiPartFormDataContent(formData {
           if (model != null) {
             append("model", Json.encodeToString(model))
@@ -107,7 +107,7 @@ public class Videos internal constructor(
     }
 
     public suspend operator fun invoke(body: CreateVideoBody? = null): VideoResource {
-      val response = client.post("videos") {
+      val response = __client.post("videos") {
         body?.let {
           contentType(ContentType.Application.Json)
           setBody(it)
@@ -119,51 +119,51 @@ public class Videos internal constructor(
   }
 
   public class VideoIdPath internal constructor(
-    private val client: HttpClient,
-    private val videoId: String,
+    private val __client: HttpClient,
+    private val _videoId: String,
   ) {
-    public val delete: Delete = Delete(client, videoId)
+    public val delete: Delete = Delete(__client, _videoId)
 
-    public val `get`: Get = Get(client, videoId)
+    public val `get`: Get = Get(__client, _videoId)
 
-    public val content: Content = Content(client, videoId)
+    public val content: Content = Content(__client, _videoId)
 
-    public val remix: Remix = Remix(client, videoId)
+    public val remix: Remix = Remix(__client, _videoId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val videoId: String,
+      private val __client: HttpClient,
+      private val _videoId: String,
     ) {
       public suspend operator fun invoke(): DeletedVideoResource {
-        val response = client.delete("videos/${this.videoId.encodeURLParameter()}")
+        val response = __client.delete("videos/${this._videoId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val videoId: String,
+      private val __client: HttpClient,
+      private val _videoId: String,
     ) {
       public suspend operator fun invoke(): VideoResource {
-        val response = client.get("videos/${this.videoId.encodeURLParameter()}")
+        val response = __client.get("videos/${this._videoId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
     }
 
     public class Content internal constructor(
-      private val client: HttpClient,
-      private val videoId: String,
+      private val __client: HttpClient,
+      private val _videoId: String,
     ) {
-      public val `get`: Get = Get(client, videoId)
+      public val `get`: Get = Get(__client, _videoId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val videoId: String,
+        private val __client: HttpClient,
+        private val _videoId: String,
       ) {
         public suspend fun videoMp4(variant: VideoContentVariant? = null): ByteArray {
-          val response = client.get("videos/${this.videoId.encodeURLParameter()}/content") {
+          val response = __client.get("videos/${this._videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType("video", "mp4"))
             if (variant != null) {
               this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
@@ -174,7 +174,7 @@ public class Videos internal constructor(
         }
 
         public suspend fun imageWebp(variant: VideoContentVariant? = null): ByteArray {
-          val response = client.get("videos/${this.videoId.encodeURLParameter()}/content") {
+          val response = __client.get("videos/${this._videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType("image", "webp"))
             if (variant != null) {
               this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
@@ -185,7 +185,7 @@ public class Videos internal constructor(
         }
 
         public suspend fun json(variant: VideoContentVariant? = null): String {
-          val response = client.get("videos/${this.videoId.encodeURLParameter()}/content") {
+          val response = __client.get("videos/${this._videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType.Application.Json)
             if (variant != null) {
               this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
@@ -198,23 +198,23 @@ public class Videos internal constructor(
     }
 
     public class Remix internal constructor(
-      private val client: HttpClient,
-      private val videoId: String,
+      private val __client: HttpClient,
+      private val _videoId: String,
     ) {
-      public val post: Post = Post(client, videoId)
+      public val post: Post = Post(__client, _videoId)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val videoId: String,
+        private val __client: HttpClient,
+        private val _videoId: String,
       ) {
         public suspend operator fun invoke(): VideoResource {
-          val response = client.post("videos/${this.videoId.encodeURLParameter()}/remix")
+          val response = __client.post("videos/${this._videoId.encodeURLParameter()}/remix")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
 
         public suspend operator fun invoke(prompt: String): VideoResource {
-          val response = client.post("videos/${this.videoId.encodeURLParameter()}/remix") {
+          val response = __client.post("videos/${this._videoId.encodeURLParameter()}/remix") {
             setBody(MultiPartFormDataContent(formData {
               append("prompt", prompt)
             }))
@@ -224,7 +224,7 @@ public class Videos internal constructor(
         }
 
         public suspend operator fun invoke(body: CreateVideoRemixBody? = null): VideoResource {
-          val response = client.post("videos/${this.videoId.encodeURLParameter()}/remix") {
+          val response = __client.post("videos/${this._videoId.encodeURLParameter()}/remix") {
             body?.let {
               contentType(ContentType.Application.Json)
               setBody(it)

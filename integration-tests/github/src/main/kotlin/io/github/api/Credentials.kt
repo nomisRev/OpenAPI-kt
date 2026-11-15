@@ -15,20 +15,20 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 public class Credentials internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val revoke: Revoke = Revoke(client)
+  public val revoke: Revoke = Revoke(__client)
 
   public class Revoke internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(credentials: List<String>): Response {
-        val response = client.post("credentials/revoke") {
+        val response = __client.post("credentials/revoke") {
           contentType(ContentType.Application.Json)
           setBody(Body(credentials = credentials))
         }

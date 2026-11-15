@@ -75,71 +75,71 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
 
 public class User internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val patch: Patch = Patch(client)
+  public val patch: Patch = Patch(__client)
 
-  public val blocks: Blocks = Blocks(client)
+  public val blocks: Blocks = Blocks(__client)
 
-  public val codespaces: Codespaces = Codespaces(client)
+  public val codespaces: Codespaces = Codespaces(__client)
 
-  public val docker: Docker = Docker(client)
+  public val docker: Docker = Docker(__client)
 
-  public val email: Email = Email(client)
+  public val email: Email = Email(__client)
 
-  public val emails: Emails = Emails(client)
+  public val emails: Emails = Emails(__client)
 
-  public val followers: Followers = Followers(client)
+  public val followers: Followers = Followers(__client)
 
-  public val following: Following = Following(client)
+  public val following: Following = Following(__client)
 
-  public val gpgKeys: GpgKeys = GpgKeys(client)
+  public val gpgKeys: GpgKeys = GpgKeys(__client)
 
-  public val installations: Installations = Installations(client)
+  public val installations: Installations = Installations(__client)
 
-  public val interactionLimits: InteractionLimits = InteractionLimits(client)
+  public val interactionLimits: InteractionLimits = InteractionLimits(__client)
 
-  public val issues: Issues = Issues(client)
+  public val issues: Issues = Issues(__client)
 
-  public val keys: Keys = Keys(client)
+  public val keys: Keys = Keys(__client)
 
-  public val marketplacePurchases: MarketplacePurchases = MarketplacePurchases(client)
+  public val marketplacePurchases: MarketplacePurchases = MarketplacePurchases(__client)
 
-  public val memberships: Memberships = Memberships(client)
+  public val memberships: Memberships = Memberships(__client)
 
-  public val migrations: Migrations = Migrations(client)
+  public val migrations: Migrations = Migrations(__client)
 
-  public val orgs: Orgs = Orgs(client)
+  public val orgs: Orgs = Orgs(__client)
 
-  public val packages: Packages = Packages(client)
+  public val packages: Packages = Packages(__client)
 
-  public val publicEmails: PublicEmails = PublicEmails(client)
+  public val publicEmails: PublicEmails = PublicEmails(__client)
 
-  public val repos: Repos = Repos(client)
+  public val repos: Repos = Repos(__client)
 
-  public val repositoryInvitations: RepositoryInvitations = RepositoryInvitations(client)
+  public val repositoryInvitations: RepositoryInvitations = RepositoryInvitations(__client)
 
-  public val socialAccounts: SocialAccounts = SocialAccounts(client)
+  public val socialAccounts: SocialAccounts = SocialAccounts(__client)
 
-  public val sshSigningKeys: SshSigningKeys = SshSigningKeys(client)
+  public val sshSigningKeys: SshSigningKeys = SshSigningKeys(__client)
 
-  public val starred: Starred = Starred(client)
+  public val starred: Starred = Starred(__client)
 
-  public val subscriptions: Subscriptions = Subscriptions(client)
+  public val subscriptions: Subscriptions = Subscriptions(__client)
 
-  public val teams: Teams = Teams(client)
+  public val teams: Teams = Teams(__client)
 
-  public fun accountId(accountId: Long): AccountIdPath = AccountIdPath(client, accountId)
+  public fun accountId(accountId: Long): AccountIdPath = AccountIdPath(__client, accountId)
 
-  public fun userId(userId: String): UserIdPath = UserIdPath(client, userId)
+  public fun userId(userId: String): UserIdPath = UserIdPath(__client, userId)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("user")
+      val response = __client.get("user")
       return when (response.status.value) {
         200 -> response.body<Response.Ok>()
         304 -> Response.NotModified
@@ -349,10 +349,10 @@ public class User internal constructor(
   }
 
   public class Patch internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.patch("user")
+      val response = __client.patch("user")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         304 -> Response.NotModified
@@ -374,7 +374,7 @@ public class User internal constructor(
       hireable: Boolean? = null,
       bio: String? = null,
     ): Response {
-      val response = client.patch("user") {
+      val response = __client.patch("user") {
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, email = email, blog = blog, twitterUsername = twitterUsername, company = company, location = location, hireable = hireable, bio = bio))
       }
@@ -437,17 +437,17 @@ public class User internal constructor(
   }
 
   public class Blocks internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public fun username(username: String): UsernamePath = UsernamePath(client, username)
+    public fun username(username: String): UsernamePath = UsernamePath(__client, username)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/blocks") {
+        val response = __client.get("user/blocks") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -487,21 +487,21 @@ public class User internal constructor(
     }
 
     public class UsernamePath internal constructor(
-      private val client: HttpClient,
-      private val username: String,
+      private val __client: HttpClient,
+      private val _username: String,
     ) {
-      public val delete: Delete = Delete(client, username)
+      public val delete: Delete = Delete(__client, _username)
 
-      public val `get`: Get = Get(client, username)
+      public val `get`: Get = Get(__client, _username)
 
-      public val put: Put = Put(client, username)
+      public val put: Put = Put(__client, _username)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val username: String,
+        private val __client: HttpClient,
+        private val _username: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("user/blocks/${this.username.encodeURLParameter()}")
+          val response = __client.delete("user/blocks/${this._username.encodeURLParameter()}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -532,11 +532,11 @@ public class User internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val username: String,
+        private val __client: HttpClient,
+        private val _username: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("user/blocks/${this.username.encodeURLParameter()}")
+          val response = __client.get("user/blocks/${this._username.encodeURLParameter()}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -567,11 +567,11 @@ public class User internal constructor(
       }
 
       public class Put internal constructor(
-        private val client: HttpClient,
-        private val username: String,
+        private val __client: HttpClient,
+        private val _username: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.put("user/blocks/${this.username.encodeURLParameter()}")
+          val response = __client.put("user/blocks/${this._username.encodeURLParameter()}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -609,25 +609,25 @@ public class User internal constructor(
   }
 
   public class Codespaces internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
-    public val secrets: Secrets = Secrets(client)
+    public val secrets: Secrets = Secrets(__client)
 
-    public fun codespaceName(codespaceName: String): CodespaceNamePath = CodespaceNamePath(client, codespaceName)
+    public fun codespaceName(codespaceName: String): CodespaceNamePath = CodespaceNamePath(__client, codespaceName)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         perPage: Long? = 30L,
         page: Long? = 1L,
         repositoryId: Long? = null,
       ): Response {
-        val response = client.get("user/codespaces") {
+        val response = __client.get("user/codespaces") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -678,10 +678,10 @@ public class User internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: One): Response {
-        val response = client.post("user/codespaces") {
+        val response = __client.post("user/codespaces") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -697,7 +697,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: Two): Response {
-        val response = client.post("user/codespaces") {
+        val response = __client.post("user/codespaces") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -825,19 +825,19 @@ public class User internal constructor(
     }
 
     public class Secrets internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
-      public val publicKey: PublicKey = PublicKey(client)
+      public val publicKey: PublicKey = PublicKey(__client)
 
-      public fun secretName(secretName: String): SecretNamePath = SecretNamePath(client, secretName)
+      public fun secretName(secretName: String): SecretNamePath = SecretNamePath(__client, secretName)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("user/codespaces/secrets") {
+          val response = __client.get("user/codespaces/secrets") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -858,15 +858,15 @@ public class User internal constructor(
       }
 
       public class PublicKey internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
-        public val `get`: Get = Get(client)
+        public val `get`: Get = Get(__client)
 
         public class Get internal constructor(
-          private val client: HttpClient,
+          private val __client: HttpClient,
         ) {
           public suspend operator fun invoke(): CodespacesUserPublicKey {
-            val response = client.get("user/codespaces/secrets/public-key")
+            val response = __client.get("user/codespaces/secrets/public-key")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -874,48 +874,48 @@ public class User internal constructor(
       }
 
       public class SecretNamePath internal constructor(
-        private val client: HttpClient,
-        private val secretName: String,
+        private val __client: HttpClient,
+        private val _secretName: String,
       ) {
-        public val delete: Delete = Delete(client, secretName)
+        public val delete: Delete = Delete(__client, _secretName)
 
-        public val `get`: Get = Get(client, secretName)
+        public val `get`: Get = Get(__client, _secretName)
 
-        public val put: Put = Put(client, secretName)
+        public val put: Put = Put(__client, _secretName)
 
-        public val repositories: Repositories = Repositories(client, secretName)
+        public val repositories: Repositories = Repositories(__client, _secretName)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val secretName: String,
+          private val __client: HttpClient,
+          private val _secretName: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("user/codespaces/secrets/${this.secretName.encodeURLParameter()}")
+            val response = __client.delete("user/codespaces/secrets/${this._secretName.encodeURLParameter()}")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val secretName: String,
+          private val __client: HttpClient,
+          private val _secretName: String,
         ) {
           public suspend operator fun invoke(): CodespacesSecret {
-            val response = client.get("user/codespaces/secrets/${this.secretName.encodeURLParameter()}")
+            val response = __client.get("user/codespaces/secrets/${this._secretName.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val secretName: String,
+          private val __client: HttpClient,
+          private val _secretName: String,
         ) {
           public suspend operator fun invoke(
             encryptedValue: String? = null,
             keyId: String,
             selectedRepositoryIds: List<SelectedRepositoryIds>? = null,
           ): Response {
-            val response = client.put("user/codespaces/secrets/${this.secretName.encodeURLParameter()}") {
+            val response = __client.put("user/codespaces/secrets/${this._secretName.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(Body(encryptedValue = encryptedValue, keyId = keyId, selectedRepositoryIds = selectedRepositoryIds))
             }
@@ -1009,21 +1009,21 @@ public class User internal constructor(
         }
 
         public class Repositories internal constructor(
-          private val client: HttpClient,
-          private val secretName: String,
+          private val __client: HttpClient,
+          private val _secretName: String,
         ) {
-          public val `get`: Get = Get(client, secretName)
+          public val `get`: Get = Get(__client, _secretName)
 
-          public val put: Put = Put(client, secretName)
+          public val put: Put = Put(__client, _secretName)
 
-          public fun repositoryId(repositoryId: Long): RepositoryIdPath = RepositoryIdPath(client, secretName, repositoryId)
+          public fun repositoryId(repositoryId: Long): RepositoryIdPath = RepositoryIdPath(__client, _secretName, repositoryId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val secretName: String,
+            private val __client: HttpClient,
+            private val _secretName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("user/codespaces/secrets/${this.secretName.encodeURLParameter()}/repositories")
+              val response = __client.get("user/codespaces/secrets/${this._secretName.encodeURLParameter()}/repositories")
               return when (response.status.value) {
                 200 -> response.body<Response.Ok>()
                 401 -> Response.Unauthorized(response.body())
@@ -1061,11 +1061,11 @@ public class User internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val secretName: String,
+            private val __client: HttpClient,
+            private val _secretName: String,
           ) {
             public suspend operator fun invoke(selectedRepositoryIds: List<Long>): Response {
-              val response = client.put("user/codespaces/secrets/${this.secretName.encodeURLParameter()}/repositories") {
+              val response = __client.put("user/codespaces/secrets/${this._secretName.encodeURLParameter()}/repositories") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
               }
@@ -1107,21 +1107,21 @@ public class User internal constructor(
           }
 
           public class RepositoryIdPath internal constructor(
-            private val client: HttpClient,
-            private val secretName: String,
-            private val repositoryId: Long,
+            private val __client: HttpClient,
+            private val _secretName: String,
+            private val _repositoryId: Long,
           ) {
-            public val delete: Delete = Delete(client, secretName, repositoryId)
+            public val delete: Delete = Delete(__client, _secretName, _repositoryId)
 
-            public val put: Put = Put(client, secretName, repositoryId)
+            public val put: Put = Put(__client, _secretName, _repositoryId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val secretName: String,
-              private val repositoryId: Long,
+              private val __client: HttpClient,
+              private val _secretName: String,
+              private val _repositoryId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("user/codespaces/secrets/${this.secretName.encodeURLParameter()}/repositories/${this.repositoryId}")
+                val response = __client.delete("user/codespaces/secrets/${this._secretName.encodeURLParameter()}/repositories/${this._repositoryId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -1154,12 +1154,12 @@ public class User internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val secretName: String,
-              private val repositoryId: Long,
+              private val __client: HttpClient,
+              private val _secretName: String,
+              private val _repositoryId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("user/codespaces/secrets/${this.secretName.encodeURLParameter()}/repositories/${this.repositoryId}")
+                val response = __client.put("user/codespaces/secrets/${this._secretName.encodeURLParameter()}/repositories/${this._repositoryId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -1196,31 +1196,31 @@ public class User internal constructor(
     }
 
     public class CodespaceNamePath internal constructor(
-      private val client: HttpClient,
-      private val codespaceName: String,
+      private val __client: HttpClient,
+      private val _codespaceName: String,
     ) {
-      public val delete: Delete = Delete(client, codespaceName)
+      public val delete: Delete = Delete(__client, _codespaceName)
 
-      public val `get`: Get = Get(client, codespaceName)
+      public val `get`: Get = Get(__client, _codespaceName)
 
-      public val patch: Patch = Patch(client, codespaceName)
+      public val patch: Patch = Patch(__client, _codespaceName)
 
-      public val exports: Exports = Exports(client, codespaceName)
+      public val exports: Exports = Exports(__client, _codespaceName)
 
-      public val machines: Machines = Machines(client, codespaceName)
+      public val machines: Machines = Machines(__client, _codespaceName)
 
-      public val publish: Publish = Publish(client, codespaceName)
+      public val publish: Publish = Publish(__client, _codespaceName)
 
-      public val start: Start = Start(client, codespaceName)
+      public val start: Start = Start(__client, _codespaceName)
 
-      public val stop: Stop = Stop(client, codespaceName)
+      public val stop: Stop = Stop(__client, _codespaceName)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val codespaceName: String,
+        private val __client: HttpClient,
+        private val _codespaceName: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("user/codespaces/${this.codespaceName.encodeURLParameter()}")
+          val response = __client.delete("user/codespaces/${this._codespaceName.encodeURLParameter()}")
           return when (response.status.value) {
             202 -> Response.Accepted(response.body())
             304 -> Response.NotModified
@@ -1258,11 +1258,11 @@ public class User internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val codespaceName: String,
+        private val __client: HttpClient,
+        private val _codespaceName: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("user/codespaces/${this.codespaceName.encodeURLParameter()}")
+          val response = __client.get("user/codespaces/${this._codespaceName.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             304 -> Response.NotModified
@@ -1300,11 +1300,11 @@ public class User internal constructor(
       }
 
       public class Patch internal constructor(
-        private val client: HttpClient,
-        private val codespaceName: String,
+        private val __client: HttpClient,
+        private val _codespaceName: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.patch("user/codespaces/${this.codespaceName.encodeURLParameter()}")
+          val response = __client.patch("user/codespaces/${this._codespaceName.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             401 -> Response.Unauthorized(response.body())
@@ -1319,7 +1319,7 @@ public class User internal constructor(
           displayName: String? = null,
           recentFolders: List<String>? = null,
         ): Response {
-          val response = client.patch("user/codespaces/${this.codespaceName.encodeURLParameter()}") {
+          val response = __client.patch("user/codespaces/${this._codespaceName.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(Body(machine = machine, displayName = displayName, recentFolders = recentFolders))
           }
@@ -1365,19 +1365,19 @@ public class User internal constructor(
       }
 
       public class Exports internal constructor(
-        private val client: HttpClient,
-        private val codespaceName: String,
+        private val __client: HttpClient,
+        private val _codespaceName: String,
       ) {
-        public val post: Post = Post(client, codespaceName)
+        public val post: Post = Post(__client, _codespaceName)
 
-        public fun exportId(exportId: String): ExportIdPath = ExportIdPath(client, codespaceName, exportId)
+        public fun exportId(exportId: String): ExportIdPath = ExportIdPath(__client, _codespaceName, exportId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val codespaceName: String,
+          private val __client: HttpClient,
+          private val _codespaceName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("user/codespaces/${this.codespaceName.encodeURLParameter()}/exports")
+            val response = __client.post("user/codespaces/${this._codespaceName.encodeURLParameter()}/exports")
             return when (response.status.value) {
               202 -> Response.Accepted(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -1417,19 +1417,19 @@ public class User internal constructor(
         }
 
         public class ExportIdPath internal constructor(
-          private val client: HttpClient,
-          private val codespaceName: String,
-          private val exportId: String,
+          private val __client: HttpClient,
+          private val _codespaceName: String,
+          private val _exportId: String,
         ) {
-          public val `get`: Get = Get(client, codespaceName, exportId)
+          public val `get`: Get = Get(__client, _codespaceName, _exportId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val codespaceName: String,
-            private val exportId: String,
+            private val __client: HttpClient,
+            private val _codespaceName: String,
+            private val _exportId: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("user/codespaces/${this.codespaceName.encodeURLParameter()}/exports/${this.exportId.encodeURLParameter()}")
+              val response = __client.get("user/codespaces/${this._codespaceName.encodeURLParameter()}/exports/${this._exportId.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -1451,17 +1451,17 @@ public class User internal constructor(
       }
 
       public class Machines internal constructor(
-        private val client: HttpClient,
-        private val codespaceName: String,
+        private val __client: HttpClient,
+        private val _codespaceName: String,
       ) {
-        public val `get`: Get = Get(client, codespaceName)
+        public val `get`: Get = Get(__client, _codespaceName)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val codespaceName: String,
+          private val __client: HttpClient,
+          private val _codespaceName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("user/codespaces/${this.codespaceName.encodeURLParameter()}/machines")
+            val response = __client.get("user/codespaces/${this._codespaceName.encodeURLParameter()}/machines")
             return when (response.status.value) {
               200 -> response.body<Response.Ok>()
               304 -> Response.NotModified
@@ -1503,17 +1503,17 @@ public class User internal constructor(
       }
 
       public class Publish internal constructor(
-        private val client: HttpClient,
-        private val codespaceName: String,
+        private val __client: HttpClient,
+        private val _codespaceName: String,
       ) {
-        public val post: Post = Post(client, codespaceName)
+        public val post: Post = Post(__client, _codespaceName)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val codespaceName: String,
+          private val __client: HttpClient,
+          private val _codespaceName: String,
         ) {
           public suspend operator fun invoke(name: String? = null, `private`: Boolean? = null): Response {
-            val response = client.post("user/codespaces/${this.codespaceName.encodeURLParameter()}/publish") {
+            val response = __client.post("user/codespaces/${this._codespaceName.encodeURLParameter()}/publish") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, private = private))
             }
@@ -1561,17 +1561,17 @@ public class User internal constructor(
       }
 
       public class Start internal constructor(
-        private val client: HttpClient,
-        private val codespaceName: String,
+        private val __client: HttpClient,
+        private val _codespaceName: String,
       ) {
-        public val post: Post = Post(client, codespaceName)
+        public val post: Post = Post(__client, _codespaceName)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val codespaceName: String,
+          private val __client: HttpClient,
+          private val _codespaceName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("user/codespaces/${this.codespaceName.encodeURLParameter()}/start")
+            val response = __client.post("user/codespaces/${this._codespaceName.encodeURLParameter()}/start")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -1625,17 +1625,17 @@ public class User internal constructor(
       }
 
       public class Stop internal constructor(
-        private val client: HttpClient,
-        private val codespaceName: String,
+        private val __client: HttpClient,
+        private val _codespaceName: String,
       ) {
-        public val post: Post = Post(client, codespaceName)
+        public val post: Post = Post(__client, _codespaceName)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val codespaceName: String,
+          private val __client: HttpClient,
+          private val _codespaceName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("user/codespaces/${this.codespaceName.encodeURLParameter()}/stop")
+            val response = __client.post("user/codespaces/${this._codespaceName.encodeURLParameter()}/stop")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -1673,20 +1673,20 @@ public class User internal constructor(
   }
 
   public class Docker internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val conflicts: Conflicts = Conflicts(client)
+    public val conflicts: Conflicts = Conflicts(__client)
 
     public class Conflicts internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(): List<Package> {
-          val response = client.get("user/docker/conflicts")
+          val response = __client.get("user/docker/conflicts")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -1695,20 +1695,20 @@ public class User internal constructor(
   }
 
   public class Email internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val visibility: Visibility = Visibility(client)
+    public val visibility: Visibility = Visibility(__client)
 
     public class Visibility internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val patch: Patch = Patch(client)
+      public val patch: Patch = Patch(__client)
 
       public class Patch internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(visibility: Visibility): Response {
-          val response = client.patch("user/email/visibility") {
+          val response = __client.patch("user/email/visibility") {
             contentType(ContentType.Application.Json)
             setBody(Body(visibility = visibility))
           }
@@ -1767,19 +1767,19 @@ public class User internal constructor(
   }
 
   public class Emails internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val delete: Delete = Delete(client)
+    public val delete: Delete = Delete(__client)
 
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("user/emails")
+        val response = __client.delete("user/emails")
         return when (response.status.value) {
           204 -> Response.NoContent
           304 -> Response.NotModified
@@ -1792,7 +1792,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: EmailsStrings): Response {
-        val response = client.delete("user/emails") {
+        val response = __client.delete("user/emails") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -1808,7 +1808,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: List<String>): Response {
-        val response = client.delete("user/emails") {
+        val response = __client.delete("user/emails") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -1824,7 +1824,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: String): Response {
-        val response = client.delete("user/emails") {
+        val response = __client.delete("user/emails") {
           contentType(ContentType.Application.Json)
           setBody(JsonPrimitive(body))
         }
@@ -1871,10 +1871,10 @@ public class User internal constructor(
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/emails") {
+        val response = __client.get("user/emails") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -1914,10 +1914,10 @@ public class User internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.post("user/emails")
+        val response = __client.post("user/emails")
         return when (response.status.value) {
           201 -> Response.Created(response.body())
           304 -> Response.NotModified
@@ -1930,7 +1930,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: EmailsStrings): Response {
-        val response = client.post("user/emails") {
+        val response = __client.post("user/emails") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -1946,7 +1946,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: List<String>): Response {
-        val response = client.post("user/emails") {
+        val response = __client.post("user/emails") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -1962,7 +1962,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: String): Response {
-        val response = client.post("user/emails") {
+        val response = __client.post("user/emails") {
           contentType(ContentType.Application.Json)
           setBody(JsonPrimitive(body))
         }
@@ -2009,15 +2009,15 @@ public class User internal constructor(
   }
 
   public class Followers internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/followers") {
+        val response = __client.get("user/followers") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -2053,17 +2053,17 @@ public class User internal constructor(
   }
 
   public class Following internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public fun username(username: String): UsernamePath = UsernamePath(client, username)
+    public fun username(username: String): UsernamePath = UsernamePath(__client, username)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/following") {
+        val response = __client.get("user/following") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -2098,21 +2098,21 @@ public class User internal constructor(
     }
 
     public class UsernamePath internal constructor(
-      private val client: HttpClient,
-      private val username: String,
+      private val __client: HttpClient,
+      private val _username: String,
     ) {
-      public val delete: Delete = Delete(client, username)
+      public val delete: Delete = Delete(__client, _username)
 
-      public val `get`: Get = Get(client, username)
+      public val `get`: Get = Get(__client, _username)
 
-      public val put: Put = Put(client, username)
+      public val put: Put = Put(__client, _username)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val username: String,
+        private val __client: HttpClient,
+        private val _username: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("user/following/${this.username.encodeURLParameter()}")
+          val response = __client.delete("user/following/${this._username.encodeURLParameter()}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -2143,11 +2143,11 @@ public class User internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val username: String,
+        private val __client: HttpClient,
+        private val _username: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("user/following/${this.username.encodeURLParameter()}")
+          val response = __client.get("user/following/${this._username.encodeURLParameter()}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -2178,11 +2178,11 @@ public class User internal constructor(
       }
 
       public class Put internal constructor(
-        private val client: HttpClient,
-        private val username: String,
+        private val __client: HttpClient,
+        private val _username: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.put("user/following/${this.username.encodeURLParameter()}")
+          val response = __client.put("user/following/${this._username.encodeURLParameter()}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -2220,19 +2220,19 @@ public class User internal constructor(
   }
 
   public class GpgKeys internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
-    public fun gpgKeyId(gpgKeyId: Long): GpgKeyIdPath = GpgKeyIdPath(client, gpgKeyId)
+    public fun gpgKeyId(gpgKeyId: Long): GpgKeyIdPath = GpgKeyIdPath(__client, gpgKeyId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/gpg_keys") {
+        val response = __client.get("user/gpg_keys") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -2272,10 +2272,10 @@ public class User internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(name: String? = null, armoredPublicKey: String): Response {
-        val response = client.post("user/gpg_keys") {
+        val response = __client.post("user/gpg_keys") {
           contentType(ContentType.Application.Json)
           setBody(Body(name = name, armoredPublicKey = armoredPublicKey))
         }
@@ -2325,19 +2325,19 @@ public class User internal constructor(
     }
 
     public class GpgKeyIdPath internal constructor(
-      private val client: HttpClient,
-      private val gpgKeyId: Long,
+      private val __client: HttpClient,
+      private val _gpgKeyId: Long,
     ) {
-      public val delete: Delete = Delete(client, gpgKeyId)
+      public val delete: Delete = Delete(__client, _gpgKeyId)
 
-      public val `get`: Get = Get(client, gpgKeyId)
+      public val `get`: Get = Get(__client, _gpgKeyId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val gpgKeyId: Long,
+        private val __client: HttpClient,
+        private val _gpgKeyId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("user/gpg_keys/${this.gpgKeyId}")
+          val response = __client.delete("user/gpg_keys/${this._gpgKeyId}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -2373,11 +2373,11 @@ public class User internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val gpgKeyId: Long,
+        private val __client: HttpClient,
+        private val _gpgKeyId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("user/gpg_keys/${this.gpgKeyId}")
+          val response = __client.get("user/gpg_keys/${this._gpgKeyId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             304 -> Response.NotModified
@@ -2412,17 +2412,17 @@ public class User internal constructor(
   }
 
   public class Installations internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public fun installationId(installationId: Long): InstallationIdPath = InstallationIdPath(client, installationId)
+    public fun installationId(installationId: Long): InstallationIdPath = InstallationIdPath(__client, installationId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/installations") {
+        val response = __client.get("user/installations") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -2460,25 +2460,25 @@ public class User internal constructor(
     }
 
     public class InstallationIdPath internal constructor(
-      private val client: HttpClient,
-      private val installationId: Long,
+      private val __client: HttpClient,
+      private val _installationId: Long,
     ) {
-      public val repositories: Repositories = Repositories(client, installationId)
+      public val repositories: Repositories = Repositories(__client, _installationId)
 
       public class Repositories internal constructor(
-        private val client: HttpClient,
-        private val installationId: Long,
+        private val __client: HttpClient,
+        private val _installationId: Long,
       ) {
-        public val `get`: Get = Get(client, installationId)
+        public val `get`: Get = Get(__client, _installationId)
 
-        public fun repositoryId(repositoryId: Long): RepositoryIdPath = RepositoryIdPath(client, installationId, repositoryId)
+        public fun repositoryId(repositoryId: Long): RepositoryIdPath = RepositoryIdPath(__client, _installationId, repositoryId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val installationId: Long,
+          private val __client: HttpClient,
+          private val _installationId: Long,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("user/installations/${this.installationId}/repositories") {
+            val response = __client.get("user/installations/${this._installationId}/repositories") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -2823,21 +2823,21 @@ public class User internal constructor(
         }
 
         public class RepositoryIdPath internal constructor(
-          private val client: HttpClient,
-          private val installationId: Long,
-          private val repositoryId: Long,
+          private val __client: HttpClient,
+          private val _installationId: Long,
+          private val _repositoryId: Long,
         ) {
-          public val delete: Delete = Delete(client, installationId, repositoryId)
+          public val delete: Delete = Delete(__client, _installationId, _repositoryId)
 
-          public val put: Put = Put(client, installationId, repositoryId)
+          public val put: Put = Put(__client, _installationId, _repositoryId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val installationId: Long,
-            private val repositoryId: Long,
+            private val __client: HttpClient,
+            private val _installationId: Long,
+            private val _repositoryId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("user/installations/${this.installationId}/repositories/${this.repositoryId}")
+              val response = __client.delete("user/installations/${this._installationId}/repositories/${this._repositoryId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 304 -> Response.NotModified
@@ -2866,12 +2866,12 @@ public class User internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val installationId: Long,
-            private val repositoryId: Long,
+            private val __client: HttpClient,
+            private val _installationId: Long,
+            private val _repositoryId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.put("user/installations/${this.installationId}/repositories/${this.repositoryId}")
+              val response = __client.put("user/installations/${this._installationId}/repositories/${this._repositoryId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 304 -> Response.NotModified
@@ -2901,28 +2901,28 @@ public class User internal constructor(
   }
 
   public class InteractionLimits internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val delete: Delete = Delete(client)
+    public val delete: Delete = Delete(__client)
 
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val put: Put = Put(client)
+    public val put: Put = Put(__client)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("user/interaction-limits")
+        val response = __client.delete("user/interaction-limits")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("user/interaction-limits")
+        val response = __client.get("user/interaction-limits")
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
           204 -> Response.NoContent
@@ -2977,10 +2977,10 @@ public class User internal constructor(
     }
 
     public class Put internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: InteractionLimit): Response {
-        val response = client.put("user/interaction-limits") {
+        val response = __client.put("user/interaction-limits") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -3004,12 +3004,12 @@ public class User internal constructor(
   }
 
   public class Issues internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         filter: Filter? = Filter.Assigned,
@@ -3021,7 +3021,7 @@ public class User internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("user/issues") {
+        val response = __client.get("user/issues") {
           if (filter != null) {
             this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
           }
@@ -3126,19 +3126,19 @@ public class User internal constructor(
   }
 
   public class Keys internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
-    public fun keyId(keyId: Long): KeyIdPath = KeyIdPath(client, keyId)
+    public fun keyId(keyId: Long): KeyIdPath = KeyIdPath(__client, keyId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/keys") {
+        val response = __client.get("user/keys") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -3178,10 +3178,10 @@ public class User internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(title: String? = null, key: String): Response {
-        val response = client.post("user/keys") {
+        val response = __client.post("user/keys") {
           contentType(ContentType.Application.Json)
           setBody(Body(title = title, key = key))
         }
@@ -3230,19 +3230,19 @@ public class User internal constructor(
     }
 
     public class KeyIdPath internal constructor(
-      private val client: HttpClient,
-      private val keyId: Long,
+      private val __client: HttpClient,
+      private val _keyId: Long,
     ) {
-      public val delete: Delete = Delete(client, keyId)
+      public val delete: Delete = Delete(__client, _keyId)
 
-      public val `get`: Get = Get(client, keyId)
+      public val `get`: Get = Get(__client, _keyId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val keyId: Long,
+        private val __client: HttpClient,
+        private val _keyId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("user/keys/${this.keyId}")
+          val response = __client.delete("user/keys/${this._keyId}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -3273,11 +3273,11 @@ public class User internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val keyId: Long,
+        private val __client: HttpClient,
+        private val _keyId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("user/keys/${this.keyId}")
+          val response = __client.get("user/keys/${this._keyId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             304 -> Response.NotModified
@@ -3312,17 +3312,17 @@ public class User internal constructor(
   }
 
   public class MarketplacePurchases internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val stubbed: Stubbed = Stubbed(client)
+    public val stubbed: Stubbed = Stubbed(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/marketplace_purchases") {
+        val response = __client.get("user/marketplace_purchases") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -3357,15 +3357,15 @@ public class User internal constructor(
     }
 
     public class Stubbed internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("user/marketplace_purchases/stubbed") {
+          val response = __client.get("user/marketplace_purchases/stubbed") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -3397,26 +3397,26 @@ public class User internal constructor(
   }
 
   public class Memberships internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val orgs: Orgs = Orgs(client)
+    public val orgs: Orgs = Orgs(__client)
 
     public class Orgs internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
-      public fun org(org: String): OrgPath = OrgPath(client, org)
+      public fun org(org: String): OrgPath = OrgPath(__client, org)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(
           state: State? = null,
           perPage: Long? = 30L,
           page: Long? = 1L,
         ): Response {
-          val response = client.get("user/memberships/orgs") {
+          val response = __client.get("user/memberships/orgs") {
             if (state != null) {
               this.url.encodedParameters.append("state", state.value.encodeURLParameter())
             }
@@ -3470,19 +3470,19 @@ public class User internal constructor(
       }
 
       public class OrgPath internal constructor(
-        private val client: HttpClient,
-        private val org: String,
+        private val __client: HttpClient,
+        private val _org: String,
       ) {
-        public val `get`: Get = Get(client, org)
+        public val `get`: Get = Get(__client, _org)
 
-        public val patch: Patch = Patch(client, org)
+        public val patch: Patch = Patch(__client, _org)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("user/memberships/orgs/${this.org.encodeURLParameter()}")
+            val response = __client.get("user/memberships/orgs/${this._org.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden(response.body())
@@ -3507,11 +3507,11 @@ public class User internal constructor(
         }
 
         public class Patch internal constructor(
-          private val client: HttpClient,
-          private val org: String,
+          private val __client: HttpClient,
+          private val _org: String,
         ) {
           public suspend operator fun invoke(state: State): Response {
-            val response = client.patch("user/memberships/orgs/${this.org.encodeURLParameter()}") {
+            val response = __client.patch("user/memberships/orgs/${this._org.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(Body(state = state))
             }
@@ -3561,19 +3561,19 @@ public class User internal constructor(
   }
 
   public class Migrations internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
-    public fun migrationId(migrationId: Long): MigrationIdPath = MigrationIdPath(client, migrationId)
+    public fun migrationId(migrationId: Long): MigrationIdPath = MigrationIdPath(__client, migrationId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/migrations") {
+        val response = __client.get("user/migrations") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -3608,7 +3608,7 @@ public class User internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         lockRepositories: Boolean? = null,
@@ -3621,7 +3621,7 @@ public class User internal constructor(
         exclude: List<Exclude>? = null,
         repositories: List<String>,
       ): Response {
-        val response = client.post("user/migrations") {
+        val response = __client.post("user/migrations") {
           contentType(ContentType.Application.Json)
           setBody(Body(lockRepositories = lockRepositories, excludeMetadata = excludeMetadata, excludeGitData = excludeGitData, excludeAttachments = excludeAttachments, excludeReleases = excludeReleases, excludeOwnerProjects = excludeOwnerProjects, orgMetadataOnly = orgMetadataOnly, exclude = exclude, repositories = repositories))
         }
@@ -3695,23 +3695,23 @@ public class User internal constructor(
     }
 
     public class MigrationIdPath internal constructor(
-      private val client: HttpClient,
-      private val migrationId: Long,
+      private val __client: HttpClient,
+      private val _migrationId: Long,
     ) {
-      public val `get`: Get = Get(client, migrationId)
+      public val `get`: Get = Get(__client, _migrationId)
 
-      public val archive: Archive = Archive(client, migrationId)
+      public val archive: Archive = Archive(__client, _migrationId)
 
-      public val repos: Repos = Repos(client, migrationId)
+      public val repos: Repos = Repos(__client, _migrationId)
 
-      public val repositories: Repositories = Repositories(client, migrationId)
+      public val repositories: Repositories = Repositories(__client, _migrationId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val migrationId: Long,
+        private val __client: HttpClient,
+        private val _migrationId: Long,
       ) {
         public suspend operator fun invoke(exclude: List<String>? = null): Response {
-          val response = client.get("user/migrations/${this.migrationId}") {
+          val response = __client.get("user/migrations/${this._migrationId}") {
             exclude?.forEach { this.url.encodedParameters.append("exclude", it.encodeURLParameter()) }
           }
           return when (response.status.value) {
@@ -3746,19 +3746,19 @@ public class User internal constructor(
       }
 
       public class Archive internal constructor(
-        private val client: HttpClient,
-        private val migrationId: Long,
+        private val __client: HttpClient,
+        private val _migrationId: Long,
       ) {
-        public val delete: Delete = Delete(client, migrationId)
+        public val delete: Delete = Delete(__client, _migrationId)
 
-        public val `get`: Get = Get(client, migrationId)
+        public val `get`: Get = Get(__client, _migrationId)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val migrationId: Long,
+          private val __client: HttpClient,
+          private val _migrationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("user/migrations/${this.migrationId}/archive")
+            val response = __client.delete("user/migrations/${this._migrationId}/archive")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -3789,11 +3789,11 @@ public class User internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val migrationId: Long,
+          private val __client: HttpClient,
+          private val _migrationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("user/migrations/${this.migrationId}/archive")
+            val response = __client.get("user/migrations/${this._migrationId}/archive")
             return when (response.status.value) {
               302 -> Response.Found
               304 -> Response.NotModified
@@ -3820,32 +3820,32 @@ public class User internal constructor(
       }
 
       public class Repos internal constructor(
-        private val client: HttpClient,
-        private val migrationId: Long,
+        private val __client: HttpClient,
+        private val _migrationId: Long,
       ) {
-        public fun repoName(repoName: String): RepoNamePath = RepoNamePath(client, migrationId, repoName)
+        public fun repoName(repoName: String): RepoNamePath = RepoNamePath(__client, _migrationId, repoName)
 
         public class RepoNamePath internal constructor(
-          private val client: HttpClient,
-          private val migrationId: Long,
-          private val repoName: String,
+          private val __client: HttpClient,
+          private val _migrationId: Long,
+          private val _repoName: String,
         ) {
-          public val lock: Lock = Lock(client, migrationId, repoName)
+          public val lock: Lock = Lock(__client, _migrationId, _repoName)
 
           public class Lock internal constructor(
-            private val client: HttpClient,
-            private val migrationId: Long,
-            private val repoName: String,
+            private val __client: HttpClient,
+            private val _migrationId: Long,
+            private val _repoName: String,
           ) {
-            public val delete: Delete = Delete(client, migrationId, repoName)
+            public val delete: Delete = Delete(__client, _migrationId, _repoName)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val migrationId: Long,
-              private val repoName: String,
+              private val __client: HttpClient,
+              private val _migrationId: Long,
+              private val _repoName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("user/migrations/${this.migrationId}/repos/${this.repoName.encodeURLParameter()}/lock")
+                val response = __client.delete("user/migrations/${this._migrationId}/repos/${this._repoName.encodeURLParameter()}/lock")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   304 -> Response.NotModified
@@ -3879,17 +3879,17 @@ public class User internal constructor(
       }
 
       public class Repositories internal constructor(
-        private val client: HttpClient,
-        private val migrationId: Long,
+        private val __client: HttpClient,
+        private val _migrationId: Long,
       ) {
-        public val `get`: Get = Get(client, migrationId)
+        public val `get`: Get = Get(__client, _migrationId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val migrationId: Long,
+          private val __client: HttpClient,
+          private val _migrationId: Long,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("user/migrations/${this.migrationId}/repositories") {
+            val response = __client.get("user/migrations/${this._migrationId}/repositories") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -3919,15 +3919,15 @@ public class User internal constructor(
   }
 
   public class Orgs internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/orgs") {
+        val response = __client.get("user/orgs") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -3963,24 +3963,24 @@ public class User internal constructor(
   }
 
   public class Packages internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val npm: Npm = Npm(client)
+    public val npm: Npm = Npm(__client)
 
-    public val maven: Maven = Maven(client)
+    public val maven: Maven = Maven(__client)
 
-    public val rubygems: Rubygems = Rubygems(client)
+    public val rubygems: Rubygems = Rubygems(__client)
 
-    public val docker: Docker = Docker(client)
+    public val docker: Docker = Docker(__client)
 
-    public val nuget: Nuget = Nuget(client)
+    public val nuget: Nuget = Nuget(__client)
 
-    public val container: Container = Container(client)
+    public val container: Container = Container(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         packageType: PackageType,
@@ -3988,7 +3988,7 @@ public class User internal constructor(
         page: Long? = 1L,
         perPage: Long? = 30L,
       ): Response {
-        val response = client.get("user/packages") {
+        val response = __client.get("user/packages") {
           this.url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
           if (visibility != null) {
             this.url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
@@ -4049,28 +4049,28 @@ public class User internal constructor(
     }
 
     public class Npm internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(client, packageName)
+      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(__client, packageName)
 
       public class PackageNamePath internal constructor(
-        private val client: HttpClient,
-        private val packageName: String,
+        private val __client: HttpClient,
+        private val _packageName: String,
       ) {
-        public val delete: Delete = Delete(client, packageName)
+        public val delete: Delete = Delete(__client, _packageName)
 
-        public val `get`: Get = Get(client, packageName)
+        public val `get`: Get = Get(__client, _packageName)
 
-        public val restore: Restore = Restore(client, packageName)
+        public val restore: Restore = Restore(__client, _packageName)
 
-        public val versions: Versions = Versions(client, packageName)
+        public val versions: Versions = Versions(__client, _packageName)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("user/packages/npm/${this.packageName.encodeURLParameter()}")
+            val response = __client.delete("user/packages/npm/${this._packageName.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               401 -> Response.Unauthorized(response.body())
@@ -4098,28 +4098,28 @@ public class User internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Package {
-            val response = client.get("user/packages/npm/${this.packageName.encodeURLParameter()}")
+            val response = __client.get("user/packages/npm/${this._packageName.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Restore internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val post: Post = Post(client, packageName)
+          public val post: Post = Post(__client, _packageName)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(token: String? = null): Response {
-              val response = client.post("user/packages/npm/${this.packageName.encodeURLParameter()}/restore") {
+              val response = __client.post("user/packages/npm/${this._packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
                   this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
@@ -4152,23 +4152,23 @@ public class User internal constructor(
         }
 
         public class Versions internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val `get`: Get = Get(client, packageName)
+          public val `get`: Get = Get(__client, _packageName)
 
-          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(client, packageName, packageVersionId)
+          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(__client, _packageName, packageVersionId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(
               page: Long? = 1L,
               perPage: Long? = 30L,
               state: State? = State.Active,
             ): Response {
-              val response = client.get("user/packages/npm/${this.packageName.encodeURLParameter()}/versions") {
+              val response = __client.get("user/packages/npm/${this._packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -4219,23 +4219,23 @@ public class User internal constructor(
           }
 
           public class PackageVersionIdPath internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
-            private val packageVersionId: Long,
+            private val __client: HttpClient,
+            private val _packageName: String,
+            private val _packageVersionId: Long,
           ) {
-            public val delete: Delete = Delete(client, packageName, packageVersionId)
+            public val delete: Delete = Delete(__client, _packageName, _packageVersionId)
 
-            public val `get`: Get = Get(client, packageName, packageVersionId)
+            public val `get`: Get = Get(__client, _packageName, _packageVersionId)
 
-            public val restore: Restore = Restore(client, packageName, packageVersionId)
+            public val restore: Restore = Restore(__client, _packageName, _packageVersionId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("user/packages/npm/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.delete("user/packages/npm/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -4263,31 +4263,31 @@ public class User internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): PackageVersion {
-                val response = client.get("user/packages/npm/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.get("user/packages/npm/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Restore internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
-              public val post: Post = Post(client, packageName, packageVersionId)
+              public val post: Post = Post(__client, _packageName, _packageVersionId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val packageName: String,
-                private val packageVersionId: Long,
+                private val __client: HttpClient,
+                private val _packageName: String,
+                private val _packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("user/packages/npm/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}/restore")
+                  val response = __client.post("user/packages/npm/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}/restore")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -4320,28 +4320,28 @@ public class User internal constructor(
     }
 
     public class Maven internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(client, packageName)
+      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(__client, packageName)
 
       public class PackageNamePath internal constructor(
-        private val client: HttpClient,
-        private val packageName: String,
+        private val __client: HttpClient,
+        private val _packageName: String,
       ) {
-        public val delete: Delete = Delete(client, packageName)
+        public val delete: Delete = Delete(__client, _packageName)
 
-        public val `get`: Get = Get(client, packageName)
+        public val `get`: Get = Get(__client, _packageName)
 
-        public val restore: Restore = Restore(client, packageName)
+        public val restore: Restore = Restore(__client, _packageName)
 
-        public val versions: Versions = Versions(client, packageName)
+        public val versions: Versions = Versions(__client, _packageName)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("user/packages/maven/${this.packageName.encodeURLParameter()}")
+            val response = __client.delete("user/packages/maven/${this._packageName.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               401 -> Response.Unauthorized(response.body())
@@ -4369,28 +4369,28 @@ public class User internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Package {
-            val response = client.get("user/packages/maven/${this.packageName.encodeURLParameter()}")
+            val response = __client.get("user/packages/maven/${this._packageName.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Restore internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val post: Post = Post(client, packageName)
+          public val post: Post = Post(__client, _packageName)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(token: String? = null): Response {
-              val response = client.post("user/packages/maven/${this.packageName.encodeURLParameter()}/restore") {
+              val response = __client.post("user/packages/maven/${this._packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
                   this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
@@ -4423,23 +4423,23 @@ public class User internal constructor(
         }
 
         public class Versions internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val `get`: Get = Get(client, packageName)
+          public val `get`: Get = Get(__client, _packageName)
 
-          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(client, packageName, packageVersionId)
+          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(__client, _packageName, packageVersionId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(
               page: Long? = 1L,
               perPage: Long? = 30L,
               state: State? = State.Active,
             ): Response {
-              val response = client.get("user/packages/maven/${this.packageName.encodeURLParameter()}/versions") {
+              val response = __client.get("user/packages/maven/${this._packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -4490,23 +4490,23 @@ public class User internal constructor(
           }
 
           public class PackageVersionIdPath internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
-            private val packageVersionId: Long,
+            private val __client: HttpClient,
+            private val _packageName: String,
+            private val _packageVersionId: Long,
           ) {
-            public val delete: Delete = Delete(client, packageName, packageVersionId)
+            public val delete: Delete = Delete(__client, _packageName, _packageVersionId)
 
-            public val `get`: Get = Get(client, packageName, packageVersionId)
+            public val `get`: Get = Get(__client, _packageName, _packageVersionId)
 
-            public val restore: Restore = Restore(client, packageName, packageVersionId)
+            public val restore: Restore = Restore(__client, _packageName, _packageVersionId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("user/packages/maven/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.delete("user/packages/maven/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -4534,31 +4534,31 @@ public class User internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): PackageVersion {
-                val response = client.get("user/packages/maven/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.get("user/packages/maven/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Restore internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
-              public val post: Post = Post(client, packageName, packageVersionId)
+              public val post: Post = Post(__client, _packageName, _packageVersionId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val packageName: String,
-                private val packageVersionId: Long,
+                private val __client: HttpClient,
+                private val _packageName: String,
+                private val _packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("user/packages/maven/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}/restore")
+                  val response = __client.post("user/packages/maven/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}/restore")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -4591,28 +4591,28 @@ public class User internal constructor(
     }
 
     public class Rubygems internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(client, packageName)
+      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(__client, packageName)
 
       public class PackageNamePath internal constructor(
-        private val client: HttpClient,
-        private val packageName: String,
+        private val __client: HttpClient,
+        private val _packageName: String,
       ) {
-        public val delete: Delete = Delete(client, packageName)
+        public val delete: Delete = Delete(__client, _packageName)
 
-        public val `get`: Get = Get(client, packageName)
+        public val `get`: Get = Get(__client, _packageName)
 
-        public val restore: Restore = Restore(client, packageName)
+        public val restore: Restore = Restore(__client, _packageName)
 
-        public val versions: Versions = Versions(client, packageName)
+        public val versions: Versions = Versions(__client, _packageName)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("user/packages/rubygems/${this.packageName.encodeURLParameter()}")
+            val response = __client.delete("user/packages/rubygems/${this._packageName.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               401 -> Response.Unauthorized(response.body())
@@ -4640,28 +4640,28 @@ public class User internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Package {
-            val response = client.get("user/packages/rubygems/${this.packageName.encodeURLParameter()}")
+            val response = __client.get("user/packages/rubygems/${this._packageName.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Restore internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val post: Post = Post(client, packageName)
+          public val post: Post = Post(__client, _packageName)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(token: String? = null): Response {
-              val response = client.post("user/packages/rubygems/${this.packageName.encodeURLParameter()}/restore") {
+              val response = __client.post("user/packages/rubygems/${this._packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
                   this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
@@ -4694,23 +4694,23 @@ public class User internal constructor(
         }
 
         public class Versions internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val `get`: Get = Get(client, packageName)
+          public val `get`: Get = Get(__client, _packageName)
 
-          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(client, packageName, packageVersionId)
+          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(__client, _packageName, packageVersionId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(
               page: Long? = 1L,
               perPage: Long? = 30L,
               state: State? = State.Active,
             ): Response {
-              val response = client.get("user/packages/rubygems/${this.packageName.encodeURLParameter()}/versions") {
+              val response = __client.get("user/packages/rubygems/${this._packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -4761,23 +4761,23 @@ public class User internal constructor(
           }
 
           public class PackageVersionIdPath internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
-            private val packageVersionId: Long,
+            private val __client: HttpClient,
+            private val _packageName: String,
+            private val _packageVersionId: Long,
           ) {
-            public val delete: Delete = Delete(client, packageName, packageVersionId)
+            public val delete: Delete = Delete(__client, _packageName, _packageVersionId)
 
-            public val `get`: Get = Get(client, packageName, packageVersionId)
+            public val `get`: Get = Get(__client, _packageName, _packageVersionId)
 
-            public val restore: Restore = Restore(client, packageName, packageVersionId)
+            public val restore: Restore = Restore(__client, _packageName, _packageVersionId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("user/packages/rubygems/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.delete("user/packages/rubygems/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -4805,31 +4805,31 @@ public class User internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): PackageVersion {
-                val response = client.get("user/packages/rubygems/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.get("user/packages/rubygems/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Restore internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
-              public val post: Post = Post(client, packageName, packageVersionId)
+              public val post: Post = Post(__client, _packageName, _packageVersionId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val packageName: String,
-                private val packageVersionId: Long,
+                private val __client: HttpClient,
+                private val _packageName: String,
+                private val _packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("user/packages/rubygems/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}/restore")
+                  val response = __client.post("user/packages/rubygems/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}/restore")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -4862,28 +4862,28 @@ public class User internal constructor(
     }
 
     public class Docker internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(client, packageName)
+      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(__client, packageName)
 
       public class PackageNamePath internal constructor(
-        private val client: HttpClient,
-        private val packageName: String,
+        private val __client: HttpClient,
+        private val _packageName: String,
       ) {
-        public val delete: Delete = Delete(client, packageName)
+        public val delete: Delete = Delete(__client, _packageName)
 
-        public val `get`: Get = Get(client, packageName)
+        public val `get`: Get = Get(__client, _packageName)
 
-        public val restore: Restore = Restore(client, packageName)
+        public val restore: Restore = Restore(__client, _packageName)
 
-        public val versions: Versions = Versions(client, packageName)
+        public val versions: Versions = Versions(__client, _packageName)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("user/packages/docker/${this.packageName.encodeURLParameter()}")
+            val response = __client.delete("user/packages/docker/${this._packageName.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               401 -> Response.Unauthorized(response.body())
@@ -4911,28 +4911,28 @@ public class User internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Package {
-            val response = client.get("user/packages/docker/${this.packageName.encodeURLParameter()}")
+            val response = __client.get("user/packages/docker/${this._packageName.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Restore internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val post: Post = Post(client, packageName)
+          public val post: Post = Post(__client, _packageName)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(token: String? = null): Response {
-              val response = client.post("user/packages/docker/${this.packageName.encodeURLParameter()}/restore") {
+              val response = __client.post("user/packages/docker/${this._packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
                   this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
@@ -4965,23 +4965,23 @@ public class User internal constructor(
         }
 
         public class Versions internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val `get`: Get = Get(client, packageName)
+          public val `get`: Get = Get(__client, _packageName)
 
-          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(client, packageName, packageVersionId)
+          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(__client, _packageName, packageVersionId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(
               page: Long? = 1L,
               perPage: Long? = 30L,
               state: State? = State.Active,
             ): Response {
-              val response = client.get("user/packages/docker/${this.packageName.encodeURLParameter()}/versions") {
+              val response = __client.get("user/packages/docker/${this._packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -5032,23 +5032,23 @@ public class User internal constructor(
           }
 
           public class PackageVersionIdPath internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
-            private val packageVersionId: Long,
+            private val __client: HttpClient,
+            private val _packageName: String,
+            private val _packageVersionId: Long,
           ) {
-            public val delete: Delete = Delete(client, packageName, packageVersionId)
+            public val delete: Delete = Delete(__client, _packageName, _packageVersionId)
 
-            public val `get`: Get = Get(client, packageName, packageVersionId)
+            public val `get`: Get = Get(__client, _packageName, _packageVersionId)
 
-            public val restore: Restore = Restore(client, packageName, packageVersionId)
+            public val restore: Restore = Restore(__client, _packageName, _packageVersionId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("user/packages/docker/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.delete("user/packages/docker/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -5076,31 +5076,31 @@ public class User internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): PackageVersion {
-                val response = client.get("user/packages/docker/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.get("user/packages/docker/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Restore internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
-              public val post: Post = Post(client, packageName, packageVersionId)
+              public val post: Post = Post(__client, _packageName, _packageVersionId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val packageName: String,
-                private val packageVersionId: Long,
+                private val __client: HttpClient,
+                private val _packageName: String,
+                private val _packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("user/packages/docker/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}/restore")
+                  val response = __client.post("user/packages/docker/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}/restore")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -5133,28 +5133,28 @@ public class User internal constructor(
     }
 
     public class Nuget internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(client, packageName)
+      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(__client, packageName)
 
       public class PackageNamePath internal constructor(
-        private val client: HttpClient,
-        private val packageName: String,
+        private val __client: HttpClient,
+        private val _packageName: String,
       ) {
-        public val delete: Delete = Delete(client, packageName)
+        public val delete: Delete = Delete(__client, _packageName)
 
-        public val `get`: Get = Get(client, packageName)
+        public val `get`: Get = Get(__client, _packageName)
 
-        public val restore: Restore = Restore(client, packageName)
+        public val restore: Restore = Restore(__client, _packageName)
 
-        public val versions: Versions = Versions(client, packageName)
+        public val versions: Versions = Versions(__client, _packageName)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("user/packages/nuget/${this.packageName.encodeURLParameter()}")
+            val response = __client.delete("user/packages/nuget/${this._packageName.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               401 -> Response.Unauthorized(response.body())
@@ -5182,28 +5182,28 @@ public class User internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Package {
-            val response = client.get("user/packages/nuget/${this.packageName.encodeURLParameter()}")
+            val response = __client.get("user/packages/nuget/${this._packageName.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Restore internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val post: Post = Post(client, packageName)
+          public val post: Post = Post(__client, _packageName)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(token: String? = null): Response {
-              val response = client.post("user/packages/nuget/${this.packageName.encodeURLParameter()}/restore") {
+              val response = __client.post("user/packages/nuget/${this._packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
                   this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
@@ -5236,23 +5236,23 @@ public class User internal constructor(
         }
 
         public class Versions internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val `get`: Get = Get(client, packageName)
+          public val `get`: Get = Get(__client, _packageName)
 
-          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(client, packageName, packageVersionId)
+          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(__client, _packageName, packageVersionId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(
               page: Long? = 1L,
               perPage: Long? = 30L,
               state: State? = State.Active,
             ): Response {
-              val response = client.get("user/packages/nuget/${this.packageName.encodeURLParameter()}/versions") {
+              val response = __client.get("user/packages/nuget/${this._packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -5303,23 +5303,23 @@ public class User internal constructor(
           }
 
           public class PackageVersionIdPath internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
-            private val packageVersionId: Long,
+            private val __client: HttpClient,
+            private val _packageName: String,
+            private val _packageVersionId: Long,
           ) {
-            public val delete: Delete = Delete(client, packageName, packageVersionId)
+            public val delete: Delete = Delete(__client, _packageName, _packageVersionId)
 
-            public val `get`: Get = Get(client, packageName, packageVersionId)
+            public val `get`: Get = Get(__client, _packageName, _packageVersionId)
 
-            public val restore: Restore = Restore(client, packageName, packageVersionId)
+            public val restore: Restore = Restore(__client, _packageName, _packageVersionId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("user/packages/nuget/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.delete("user/packages/nuget/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -5347,31 +5347,31 @@ public class User internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): PackageVersion {
-                val response = client.get("user/packages/nuget/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.get("user/packages/nuget/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Restore internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
-              public val post: Post = Post(client, packageName, packageVersionId)
+              public val post: Post = Post(__client, _packageName, _packageVersionId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val packageName: String,
-                private val packageVersionId: Long,
+                private val __client: HttpClient,
+                private val _packageName: String,
+                private val _packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("user/packages/nuget/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}/restore")
+                  val response = __client.post("user/packages/nuget/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}/restore")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -5404,28 +5404,28 @@ public class User internal constructor(
     }
 
     public class Container internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(client, packageName)
+      public fun packageName(packageName: String): PackageNamePath = PackageNamePath(__client, packageName)
 
       public class PackageNamePath internal constructor(
-        private val client: HttpClient,
-        private val packageName: String,
+        private val __client: HttpClient,
+        private val _packageName: String,
       ) {
-        public val delete: Delete = Delete(client, packageName)
+        public val delete: Delete = Delete(__client, _packageName)
 
-        public val `get`: Get = Get(client, packageName)
+        public val `get`: Get = Get(__client, _packageName)
 
-        public val restore: Restore = Restore(client, packageName)
+        public val restore: Restore = Restore(__client, _packageName)
 
-        public val versions: Versions = Versions(client, packageName)
+        public val versions: Versions = Versions(__client, _packageName)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("user/packages/container/${this.packageName.encodeURLParameter()}")
+            val response = __client.delete("user/packages/container/${this._packageName.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               401 -> Response.Unauthorized(response.body())
@@ -5453,28 +5453,28 @@ public class User internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
           public suspend operator fun invoke(): Package {
-            val response = client.get("user/packages/container/${this.packageName.encodeURLParameter()}")
+            val response = __client.get("user/packages/container/${this._packageName.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
         }
 
         public class Restore internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val post: Post = Post(client, packageName)
+          public val post: Post = Post(__client, _packageName)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(token: String? = null): Response {
-              val response = client.post("user/packages/container/${this.packageName.encodeURLParameter()}/restore") {
+              val response = __client.post("user/packages/container/${this._packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
                   this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
@@ -5507,23 +5507,23 @@ public class User internal constructor(
         }
 
         public class Versions internal constructor(
-          private val client: HttpClient,
-          private val packageName: String,
+          private val __client: HttpClient,
+          private val _packageName: String,
         ) {
-          public val `get`: Get = Get(client, packageName)
+          public val `get`: Get = Get(__client, _packageName)
 
-          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(client, packageName, packageVersionId)
+          public fun packageVersionId(packageVersionId: Long): PackageVersionIdPath = PackageVersionIdPath(__client, _packageName, packageVersionId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
+            private val __client: HttpClient,
+            private val _packageName: String,
           ) {
             public suspend operator fun invoke(
               page: Long? = 1L,
               perPage: Long? = 30L,
               state: State? = State.Active,
             ): Response {
-              val response = client.get("user/packages/container/${this.packageName.encodeURLParameter()}/versions") {
+              val response = __client.get("user/packages/container/${this._packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -5574,23 +5574,23 @@ public class User internal constructor(
           }
 
           public class PackageVersionIdPath internal constructor(
-            private val client: HttpClient,
-            private val packageName: String,
-            private val packageVersionId: Long,
+            private val __client: HttpClient,
+            private val _packageName: String,
+            private val _packageVersionId: Long,
           ) {
-            public val delete: Delete = Delete(client, packageName, packageVersionId)
+            public val delete: Delete = Delete(__client, _packageName, _packageVersionId)
 
-            public val `get`: Get = Get(client, packageName, packageVersionId)
+            public val `get`: Get = Get(__client, _packageName, _packageVersionId)
 
-            public val restore: Restore = Restore(client, packageName, packageVersionId)
+            public val restore: Restore = Restore(__client, _packageName, _packageVersionId)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("user/packages/container/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.delete("user/packages/container/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -5618,31 +5618,31 @@ public class User internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
               public suspend operator fun invoke(): PackageVersion {
-                val response = client.get("user/packages/container/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}")
+                val response = __client.get("user/packages/container/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Restore internal constructor(
-              private val client: HttpClient,
-              private val packageName: String,
-              private val packageVersionId: Long,
+              private val __client: HttpClient,
+              private val _packageName: String,
+              private val _packageVersionId: Long,
             ) {
-              public val post: Post = Post(client, packageName, packageVersionId)
+              public val post: Post = Post(__client, _packageName, _packageVersionId)
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val packageName: String,
-                private val packageVersionId: Long,
+                private val __client: HttpClient,
+                private val _packageName: String,
+                private val _packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("user/packages/container/${this.packageName.encodeURLParameter()}/versions/${this.packageVersionId}/restore")
+                  val response = __client.post("user/packages/container/${this._packageName.encodeURLParameter()}/versions/${this._packageVersionId}/restore")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -5676,15 +5676,15 @@ public class User internal constructor(
   }
 
   public class PublicEmails internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/public_emails") {
+        val response = __client.get("user/public_emails") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -5725,14 +5725,14 @@ public class User internal constructor(
   }
 
   public class Repos internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         visibility: Visibility? = Visibility.All,
@@ -5745,7 +5745,7 @@ public class User internal constructor(
         since: Instant? = null,
         before: Instant? = null,
       ): Response {
-        val response = client.get("user/repos") {
+        val response = __client.get("user/repos") {
           if (visibility != null) {
             this.url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
           }
@@ -5862,7 +5862,7 @@ public class User internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(
         name: String,
@@ -5889,7 +5889,7 @@ public class User internal constructor(
         hasDownloads: Boolean? = null,
         isTemplate: Boolean? = null,
       ): Response {
-        val response = client.post("user/repos") {
+        val response = __client.post("user/repos") {
           contentType(ContentType.Application.Json)
           setBody(Body(name = name, description = description, homepage = homepage, private = private, hasIssues = hasIssues, hasProjects = hasProjects, hasWiki = hasWiki, hasDiscussions = hasDiscussions, teamId = teamId, autoInit = autoInit, gitignoreTemplate = gitignoreTemplate, licenseTemplate = licenseTemplate, allowSquashMerge = allowSquashMerge, allowMergeCommit = allowMergeCommit, allowRebaseMerge = allowRebaseMerge, allowAutoMerge = allowAutoMerge, deleteBranchOnMerge = deleteBranchOnMerge, squashMergeCommitTitle = squashMergeCommitTitle, squashMergeCommitMessage = squashMergeCommitMessage, mergeCommitTitle = mergeCommitTitle, mergeCommitMessage = mergeCommitMessage, hasDownloads = hasDownloads, isTemplate = isTemplate))
         }
@@ -6051,17 +6051,17 @@ public class User internal constructor(
   }
 
   public class RepositoryInvitations internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public fun invitationId(invitationId: Long): InvitationIdPath = InvitationIdPath(client, invitationId)
+    public fun invitationId(invitationId: Long): InvitationIdPath = InvitationIdPath(__client, invitationId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/repository_invitations") {
+        val response = __client.get("user/repository_invitations") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -6101,19 +6101,19 @@ public class User internal constructor(
     }
 
     public class InvitationIdPath internal constructor(
-      private val client: HttpClient,
-      private val invitationId: Long,
+      private val __client: HttpClient,
+      private val _invitationId: Long,
     ) {
-      public val delete: Delete = Delete(client, invitationId)
+      public val delete: Delete = Delete(__client, _invitationId)
 
-      public val patch: Patch = Patch(client, invitationId)
+      public val patch: Patch = Patch(__client, _invitationId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val invitationId: Long,
+        private val __client: HttpClient,
+        private val _invitationId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("user/repository_invitations/${this.invitationId}")
+          val response = __client.delete("user/repository_invitations/${this._invitationId}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -6144,11 +6144,11 @@ public class User internal constructor(
       }
 
       public class Patch internal constructor(
-        private val client: HttpClient,
-        private val invitationId: Long,
+        private val __client: HttpClient,
+        private val _invitationId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.patch("user/repository_invitations/${this.invitationId}")
+          val response = __client.patch("user/repository_invitations/${this._invitationId}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -6181,19 +6181,19 @@ public class User internal constructor(
   }
 
   public class SocialAccounts internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val delete: Delete = Delete(client)
+    public val delete: Delete = Delete(__client)
 
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(accountUrls: List<String>): Response {
-        val response = client.delete("user/social_accounts") {
+        val response = __client.delete("user/social_accounts") {
           contentType(ContentType.Application.Json)
           setBody(Body(accountUrls = accountUrls))
         }
@@ -6238,10 +6238,10 @@ public class User internal constructor(
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/social_accounts") {
+        val response = __client.get("user/social_accounts") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -6281,10 +6281,10 @@ public class User internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(accountUrls: List<String>): Response {
-        val response = client.post("user/social_accounts") {
+        val response = __client.post("user/social_accounts") {
           contentType(ContentType.Application.Json)
           setBody(Body(accountUrls = accountUrls))
         }
@@ -6332,19 +6332,19 @@ public class User internal constructor(
   }
 
   public class SshSigningKeys internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
-    public fun sshSigningKeyId(sshSigningKeyId: Long): SshSigningKeyIdPath = SshSigningKeyIdPath(client, sshSigningKeyId)
+    public fun sshSigningKeyId(sshSigningKeyId: Long): SshSigningKeyIdPath = SshSigningKeyIdPath(__client, sshSigningKeyId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/ssh_signing_keys") {
+        val response = __client.get("user/ssh_signing_keys") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -6384,10 +6384,10 @@ public class User internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(title: String? = null, key: String): Response {
-        val response = client.post("user/ssh_signing_keys") {
+        val response = __client.post("user/ssh_signing_keys") {
           contentType(ContentType.Application.Json)
           setBody(Body(title = title, key = key))
         }
@@ -6436,19 +6436,19 @@ public class User internal constructor(
     }
 
     public class SshSigningKeyIdPath internal constructor(
-      private val client: HttpClient,
-      private val sshSigningKeyId: Long,
+      private val __client: HttpClient,
+      private val _sshSigningKeyId: Long,
     ) {
-      public val delete: Delete = Delete(client, sshSigningKeyId)
+      public val delete: Delete = Delete(__client, _sshSigningKeyId)
 
-      public val `get`: Get = Get(client, sshSigningKeyId)
+      public val `get`: Get = Get(__client, _sshSigningKeyId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val sshSigningKeyId: Long,
+        private val __client: HttpClient,
+        private val _sshSigningKeyId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("user/ssh_signing_keys/${this.sshSigningKeyId}")
+          val response = __client.delete("user/ssh_signing_keys/${this._sshSigningKeyId}")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -6479,11 +6479,11 @@ public class User internal constructor(
       }
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val sshSigningKeyId: Long,
+        private val __client: HttpClient,
+        private val _sshSigningKeyId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("user/ssh_signing_keys/${this.sshSigningKeyId}")
+          val response = __client.get("user/ssh_signing_keys/${this._sshSigningKeyId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             304 -> Response.NotModified
@@ -6518,14 +6518,14 @@ public class User internal constructor(
   }
 
   public class Starred internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public fun owner(owner: String): OwnerPath = OwnerPath(client, owner)
+    public fun owner(owner: String): OwnerPath = OwnerPath(__client, owner)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend fun json(
         sort: Sort? = Sort.Created,
@@ -6533,7 +6533,7 @@ public class User internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): JsonResponse {
-        val response = client.get("user/starred") {
+        val response = __client.get("user/starred") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
           if (sort != null) {
             this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
@@ -6563,7 +6563,7 @@ public class User internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): VndGithubV3StarJsonResponse {
-        val response = client.get("user/starred") {
+        val response = __client.get("user/starred") {
           `header`(HttpHeaders.Accept, ContentType("application", "vnd.github.v3.star+json"))
           if (sort != null) {
             this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
@@ -6635,29 +6635,29 @@ public class User internal constructor(
     }
 
     public class OwnerPath internal constructor(
-      private val client: HttpClient,
-      private val owner: String,
+      private val __client: HttpClient,
+      private val _owner: String,
     ) {
-      public fun repo(repo: String): RepoPath = RepoPath(client, owner, repo)
+      public fun repo(repo: String): RepoPath = RepoPath(__client, _owner, repo)
 
       public class RepoPath internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val delete: Delete = Delete(client, owner, repo)
+        public val delete: Delete = Delete(__client, _owner, _repo)
 
-        public val `get`: Get = Get(client, owner, repo)
+        public val `get`: Get = Get(__client, _owner, _repo)
 
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("user/starred/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+            val response = __client.delete("user/starred/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -6688,12 +6688,12 @@ public class User internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("user/starred/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+            val response = __client.get("user/starred/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -6724,12 +6724,12 @@ public class User internal constructor(
         }
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("user/starred/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+            val response = __client.put("user/starred/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -6763,15 +6763,15 @@ public class User internal constructor(
   }
 
   public class Subscriptions internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/subscriptions") {
+        val response = __client.get("user/subscriptions") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -6807,15 +6807,15 @@ public class User internal constructor(
   }
 
   public class Teams internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("user/teams") {
+        val response = __client.get("user/teams") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -6851,17 +6851,17 @@ public class User internal constructor(
   }
 
   public class AccountIdPath internal constructor(
-    private val client: HttpClient,
-    private val accountId: Long,
+    private val __client: HttpClient,
+    private val _accountId: Long,
   ) {
-    public val `get`: Get = Get(client, accountId)
+    public val `get`: Get = Get(__client, _accountId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val accountId: Long,
+      private val __client: HttpClient,
+      private val _accountId: Long,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("user/${this.accountId}")
+        val response = __client.get("user/${this._accountId}")
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
           404 -> Response.NotFound(response.body())
@@ -7064,38 +7064,38 @@ public class User internal constructor(
   }
 
   public class UserIdPath internal constructor(
-    private val client: HttpClient,
-    private val userId: String,
+    private val __client: HttpClient,
+    private val _userId: String,
   ) {
-    public val projectsV2: ProjectsV2 = ProjectsV2(client, userId)
+    public val projectsV2: ProjectsV2 = ProjectsV2(__client, _userId)
 
     public class ProjectsV2 internal constructor(
-      private val client: HttpClient,
-      private val userId: String,
+      private val __client: HttpClient,
+      private val _userId: String,
     ) {
-      public fun projectNumber(projectNumber: Long): ProjectNumberPath = ProjectNumberPath(client, userId, projectNumber)
+      public fun projectNumber(projectNumber: Long): ProjectNumberPath = ProjectNumberPath(__client, _userId, projectNumber)
 
       public class ProjectNumberPath internal constructor(
-        private val client: HttpClient,
-        private val userId: String,
-        private val projectNumber: Long,
+        private val __client: HttpClient,
+        private val _userId: String,
+        private val _projectNumber: Long,
       ) {
-        public val drafts: Drafts = Drafts(client, userId, projectNumber)
+        public val drafts: Drafts = Drafts(__client, _userId, _projectNumber)
 
         public class Drafts internal constructor(
-          private val client: HttpClient,
-          private val userId: String,
-          private val projectNumber: Long,
+          private val __client: HttpClient,
+          private val _userId: String,
+          private val _projectNumber: Long,
         ) {
-          public val post: Post = Post(client, userId, projectNumber)
+          public val post: Post = Post(__client, _userId, _projectNumber)
 
           public class Post internal constructor(
-            private val client: HttpClient,
-            private val userId: String,
-            private val projectNumber: Long,
+            private val __client: HttpClient,
+            private val _userId: String,
+            private val _projectNumber: Long,
           ) {
             public suspend operator fun invoke(title: String, body: String? = null): Response {
-              val response = client.post("user/${this.userId.encodeURLParameter()}/projectsV2/${this.projectNumber}/drafts") {
+              val response = __client.post("user/${this._userId.encodeURLParameter()}/projectsV2/${this._projectNumber}/drafts") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(title = title, body = body))
               }

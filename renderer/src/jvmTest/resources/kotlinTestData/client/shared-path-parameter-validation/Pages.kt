@@ -6,40 +6,40 @@ import io.ktor.client.request.`get`
 import kotlin.Int
 
 public class Pages internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun number(number: Int): NumberPath = NumberPath(client, number)
+  public fun number(number: Int): NumberPath = NumberPath(__client, number)
 
   public class NumberPath internal constructor(
-    private val client: HttpClient,
-    private val number: Int,
+    private val __client: HttpClient,
+    private val _number: Int,
   ) {
-    public val `get`: Get = Get(client, number)
+    public val `get`: Get = Get(__client, _number)
 
-    public val lines: Lines = Lines(client, number)
+    public val lines: Lines = Lines(__client, _number)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val number: Int,
+      private val __client: HttpClient,
+      private val _number: Int,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("pages/${this.number}")
+        val response = __client.get("pages/${this._number}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
 
     public class Lines internal constructor(
-      private val client: HttpClient,
-      private val number: Int,
+      private val __client: HttpClient,
+      private val _number: Int,
     ) {
-      public val `get`: Get = Get(client, number)
+      public val `get`: Get = Get(__client, _number)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val number: Int,
+        private val __client: HttpClient,
+        private val _number: Int,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("pages/${this.number}/lines")
+          val response = __client.get("pages/${this._number}/lines")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

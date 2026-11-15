@@ -25,19 +25,19 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Advisories internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       ghsaId: String? = null,
       cveId: String? = null,
       cwes: Cwes? = null,
     ) {
-      val response = client.get("advisories") {
+      val response = __client.get("advisories") {
         if (ghsaId != null) {
           this.url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
         }

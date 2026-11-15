@@ -8,15 +8,15 @@ import kotlin.String
 import kotlin.collections.Map
 
 public class Emojis internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("emojis")
+      val response = __client.get("emojis")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         304 -> Response.NotModified

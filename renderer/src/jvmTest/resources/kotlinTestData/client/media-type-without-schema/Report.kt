@@ -10,15 +10,15 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 
 public class Report internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("report") {
+      val response = __client.get("report") {
         `header`(HttpHeaders.Accept, ContentType.Application.Pdf)
       }
       return when (response.status.value) {

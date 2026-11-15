@@ -9,15 +9,15 @@ import kotlin.String
 import kotlinx.serialization.Serializable
 
 public class Settings internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(sort: String? = null, kind: Kind? = null): Preferences {
-      val response = client.get("settings") {
+      val response = __client.get("settings") {
         if (sort != null) {
           this.url.encodedParameters.append("sort", sort.encodeURLParameter())
         }

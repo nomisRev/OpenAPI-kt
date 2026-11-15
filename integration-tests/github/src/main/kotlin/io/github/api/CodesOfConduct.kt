@@ -11,17 +11,17 @@ import kotlin.String
 import kotlin.collections.List
 
 public class CodesOfConduct internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun key(key: String): KeyPath = KeyPath(client, key)
+  public fun key(key: String): KeyPath = KeyPath(__client, key)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("codes_of_conduct")
+      val response = __client.get("codes_of_conduct")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         304 -> Response.NotModified
@@ -39,17 +39,17 @@ public class CodesOfConduct internal constructor(
   }
 
   public class KeyPath internal constructor(
-    private val client: HttpClient,
-    private val key: String,
+    private val __client: HttpClient,
+    private val _key: String,
   ) {
-    public val `get`: Get = Get(client, key)
+    public val `get`: Get = Get(__client, _key)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val key: String,
+      private val __client: HttpClient,
+      private val _key: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("codes_of_conduct/${this.key.encodeURLParameter()}")
+        val response = __client.get("codes_of_conduct/${this._key.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified

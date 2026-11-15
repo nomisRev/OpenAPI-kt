@@ -82,7 +82,7 @@ private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): 
     builder.addFunction(
         com.squareup.kotlinpoet.FunSpec.builder("close")
             .addModifiers(com.squareup.kotlinpoet.KModifier.OVERRIDE)
-            .addStatement("client.close()")
+            .addStatement("%N.close()", ClientStateName)
             .build()
     )
     val orderedOperations = operations.entries.sortedBy { it.key.value }
@@ -124,7 +124,7 @@ private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): 
         )
     }
 
-    return builder.build()
+    return builder.buildChecked(className)
 }
 
 private fun PathNode.toTypeSpec(
@@ -197,7 +197,7 @@ private fun PathNode.toTypeSpec(
         builder.addType(child.toTypeSpec(config, childClassName, currentAccumulatedParams))
     }
 
-    return builder.build()
+    return builder.buildChecked(className)
 }
 
 /**
@@ -222,4 +222,15 @@ private fun TypeSpec.withOperation(operation: TypeSpec): TypeSpec? {
         operation.propertySpecs.filter { it.name !in propertyNames }.forEach(::addProperty)
         operation.typeSpecs.forEach(::addType)
     }.build()
+}
+
+/**
+ * Builds a path or root class, failing when two of its properties (the private state in the primary constructor and the
+ * navigation and operation members) have one name: KotlinPoet would write both and the class would not compile, or
+ * the spec's member would be lost.
+ */
+private fun TypeSpec.Builder.buildChecked(className: ClassName): TypeSpec {
+    val duplicates = propertySpecs.groupingBy { it.name }.eachCount().filterValues { it > 1 }.keys
+    check(duplicates.isEmpty()) { "The class ${className.canonicalName} declares the properties $duplicates twice" }
+    return build()
 }

@@ -13,14 +13,14 @@ import kotlin.collections.List
 import kotlinx.datetime.LocalDate
 
 public class WorkItems internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       query: String? = null,
@@ -38,7 +38,7 @@ public class WorkItems internal constructor(
       skip: Int? = null,
       top: Int? = null,
     ): List<BaseWorkItemRead.IssueWorkItem> {
-      val response = client.get("workItems") {
+      val response = __client.get("workItems") {
         if (query != null) {
           this.url.encodedParameters.append("query", query.encodeURLParameter())
         }
@@ -88,17 +88,17 @@ public class WorkItems internal constructor(
   }
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated"): BaseWorkItemRead.IssueWorkItem {
-        val response = client.get("workItems/${this.id.encodeURLParameter()}") {
+        val response = __client.get("workItems/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

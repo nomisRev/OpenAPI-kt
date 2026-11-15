@@ -9,15 +9,15 @@ import kotlin.String
 import kotlinx.serialization.Serializable
 
 public class Pets internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("pets")
+      val response = __client.get("pets")
       return when (response.status.value) {
         200 -> response.body<Response.Ok>()
         503 -> response.body<Response.ServiceUnavailable>()

@@ -7,59 +7,59 @@ import io.ktor.client.request.patch
 import kotlin.Long
 
 public class Pulls internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun index(index: Long): IndexPath = IndexPath(client, index)
+  public fun index(index: Long): IndexPath = IndexPath(__client, index)
 
   public class IndexPath internal constructor(
-    private val client: HttpClient,
-    private val index: Long,
+    private val __client: HttpClient,
+    private val _index: Long,
   ) {
-    public val patch: Patch = Patch(client, index)
+    public val patch: Patch = Patch(__client, _index)
 
-    public val diff: Diff = Diff(client, index)
+    public val diff: Diff = Diff(__client, _index)
 
-    public val dotPatch: DotPatch = DotPatch(client, index)
+    public val dotPatch: DotPatch = DotPatch(__client, _index)
 
     public class Patch internal constructor(
-      private val client: HttpClient,
-      private val index: Long,
+      private val __client: HttpClient,
+      private val _index: Long,
     ) {
       public suspend operator fun invoke() {
-        val response = client.patch("pulls/${this.index}")
+        val response = __client.patch("pulls/${this._index}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
 
     public class Diff internal constructor(
-      private val client: HttpClient,
-      private val index: Long,
+      private val __client: HttpClient,
+      private val _index: Long,
     ) {
-      public val `get`: Get = Get(client, index)
+      public val `get`: Get = Get(__client, _index)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val index: Long,
+        private val __client: HttpClient,
+        private val _index: Long,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("pulls/${this.index}.diff")
+          val response = __client.get("pulls/${this._index}.diff")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
     }
 
     public class DotPatch internal constructor(
-      private val client: HttpClient,
-      private val index: Long,
+      private val __client: HttpClient,
+      private val _index: Long,
     ) {
-      public val `get`: Get = Get(client, index)
+      public val `get`: Get = Get(__client, _index)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val index: Long,
+        private val __client: HttpClient,
+        private val _index: Long,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("pulls/${this.index}.patch")
+          val response = __client.get("pulls/${this._index}.patch")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

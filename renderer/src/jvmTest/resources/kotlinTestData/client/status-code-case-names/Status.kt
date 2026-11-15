@@ -11,15 +11,15 @@ import kotlin.String
 import kotlin.Unit
 
 public class Status internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val ping: Ping = Ping(client)
+  public val ping: Ping = Ping(__client)
 
-  public val legal: Legal = Legal(client)
+  public val legal: Legal = Legal(__client)
 
-  public val negotiated: Negotiated = Negotiated(client)
+  public val negotiated: Negotiated = Negotiated(__client)
 
-  public val failing: Failing = Failing(client)
+  public val failing: Failing = Failing(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -38,6 +38,6 @@ public class Status internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

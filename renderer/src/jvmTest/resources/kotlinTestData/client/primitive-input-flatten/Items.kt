@@ -6,15 +6,15 @@ import io.ktor.client.request.`get`
 import kotlin.Int
 
 public class Items internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(limit: Int = 20, offset: Int? = 0) {
-      val response = client.get("items") {
+      val response = __client.get("items") {
         this.url.encodedParameters.append("limit", limit.toString())
         if (offset != null) {
           this.url.encodedParameters.append("offset", offset.toString())

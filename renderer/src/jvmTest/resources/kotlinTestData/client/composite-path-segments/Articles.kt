@@ -5,37 +5,37 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 
 public class Articles internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val json: Json = Json(client)
+  public val json: Json = Json(__client)
 
-  public val xml: Xml = Xml(client)
+  public val xml: Xml = Xml(__client)
 
   public class Json internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("articles.json")
+        val response = __client.get("articles.json")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
   }
 
   public class Xml internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("articles.xml")
+        val response = __client.get("articles.xml")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

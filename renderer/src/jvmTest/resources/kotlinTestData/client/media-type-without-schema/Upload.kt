@@ -11,15 +11,15 @@ import io.ktor.http.contentType
 import kotlin.Unit
 
 public class Upload internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(block: HttpRequestBuilder.() -> Unit) {
-      val response = client.post("upload") {
+      val response = __client.post("upload") {
         block()
         if (this.body !is EmptyContent && this.contentType() == null && (this.body as? OutgoingContent)?.contentType == null) {
           this.contentType(ContentType.Application.Pdf)

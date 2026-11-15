@@ -26,37 +26,37 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Repos internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun owner(owner: String): OwnerPath = OwnerPath(client, owner)
+  public fun owner(owner: String): OwnerPath = OwnerPath(__client, owner)
 
   public class OwnerPath internal constructor(
-    private val client: HttpClient,
-    private val owner: String,
+    private val __client: HttpClient,
+    private val _owner: String,
   ) {
-    public fun repo(repo: String): RepoPath = RepoPath(client, owner, repo)
+    public fun repo(repo: String): RepoPath = RepoPath(__client, _owner, repo)
 
     public class RepoPath internal constructor(
-      private val client: HttpClient,
-      private val owner: String,
-      private val repo: String,
+      private val __client: HttpClient,
+      private val _owner: String,
+      private val _repo: String,
     ) {
-      public val pages: Pages = Pages(client, owner, repo)
+      public val pages: Pages = Pages(__client, _owner, _repo)
 
       public class Pages internal constructor(
-        private val client: HttpClient,
-        private val owner: String,
-        private val repo: String,
+        private val __client: HttpClient,
+        private val _owner: String,
+        private val _repo: String,
       ) {
-        public val put: Put = Put(client, owner, repo)
+        public val put: Put = Put(__client, _owner, _repo)
 
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           public suspend operator fun invoke(source: Source? = null) {
-            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages") {
+            val response = __client.put("repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}/pages") {
               contentType(ContentType.Application.Json)
               setBody(Body(source = source))
             }

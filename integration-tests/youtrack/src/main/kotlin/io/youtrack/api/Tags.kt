@@ -18,16 +18,16 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Tags internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       query: String? = null,
@@ -35,7 +35,7 @@ public class Tags internal constructor(
       skip: Int? = null,
       top: Int? = null,
     ): List<IssueFolderRead.Tag> {
-      val response = client.get("tags") {
+      val response = __client.get("tags") {
         if (query != null) {
           this.url.encodedParameters.append("query", query.encodeURLParameter())
         }
@@ -55,10 +55,10 @@ public class Tags internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
-      val response = client.post("tags") {
+      val response = __client.post("tags") {
         if (fields != null) {
           this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
@@ -73,33 +73,33 @@ public class Tags internal constructor(
   }
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val delete: Delete = Delete(client, id)
+    public val delete: Delete = Delete(__client, _id)
 
-    public val `get`: Get = Get(client, id)
+    public val `get`: Get = Get(__client, _id)
 
-    public val post: Post = Post(client, id)
+    public val post: Post = Post(__client, _id)
 
-    public val issues: Issues = Issues(client, id)
+    public val issues: Issues = Issues(__client, _id)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("tags/${this.id.encodeURLParameter()}")
+        val response = __client.delete("tags/${this._id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag {
-        val response = client.get("tags/${this.id.encodeURLParameter()}") {
+        val response = __client.get("tags/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -110,11 +110,11 @@ public class Tags internal constructor(
     }
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
-        val response = client.post("tags/${this.id.encodeURLParameter()}") {
+        val response = __client.post("tags/${this._id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -129,14 +129,14 @@ public class Tags internal constructor(
     }
 
     public class Issues internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
-      public val `get`: Get = Get(client, id)
+      public val `get`: Get = Get(__client, _id)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val id: String,
+        private val __client: HttpClient,
+        private val _id: String,
       ) {
         public suspend operator fun invoke(
           customFields: String? = null,
@@ -144,7 +144,7 @@ public class Tags internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueRead> {
-          val response = client.get("tags/${this.id.encodeURLParameter()}/issues") {
+          val response = __client.get("tags/${this._id.encodeURLParameter()}/issues") {
             if (customFields != null) {
               this.url.encodedParameters.append("customFields", customFields.encodeURLParameter())
             }

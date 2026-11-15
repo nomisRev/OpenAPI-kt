@@ -18,15 +18,15 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Certificate internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend fun json(): JsonResponse {
-      val response = client.post("certificate") {
+      val response = __client.post("certificate") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       return when (response.status.value) {
@@ -38,7 +38,7 @@ public class Certificate internal constructor(
     }
 
     public suspend fun pdf(): PdfResponse {
-      val response = client.post("certificate") {
+      val response = __client.post("certificate") {
         `header`(HttpHeaders.Accept, ContentType.Application.Pdf)
       }
       return when (response.status.value) {

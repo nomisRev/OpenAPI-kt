@@ -24,30 +24,30 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Applications internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun clientId(clientId: String): ClientIdPath = ClientIdPath(client, clientId)
+  public fun clientId(clientId: String): ClientIdPath = ClientIdPath(__client, clientId)
 
   public class ClientIdPath internal constructor(
-    private val client: HttpClient,
-    private val clientId: String,
+    private val __client: HttpClient,
+    private val _clientId: String,
   ) {
-    public val grant: Grant = Grant(client, clientId)
+    public val grant: Grant = Grant(__client, _clientId)
 
-    public val token: Token = Token(client, clientId)
+    public val token: Token = Token(__client, _clientId)
 
     public class Grant internal constructor(
-      private val client: HttpClient,
-      private val clientId: String,
+      private val __client: HttpClient,
+      private val _clientId: String,
     ) {
-      public val delete: Delete = Delete(client, clientId)
+      public val delete: Delete = Delete(__client, _clientId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val clientId: String,
+        private val __client: HttpClient,
+        private val _clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.delete("applications/${this.clientId.encodeURLParameter()}/grant") {
+          val response = __client.delete("applications/${this._clientId.encodeURLParameter()}/grant") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -75,23 +75,23 @@ public class Applications internal constructor(
     }
 
     public class Token internal constructor(
-      private val client: HttpClient,
-      private val clientId: String,
+      private val __client: HttpClient,
+      private val _clientId: String,
     ) {
-      public val delete: Delete = Delete(client, clientId)
+      public val delete: Delete = Delete(__client, _clientId)
 
-      public val patch: Patch = Patch(client, clientId)
+      public val patch: Patch = Patch(__client, _clientId)
 
-      public val post: Post = Post(client, clientId)
+      public val post: Post = Post(__client, _clientId)
 
-      public val scoped: Scoped = Scoped(client, clientId)
+      public val scoped: Scoped = Scoped(__client, _clientId)
 
       public class Delete internal constructor(
-        private val client: HttpClient,
-        private val clientId: String,
+        private val __client: HttpClient,
+        private val _clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.delete("applications/${this.clientId.encodeURLParameter()}/token") {
+          val response = __client.delete("applications/${this._clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -118,11 +118,11 @@ public class Applications internal constructor(
       }
 
       public class Patch internal constructor(
-        private val client: HttpClient,
-        private val clientId: String,
+        private val __client: HttpClient,
+        private val _clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.patch("applications/${this.clientId.encodeURLParameter()}/token") {
+          val response = __client.patch("applications/${this._clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -151,11 +151,11 @@ public class Applications internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val clientId: String,
+        private val __client: HttpClient,
+        private val _clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.post("applications/${this.clientId.encodeURLParameter()}/token") {
+          val response = __client.post("applications/${this._clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -189,14 +189,14 @@ public class Applications internal constructor(
       }
 
       public class Scoped internal constructor(
-        private val client: HttpClient,
-        private val clientId: String,
+        private val __client: HttpClient,
+        private val _clientId: String,
       ) {
-        public val post: Post = Post(client, clientId)
+        public val post: Post = Post(__client, _clientId)
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val clientId: String,
+          private val __client: HttpClient,
+          private val _clientId: String,
         ) {
           public suspend operator fun invoke(
             accessToken: String,
@@ -206,7 +206,7 @@ public class Applications internal constructor(
             repositoryIds: List<Long>? = null,
             permissions: AppPermissions? = null,
           ): Response {
-            val response = client.post("applications/${this.clientId.encodeURLParameter()}/token/scoped") {
+            val response = __client.post("applications/${this._clientId.encodeURLParameter()}/token/scoped") {
               contentType(ContentType.Application.Json)
               setBody(Body(accessToken = accessToken, target = target, targetId = targetId, repositories = repositories, repositoryIds = repositoryIds, permissions = permissions))
             }

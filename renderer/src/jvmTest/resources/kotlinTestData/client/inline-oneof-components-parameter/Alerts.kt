@@ -26,15 +26,15 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Alerts internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(has: Has? = null) {
-      val response = client.get("alerts") {
+      val response = __client.get("alerts") {
         if (has != null) {
           when (has) {
             is Has.CaseString -> {

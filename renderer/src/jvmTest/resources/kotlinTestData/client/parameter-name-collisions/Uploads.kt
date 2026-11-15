@@ -11,19 +11,19 @@ import kotlin.ByteArray
 import kotlin.String
 
 public class Uploads internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       name: String,
       bodyName: String,
       `file`: ByteArray,
     ) {
-      val response = client.post("uploads") {
+      val response = __client.post("uploads") {
         this.url.encodedParameters.append("name", name.encodeURLParameter())
         setBody(MultiPartFormDataContent(formData {
           append("name", bodyName)

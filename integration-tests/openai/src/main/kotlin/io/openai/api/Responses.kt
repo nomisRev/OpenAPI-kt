@@ -30,21 +30,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Responses internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val inputTokens: InputTokens = InputTokens(client)
+  public val inputTokens: InputTokens = InputTokens(__client)
 
-  public val compact: Compact = Compact(client)
+  public val compact: Compact = Compact(__client)
 
-  public fun responseId(responseId: String): ResponseIdPath = ResponseIdPath(client, responseId)
+  public fun responseId(responseId: String): ResponseIdPath = ResponseIdPath(__client, responseId)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend fun json(body: CreateResponse): Response {
-      val response = client.post("responses") {
+      val response = __client.post("responses") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
         contentType(ContentType.Application.Json)
         setBody(body)
@@ -54,7 +54,7 @@ public class Responses internal constructor(
     }
 
     public suspend fun textEventStream(body: CreateResponse): ResponseStreamEvent {
-      val response = client.post("responses") {
+      val response = __client.post("responses") {
         `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
         contentType(ContentType.Application.Json)
         setBody(body)
@@ -65,23 +65,23 @@ public class Responses internal constructor(
   }
 
   public class ResponseIdPath internal constructor(
-    private val client: HttpClient,
-    private val responseId: String,
+    private val __client: HttpClient,
+    private val _responseId: String,
   ) {
-    public val delete: Delete = Delete(client, responseId)
+    public val delete: Delete = Delete(__client, _responseId)
 
-    public val `get`: Get = Get(client, responseId)
+    public val `get`: Get = Get(__client, _responseId)
 
-    public val cancel: Cancel = Cancel(client, responseId)
+    public val cancel: Cancel = Cancel(__client, _responseId)
 
-    public val inputItems: InputItems = InputItems(client, responseId)
+    public val inputItems: InputItems = InputItems(__client, _responseId)
 
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val responseId: String,
+      private val __client: HttpClient,
+      private val _responseId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("responses/${this.responseId.encodeURLParameter()}")
+        val response = __client.delete("responses/${this._responseId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok
           404 -> Response.NotFound(response.body())
@@ -99,8 +99,8 @@ public class Responses internal constructor(
     }
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val responseId: String,
+      private val __client: HttpClient,
+      private val _responseId: String,
     ) {
       public suspend operator fun invoke(
         include: List<IncludeEnum>? = null,
@@ -108,7 +108,7 @@ public class Responses internal constructor(
         startingAfter: Long? = null,
         includeObfuscation: Boolean? = null,
       ): Response {
-        val response = client.get("responses/${this.responseId.encodeURLParameter()}") {
+        val response = __client.get("responses/${this._responseId.encodeURLParameter()}") {
           include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
           if (stream != null) {
             this.url.encodedParameters.append("stream", stream.toString())
@@ -126,17 +126,17 @@ public class Responses internal constructor(
     }
 
     public class Cancel internal constructor(
-      private val client: HttpClient,
-      private val responseId: String,
+      private val __client: HttpClient,
+      private val _responseId: String,
     ) {
-      public val post: Post = Post(client, responseId)
+      public val post: Post = Post(__client, _responseId)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val responseId: String,
+        private val __client: HttpClient,
+        private val _responseId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("responses/${this.responseId.encodeURLParameter()}/cancel")
+          val response = __client.post("responses/${this._responseId.encodeURLParameter()}/cancel")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())
@@ -157,14 +157,14 @@ public class Responses internal constructor(
     }
 
     public class InputItems internal constructor(
-      private val client: HttpClient,
-      private val responseId: String,
+      private val __client: HttpClient,
+      private val _responseId: String,
     ) {
-      public val `get`: Get = Get(client, responseId)
+      public val `get`: Get = Get(__client, _responseId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val responseId: String,
+        private val __client: HttpClient,
+        private val _responseId: String,
       ) {
         public suspend operator fun invoke(
           limit: Long? = 20L,
@@ -172,7 +172,7 @@ public class Responses internal constructor(
           after: String? = null,
           include: List<IncludeEnum>? = null,
         ): ResponseItemList {
-          val response = client.get("responses/${this.responseId.encodeURLParameter()}/input_items") {
+          val response = __client.get("responses/${this._responseId.encodeURLParameter()}/input_items") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -203,15 +203,15 @@ public class Responses internal constructor(
   }
 
   public class InputTokens internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: TokenCountsBody? = null): TokenCountsResource {
-        val response = client.post("responses/input_tokens") {
+        val response = __client.post("responses/input_tokens") {
           body?.let {
             contentType(ContentType.Application.Json)
             setBody(it)
@@ -224,15 +224,15 @@ public class Responses internal constructor(
   }
 
   public class Compact internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(body: CompactResponseMethodPublicBody? = null): CompactResource {
-        val response = client.post("responses/compact") {
+        val response = __client.post("responses/compact") {
           body?.let {
             contentType(ContentType.Application.Json)
             setBody(it)

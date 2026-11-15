@@ -16,31 +16,31 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class MarketplaceListing internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val accounts: Accounts = Accounts(client)
+  public val accounts: Accounts = Accounts(__client)
 
-  public val plans: Plans = Plans(client)
+  public val plans: Plans = Plans(__client)
 
-  public val stubbed: Stubbed = Stubbed(client)
+  public val stubbed: Stubbed = Stubbed(__client)
 
   public class Accounts internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public fun accountId(accountId: Long): AccountIdPath = AccountIdPath(client, accountId)
+    public fun accountId(accountId: Long): AccountIdPath = AccountIdPath(__client, accountId)
 
     public class AccountIdPath internal constructor(
-      private val client: HttpClient,
-      private val accountId: Long,
+      private val __client: HttpClient,
+      private val _accountId: Long,
     ) {
-      public val `get`: Get = Get(client, accountId)
+      public val `get`: Get = Get(__client, _accountId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val accountId: Long,
+        private val __client: HttpClient,
+        private val _accountId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("marketplace_listing/accounts/${this.accountId}")
+          val response = __client.get("marketplace_listing/accounts/${this._accountId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             401 -> Response.Unauthorized(response.body())
@@ -67,17 +67,17 @@ public class MarketplaceListing internal constructor(
   }
 
   public class Plans internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
-    public fun planId(planId: Long): PlanIdPath = PlanIdPath(client, planId)
+    public fun planId(planId: Long): PlanIdPath = PlanIdPath(__client, planId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("marketplace_listing/plans") {
+        val response = __client.get("marketplace_listing/plans") {
           if (perPage != null) {
             this.url.encodedParameters.append("per_page", perPage.toString())
           }
@@ -109,20 +109,20 @@ public class MarketplaceListing internal constructor(
     }
 
     public class PlanIdPath internal constructor(
-      private val client: HttpClient,
-      private val planId: Long,
+      private val __client: HttpClient,
+      private val _planId: Long,
     ) {
-      public val accounts: Accounts = Accounts(client, planId)
+      public val accounts: Accounts = Accounts(__client, _planId)
 
       public class Accounts internal constructor(
-        private val client: HttpClient,
-        private val planId: Long,
+        private val __client: HttpClient,
+        private val _planId: Long,
       ) {
-        public val `get`: Get = Get(client, planId)
+        public val `get`: Get = Get(__client, _planId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val planId: Long,
+          private val __client: HttpClient,
+          private val _planId: Long,
         ) {
           public suspend operator fun invoke(
             sort: Sort? = Sort.Created,
@@ -130,7 +130,7 @@ public class MarketplaceListing internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("marketplace_listing/plans/${this.planId}/accounts") {
+            val response = __client.get("marketplace_listing/plans/${this._planId}/accounts") {
               if (sort != null) {
                 this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
@@ -198,29 +198,29 @@ public class MarketplaceListing internal constructor(
   }
 
   public class Stubbed internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val accounts: Accounts = Accounts(client)
+    public val accounts: Accounts = Accounts(__client)
 
-    public val plans: Plans = Plans(client)
+    public val plans: Plans = Plans(__client)
 
     public class Accounts internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public fun accountId(accountId: Long): AccountIdPath = AccountIdPath(client, accountId)
+      public fun accountId(accountId: Long): AccountIdPath = AccountIdPath(__client, accountId)
 
       public class AccountIdPath internal constructor(
-        private val client: HttpClient,
-        private val accountId: Long,
+        private val __client: HttpClient,
+        private val _accountId: Long,
       ) {
-        public val `get`: Get = Get(client, accountId)
+        public val `get`: Get = Get(__client, _accountId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val accountId: Long,
+          private val __client: HttpClient,
+          private val _accountId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("marketplace_listing/stubbed/accounts/${this.accountId}")
+            val response = __client.get("marketplace_listing/stubbed/accounts/${this._accountId}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -245,17 +245,17 @@ public class MarketplaceListing internal constructor(
     }
 
     public class Plans internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
-      public val `get`: Get = Get(client)
+      public val `get`: Get = Get(__client)
 
-      public fun planId(planId: Long): PlanIdPath = PlanIdPath(client, planId)
+      public fun planId(planId: Long): PlanIdPath = PlanIdPath(__client, planId)
 
       public class Get internal constructor(
-        private val client: HttpClient,
+        private val __client: HttpClient,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("marketplace_listing/stubbed/plans") {
+          val response = __client.get("marketplace_listing/stubbed/plans") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -282,20 +282,20 @@ public class MarketplaceListing internal constructor(
       }
 
       public class PlanIdPath internal constructor(
-        private val client: HttpClient,
-        private val planId: Long,
+        private val __client: HttpClient,
+        private val _planId: Long,
       ) {
-        public val accounts: Accounts = Accounts(client, planId)
+        public val accounts: Accounts = Accounts(__client, _planId)
 
         public class Accounts internal constructor(
-          private val client: HttpClient,
-          private val planId: Long,
+          private val __client: HttpClient,
+          private val _planId: Long,
         ) {
-          public val `get`: Get = Get(client, planId)
+          public val `get`: Get = Get(__client, _planId)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val planId: Long,
+            private val __client: HttpClient,
+            private val _planId: Long,
           ) {
             public suspend operator fun invoke(
               sort: Sort? = Sort.Created,
@@ -303,7 +303,7 @@ public class MarketplaceListing internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("marketplace_listing/stubbed/plans/${this.planId}/accounts") {
+              val response = __client.get("marketplace_listing/stubbed/plans/${this._planId}/accounts") {
                 if (sort != null) {
                   this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }

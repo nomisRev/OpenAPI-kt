@@ -32,41 +32,41 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Teams internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun teamId(teamId: Long): TeamIdPath = TeamIdPath(client, teamId)
+  public fun teamId(teamId: Long): TeamIdPath = TeamIdPath(__client, teamId)
 
   public class TeamIdPath internal constructor(
-    private val client: HttpClient,
-    private val teamId: Long,
+    private val __client: HttpClient,
+    private val _teamId: Long,
   ) {
     @Deprecated("Deprecated by the API provider")
-    public val delete: Delete = Delete(client, teamId)
+    public val delete: Delete = Delete(__client, _teamId)
 
     @Deprecated("Deprecated by the API provider")
-    public val `get`: Get = Get(client, teamId)
+    public val `get`: Get = Get(__client, _teamId)
 
     @Deprecated("Deprecated by the API provider")
-    public val patch: Patch = Patch(client, teamId)
+    public val patch: Patch = Patch(__client, _teamId)
 
-    public val invitations: Invitations = Invitations(client, teamId)
+    public val invitations: Invitations = Invitations(__client, _teamId)
 
-    public val members: Members = Members(client, teamId)
+    public val members: Members = Members(__client, _teamId)
 
-    public val memberships: Memberships = Memberships(client, teamId)
+    public val memberships: Memberships = Memberships(__client, _teamId)
 
-    public val repos: Repos = Repos(client, teamId)
+    public val repos: Repos = Repos(__client, _teamId)
 
-    public val teams: Teams = Teams(client, teamId)
+    public val teams: Teams = Teams(__client, _teamId)
 
     @Deprecated("Deprecated by the API provider")
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val teamId: Long,
+      private val __client: HttpClient,
+      private val _teamId: Long,
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(): Response {
-        val response = client.delete("teams/${this.teamId}")
+        val response = __client.delete("teams/${this._teamId}")
         return when (response.status.value) {
           204 -> Response.NoContent
           404 -> Response.NotFound(response.body())
@@ -90,12 +90,12 @@ public class Teams internal constructor(
 
     @Deprecated("Deprecated by the API provider")
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val teamId: Long,
+      private val __client: HttpClient,
+      private val _teamId: Long,
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(): Response {
-        val response = client.get("teams/${this.teamId}")
+        val response = __client.get("teams/${this._teamId}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())
@@ -116,8 +116,8 @@ public class Teams internal constructor(
 
     @Deprecated("Deprecated by the API provider")
     public class Patch internal constructor(
-      private val client: HttpClient,
-      private val teamId: Long,
+      private val __client: HttpClient,
+      private val _teamId: Long,
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(
@@ -128,7 +128,7 @@ public class Teams internal constructor(
         permission: Permission? = null,
         parentTeamId: Optional<Long> = Optional.Absent,
       ): Response {
-        val response = client.patch("teams/${this.teamId}") {
+        val response = __client.patch("teams/${this._teamId}") {
           contentType(ContentType.Application.Json)
           setBody(Body(name = name, description = description, privacy = privacy, notificationSetting = notificationSetting, permission = permission, parentTeamId = parentTeamId))
         }
@@ -219,20 +219,20 @@ public class Teams internal constructor(
     }
 
     public class Invitations internal constructor(
-      private val client: HttpClient,
-      private val teamId: Long,
+      private val __client: HttpClient,
+      private val _teamId: Long,
     ) {
       @Deprecated("Deprecated by the API provider")
-      public val `get`: Get = Get(client, teamId)
+      public val `get`: Get = Get(__client, _teamId)
 
       @Deprecated("Deprecated by the API provider")
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val teamId: Long,
+        private val __client: HttpClient,
+        private val _teamId: Long,
       ) {
         @Deprecated("Deprecated by the API provider")
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationInvitation> {
-          val response = client.get("teams/${this.teamId}/invitations") {
+          val response = __client.get("teams/${this._teamId}/invitations") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -247,18 +247,18 @@ public class Teams internal constructor(
     }
 
     public class Members internal constructor(
-      private val client: HttpClient,
-      private val teamId: Long,
+      private val __client: HttpClient,
+      private val _teamId: Long,
     ) {
       @Deprecated("Deprecated by the API provider")
-      public val `get`: Get = Get(client, teamId)
+      public val `get`: Get = Get(__client, _teamId)
 
-      public fun username(username: String): UsernamePath = UsernamePath(client, teamId, username)
+      public fun username(username: String): UsernamePath = UsernamePath(__client, _teamId, username)
 
       @Deprecated("Deprecated by the API provider")
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val teamId: Long,
+        private val __client: HttpClient,
+        private val _teamId: Long,
       ) {
         @Deprecated("Deprecated by the API provider")
         public suspend operator fun invoke(
@@ -266,7 +266,7 @@ public class Teams internal constructor(
           perPage: Long? = 30L,
           page: Long? = 1L,
         ): Response {
-          val response = client.get("teams/${this.teamId}/members") {
+          val response = __client.get("teams/${this._teamId}/members") {
             if (role != null) {
               this.url.encodedParameters.append("role", role.value.encodeURLParameter())
             }
@@ -309,28 +309,28 @@ public class Teams internal constructor(
       }
 
       public class UsernamePath internal constructor(
-        private val client: HttpClient,
-        private val teamId: Long,
-        private val username: String,
+        private val __client: HttpClient,
+        private val _teamId: Long,
+        private val _username: String,
       ) {
         @Deprecated("Deprecated by the API provider")
-        public val delete: Delete = Delete(client, teamId, username)
+        public val delete: Delete = Delete(__client, _teamId, _username)
 
         @Deprecated("Deprecated by the API provider")
-        public val `get`: Get = Get(client, teamId, username)
+        public val `get`: Get = Get(__client, _teamId, _username)
 
         @Deprecated("Deprecated by the API provider")
-        public val put: Put = Put(client, teamId, username)
+        public val put: Put = Put(__client, _teamId, _username)
 
         @Deprecated("Deprecated by the API provider")
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val teamId: Long,
-          private val username: String,
+          private val __client: HttpClient,
+          private val _teamId: Long,
+          private val _username: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.delete("teams/${this.teamId}/members/${this.username.encodeURLParameter()}")
+            val response = __client.delete("teams/${this._teamId}/members/${this._username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound
@@ -347,13 +347,13 @@ public class Teams internal constructor(
 
         @Deprecated("Deprecated by the API provider")
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val teamId: Long,
-          private val username: String,
+          private val __client: HttpClient,
+          private val _teamId: Long,
+          private val _username: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.get("teams/${this.teamId}/members/${this.username.encodeURLParameter()}")
+            val response = __client.get("teams/${this._teamId}/members/${this._username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound
@@ -370,13 +370,13 @@ public class Teams internal constructor(
 
         @Deprecated("Deprecated by the API provider")
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val teamId: Long,
-          private val username: String,
+          private val __client: HttpClient,
+          private val _teamId: Long,
+          private val _username: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.put("teams/${this.teamId}/members/${this.username.encodeURLParameter()}")
+            val response = __client.put("teams/${this._teamId}/members/${this._username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden(response.body())
@@ -402,34 +402,34 @@ public class Teams internal constructor(
     }
 
     public class Memberships internal constructor(
-      private val client: HttpClient,
-      private val teamId: Long,
+      private val __client: HttpClient,
+      private val _teamId: Long,
     ) {
-      public fun username(username: String): UsernamePath = UsernamePath(client, teamId, username)
+      public fun username(username: String): UsernamePath = UsernamePath(__client, _teamId, username)
 
       public class UsernamePath internal constructor(
-        private val client: HttpClient,
-        private val teamId: Long,
-        private val username: String,
+        private val __client: HttpClient,
+        private val _teamId: Long,
+        private val _username: String,
       ) {
         @Deprecated("Deprecated by the API provider")
-        public val delete: Delete = Delete(client, teamId, username)
+        public val delete: Delete = Delete(__client, _teamId, _username)
 
         @Deprecated("Deprecated by the API provider")
-        public val `get`: Get = Get(client, teamId, username)
+        public val `get`: Get = Get(__client, _teamId, _username)
 
         @Deprecated("Deprecated by the API provider")
-        public val put: Put = Put(client, teamId, username)
+        public val put: Put = Put(__client, _teamId, _username)
 
         @Deprecated("Deprecated by the API provider")
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val teamId: Long,
-          private val username: String,
+          private val __client: HttpClient,
+          private val _teamId: Long,
+          private val _username: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.delete("teams/${this.teamId}/memberships/${this.username.encodeURLParameter()}")
+            val response = __client.delete("teams/${this._teamId}/memberships/${this._username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden
@@ -446,13 +446,13 @@ public class Teams internal constructor(
 
         @Deprecated("Deprecated by the API provider")
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val teamId: Long,
-          private val username: String,
+          private val __client: HttpClient,
+          private val _teamId: Long,
+          private val _username: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.get("teams/${this.teamId}/memberships/${this.username.encodeURLParameter()}")
+            val response = __client.get("teams/${this._teamId}/memberships/${this._username.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -473,13 +473,13 @@ public class Teams internal constructor(
 
         @Deprecated("Deprecated by the API provider")
         public class Put internal constructor(
-          private val client: HttpClient,
-          private val teamId: Long,
-          private val username: String,
+          private val __client: HttpClient,
+          private val _teamId: Long,
+          private val _username: String,
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.put("teams/${this.teamId}/memberships/${this.username.encodeURLParameter()}")
+            val response = __client.put("teams/${this._teamId}/memberships/${this._username.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden
@@ -491,7 +491,7 @@ public class Teams internal constructor(
 
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(role: Role? = null): Response {
-            val response = client.put("teams/${this.teamId}/memberships/${this.username.encodeURLParameter()}") {
+            val response = __client.put("teams/${this._teamId}/memberships/${this._username.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(Body(role = role))
             }
@@ -540,22 +540,22 @@ public class Teams internal constructor(
     }
 
     public class Repos internal constructor(
-      private val client: HttpClient,
-      private val teamId: Long,
+      private val __client: HttpClient,
+      private val _teamId: Long,
     ) {
       @Deprecated("Deprecated by the API provider")
-      public val `get`: Get = Get(client, teamId)
+      public val `get`: Get = Get(__client, _teamId)
 
-      public fun owner(owner: String): OwnerPath = OwnerPath(client, teamId, owner)
+      public fun owner(owner: String): OwnerPath = OwnerPath(__client, _teamId, owner)
 
       @Deprecated("Deprecated by the API provider")
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val teamId: Long,
+        private val __client: HttpClient,
+        private val _teamId: Long,
       ) {
         @Deprecated("Deprecated by the API provider")
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("teams/${this.teamId}/repos") {
+          val response = __client.get("teams/${this._teamId}/repos") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -582,51 +582,51 @@ public class Teams internal constructor(
       }
 
       public class OwnerPath internal constructor(
-        private val client: HttpClient,
-        private val teamId: Long,
-        private val owner: String,
+        private val __client: HttpClient,
+        private val _teamId: Long,
+        private val _owner: String,
       ) {
-        public fun repo(repo: String): RepoPath = RepoPath(client, teamId, owner, repo)
+        public fun repo(repo: String): RepoPath = RepoPath(__client, _teamId, _owner, repo)
 
         public class RepoPath internal constructor(
-          private val client: HttpClient,
-          private val teamId: Long,
-          private val owner: String,
-          private val repo: String,
+          private val __client: HttpClient,
+          private val _teamId: Long,
+          private val _owner: String,
+          private val _repo: String,
         ) {
           @Deprecated("Deprecated by the API provider")
-          public val delete: Delete = Delete(client, teamId, owner, repo)
+          public val delete: Delete = Delete(__client, _teamId, _owner, _repo)
 
           @Deprecated("Deprecated by the API provider")
-          public val `get`: Get = Get(client, teamId, owner, repo)
+          public val `get`: Get = Get(__client, _teamId, _owner, _repo)
 
           @Deprecated("Deprecated by the API provider")
-          public val put: Put = Put(client, teamId, owner, repo)
+          public val put: Put = Put(__client, _teamId, _owner, _repo)
 
           @Deprecated("Deprecated by the API provider")
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val teamId: Long,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _teamId: Long,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke() {
-              val response = client.delete("teams/${this.teamId}/repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+              val response = __client.delete("teams/${this._teamId}/repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
           @Deprecated("Deprecated by the API provider")
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val teamId: Long,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _teamId: Long,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(): Response {
-              val response = client.get("teams/${this.teamId}/repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+              val response = __client.get("teams/${this._teamId}/repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 204 -> Response.NoContent
@@ -648,14 +648,14 @@ public class Teams internal constructor(
 
           @Deprecated("Deprecated by the API provider")
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val teamId: Long,
-            private val owner: String,
-            private val repo: String,
+            private val __client: HttpClient,
+            private val _teamId: Long,
+            private val _owner: String,
+            private val _repo: String,
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(): Response {
-              val response = client.put("teams/${this.teamId}/repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
+              val response = __client.put("teams/${this._teamId}/repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 403 -> Response.Forbidden(response.body())
@@ -666,7 +666,7 @@ public class Teams internal constructor(
 
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(permission: Permission? = null): Response {
-              val response = client.put("teams/${this.teamId}/repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}") {
+              val response = __client.put("teams/${this._teamId}/repos/${this._owner.encodeURLParameter()}/${this._repo.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(permission = permission))
               }
@@ -715,20 +715,20 @@ public class Teams internal constructor(
     }
 
     public class Teams internal constructor(
-      private val client: HttpClient,
-      private val teamId: Long,
+      private val __client: HttpClient,
+      private val _teamId: Long,
     ) {
       @Deprecated("Deprecated by the API provider")
-      public val `get`: Get = Get(client, teamId)
+      public val `get`: Get = Get(__client, _teamId)
 
       @Deprecated("Deprecated by the API provider")
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val teamId: Long,
+        private val __client: HttpClient,
+        private val _teamId: Long,
       ) {
         @Deprecated("Deprecated by the API provider")
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("teams/${this.teamId}/teams") {
+          val response = __client.get("teams/${this._teamId}/teams") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }

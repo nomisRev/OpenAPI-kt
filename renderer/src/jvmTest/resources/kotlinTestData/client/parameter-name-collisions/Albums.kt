@@ -16,15 +16,15 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Albums internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(ids: String) {
-      val response = client.put("albums") {
+      val response = __client.put("albums") {
         this.url.encodedParameters.append("ids", ids.encodeURLParameter())
       }
       if (response.status.value != 204) throw ResponseException(response, "")
@@ -35,7 +35,7 @@ public class Albums internal constructor(
       bodyIds: List<String>? = null,
       position: Int? = null,
     ) {
-      val response = client.put("albums") {
+      val response = __client.put("albums") {
         this.url.encodedParameters.append("ids", ids.encodeURLParameter())
         contentType(ContentType.Application.Json)
         setBody(Body(ids = bodyIds, position = position))

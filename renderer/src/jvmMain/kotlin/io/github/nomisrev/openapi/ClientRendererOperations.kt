@@ -101,7 +101,7 @@ internal fun Route.toOperationTypeSpec(
 }
 
 private fun operationConstructorArgs(accumulatedParams: List<AccumulatedParam>): CodeBlock =
-    (listOf(CodeBlock.of("client")) + accumulatedParams.map { CodeBlock.of("%N", it.name.toCamelCase()) })
+    (listOf(CodeBlock.of("%N", ClientStateName)) + accumulatedParams.map { CodeBlock.of("%N", it.name.toStateName()) })
         .joinToCode(", ")
 
 private fun operationFunBuilder(functionName: String, operator: Boolean): FunSpec.Builder =

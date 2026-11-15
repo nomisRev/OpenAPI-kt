@@ -11,9 +11,9 @@ import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val items: Items = Items(client)
+  public val items: Items = Items(__client)
 
   public constructor(server: ApiServer, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(server.url) }
@@ -32,7 +32,7 @@ public class Api internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }
 

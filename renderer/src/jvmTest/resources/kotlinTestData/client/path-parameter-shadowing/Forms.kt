@@ -12,22 +12,22 @@ import io.ktor.http.formUrlEncode
 import kotlin.String
 
 public class Forms internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun id(id: String): IdPath = IdPath(client, id)
+  public fun id(id: String): IdPath = IdPath(__client, id)
 
   public class IdPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
+    private val __client: HttpClient,
+    private val _id: String,
   ) {
-    public val post: Post = Post(client, id)
+    public val post: Post = Post(__client, _id)
 
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val id: String,
+      private val __client: HttpClient,
+      private val _id: String,
     ) {
       public suspend operator fun invoke(id: String, title: String? = null) {
-        val response = client.post("forms/${this.id.encodeURLParameter()}") {
+        val response = __client.post("forms/${this._id.encodeURLParameter()}") {
           contentType(ContentType.Application.FormUrlEncoded)
           setBody(Parameters.build {
             append("id", id)

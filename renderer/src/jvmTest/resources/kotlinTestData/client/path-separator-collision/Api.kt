@@ -11,17 +11,17 @@ import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val secretScanning: SecretScanning = SecretScanning(client)
+  public val secretScanning: SecretScanning = SecretScanning(__client)
 
-  public val secretScanning2: SecretScanning2 = SecretScanning2(client)
+  public val secretScanning2: SecretScanning2 = SecretScanning2(__client)
 
-  public val xY: XY = XY(client)
+  public val xY: XY = XY(__client)
 
-  public val xY2: XY2 = XY2(client)
+  public val xY2: XY2 = XY2(__client)
 
-  public val pQ: PQ = PQ(client)
+  public val pQ: PQ = PQ(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -40,6 +40,6 @@ public class Api internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

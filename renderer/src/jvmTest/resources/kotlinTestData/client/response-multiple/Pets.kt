@@ -11,22 +11,22 @@ import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Pets internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun petId(petId: String): PetIdPath = PetIdPath(client, petId)
+  public fun petId(petId: String): PetIdPath = PetIdPath(__client, petId)
 
   public class PetIdPath internal constructor(
-    private val client: HttpClient,
-    private val petId: String,
+    private val __client: HttpClient,
+    private val _petId: String,
   ) {
-    public val `get`: Get = Get(client, petId)
+    public val `get`: Get = Get(__client, _petId)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val petId: String,
+      private val __client: HttpClient,
+      private val _petId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("pets/${this.petId.encodeURLParameter()}")
+        val response = __client.get("pets/${this._petId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") })
           404 -> Response.NotFound(response.body())

@@ -18,17 +18,17 @@ import kotlin.ByteArray
 import kotlin.String
 
 public class Uploads internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun uploadId(uploadId: String): UploadIdPath = UploadIdPath(client, uploadId)
+  public fun uploadId(uploadId: String): UploadIdPath = UploadIdPath(__client, uploadId)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreateUploadRequest): Upload {
-      val response = client.post("uploads") {
+      val response = __client.post("uploads") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -38,27 +38,27 @@ public class Uploads internal constructor(
   }
 
   public class UploadIdPath internal constructor(
-    private val client: HttpClient,
-    private val uploadId: String,
+    private val __client: HttpClient,
+    private val _uploadId: String,
   ) {
-    public val cancel: Cancel = Cancel(client, uploadId)
+    public val cancel: Cancel = Cancel(__client, _uploadId)
 
-    public val complete: Complete = Complete(client, uploadId)
+    public val complete: Complete = Complete(__client, _uploadId)
 
-    public val parts: Parts = Parts(client, uploadId)
+    public val parts: Parts = Parts(__client, _uploadId)
 
     public class Cancel internal constructor(
-      private val client: HttpClient,
-      private val uploadId: String,
+      private val __client: HttpClient,
+      private val _uploadId: String,
     ) {
-      public val post: Post = Post(client, uploadId)
+      public val post: Post = Post(__client, _uploadId)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val uploadId: String,
+        private val __client: HttpClient,
+        private val _uploadId: String,
       ) {
         public suspend operator fun invoke(): Upload {
-          val response = client.post("uploads/${this.uploadId.encodeURLParameter()}/cancel")
+          val response = __client.post("uploads/${this._uploadId.encodeURLParameter()}/cancel")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -66,17 +66,17 @@ public class Uploads internal constructor(
     }
 
     public class Complete internal constructor(
-      private val client: HttpClient,
-      private val uploadId: String,
+      private val __client: HttpClient,
+      private val _uploadId: String,
     ) {
-      public val post: Post = Post(client, uploadId)
+      public val post: Post = Post(__client, _uploadId)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val uploadId: String,
+        private val __client: HttpClient,
+        private val _uploadId: String,
       ) {
         public suspend operator fun invoke(body: CompleteUploadRequest): Upload {
-          val response = client.post("uploads/${this.uploadId.encodeURLParameter()}/complete") {
+          val response = __client.post("uploads/${this._uploadId.encodeURLParameter()}/complete") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -87,17 +87,17 @@ public class Uploads internal constructor(
     }
 
     public class Parts internal constructor(
-      private val client: HttpClient,
-      private val uploadId: String,
+      private val __client: HttpClient,
+      private val _uploadId: String,
     ) {
-      public val post: Post = Post(client, uploadId)
+      public val post: Post = Post(__client, _uploadId)
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val uploadId: String,
+        private val __client: HttpClient,
+        private val _uploadId: String,
       ) {
         public suspend operator fun invoke(`data`: ByteArray): UploadPart {
-          val response = client.post("uploads/${this.uploadId.encodeURLParameter()}/parts") {
+          val response = __client.post("uploads/${this._uploadId.encodeURLParameter()}/parts") {
             setBody(MultiPartFormDataContent(formData {
               append("data", data)
             }))

@@ -53,52 +53,52 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Enterprises internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun enterprise(enterprise: String): EnterprisePath = EnterprisePath(client, enterprise)
+  public fun enterprise(enterprise: String): EnterprisePath = EnterprisePath(__client, enterprise)
 
   public class EnterprisePath internal constructor(
-    private val client: HttpClient,
-    private val enterprise: String,
+    private val __client: HttpClient,
+    private val _enterprise: String,
   ) {
-    public val actions: Actions = Actions(client, enterprise)
+    public val actions: Actions = Actions(__client, _enterprise)
 
-    public val codeSecurity: CodeSecurity = CodeSecurity(client, enterprise)
+    public val codeSecurity: CodeSecurity = CodeSecurity(__client, _enterprise)
 
-    public val dependabot: Dependabot = Dependabot(client, enterprise)
+    public val dependabot: Dependabot = Dependabot(__client, _enterprise)
 
-    public val teams: Teams = Teams(client, enterprise)
+    public val teams: Teams = Teams(__client, _enterprise)
 
     public class Actions internal constructor(
-      private val client: HttpClient,
-      private val enterprise: String,
+      private val __client: HttpClient,
+      private val _enterprise: String,
     ) {
-      public val cache: Cache = Cache(client, enterprise)
+      public val cache: Cache = Cache(__client, _enterprise)
 
-      public val oidc: Oidc = Oidc(client, enterprise)
+      public val oidc: Oidc = Oidc(__client, _enterprise)
 
       public class Cache internal constructor(
-        private val client: HttpClient,
-        private val enterprise: String,
+        private val __client: HttpClient,
+        private val _enterprise: String,
       ) {
-        public val retentionLimit: RetentionLimit = RetentionLimit(client, enterprise)
+        public val retentionLimit: RetentionLimit = RetentionLimit(__client, _enterprise)
 
-        public val storageLimit: StorageLimit = StorageLimit(client, enterprise)
+        public val storageLimit: StorageLimit = StorageLimit(__client, _enterprise)
 
         public class RetentionLimit internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
         ) {
-          public val `get`: Get = Get(client, enterprise)
+          public val `get`: Get = Get(__client, _enterprise)
 
-          public val put: Put = Put(client, enterprise)
+          public val put: Put = Put(__client, _enterprise)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/actions/cache/retention-limit")
+              val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/actions/cache/retention-limit")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -123,11 +123,11 @@ public class Enterprises internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
           ) {
             public suspend operator fun invoke(body: ActionsCacheRetentionLimitForEnterprise): Response {
-              val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/actions/cache/retention-limit") {
+              val response = __client.put("enterprises/${this._enterprise.encodeURLParameter()}/actions/cache/retention-limit") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -159,19 +159,19 @@ public class Enterprises internal constructor(
         }
 
         public class StorageLimit internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
         ) {
-          public val `get`: Get = Get(client, enterprise)
+          public val `get`: Get = Get(__client, _enterprise)
 
-          public val put: Put = Put(client, enterprise)
+          public val put: Put = Put(__client, _enterprise)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/actions/cache/storage-limit")
+              val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/actions/cache/storage-limit")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -196,11 +196,11 @@ public class Enterprises internal constructor(
           }
 
           public class Put internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
           ) {
             public suspend operator fun invoke(body: ActionsCacheStorageLimitForEnterprise): Response {
-              val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/actions/cache/storage-limit") {
+              val response = __client.put("enterprises/${this._enterprise.encodeURLParameter()}/actions/cache/storage-limit") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -233,39 +233,39 @@ public class Enterprises internal constructor(
       }
 
       public class Oidc internal constructor(
-        private val client: HttpClient,
-        private val enterprise: String,
+        private val __client: HttpClient,
+        private val _enterprise: String,
       ) {
-        public val customization: Customization = Customization(client, enterprise)
+        public val customization: Customization = Customization(__client, _enterprise)
 
         public class Customization internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
         ) {
-          public val properties: Properties = Properties(client, enterprise)
+          public val properties: Properties = Properties(__client, _enterprise)
 
           public class Properties internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
           ) {
-            public val repo: Repo = Repo(client, enterprise)
+            public val repo: Repo = Repo(__client, _enterprise)
 
             public class Repo internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
             ) {
-              public val `get`: Get = Get(client, enterprise)
+              public val `get`: Get = Get(__client, _enterprise)
 
-              public val post: Post = Post(client, enterprise)
+              public val post: Post = Post(__client, _enterprise)
 
-              public fun customPropertyName(customPropertyName: String): CustomPropertyNamePath = CustomPropertyNamePath(client, enterprise, customPropertyName)
+              public fun customPropertyName(customPropertyName: String): CustomPropertyNamePath = CustomPropertyNamePath(__client, _enterprise, customPropertyName)
 
               public class Get internal constructor(
-                private val client: HttpClient,
-                private val enterprise: String,
+                private val __client: HttpClient,
+                private val _enterprise: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo")
+                  val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     403 -> Response.Forbidden(response.body())
@@ -290,11 +290,11 @@ public class Enterprises internal constructor(
               }
 
               public class Post internal constructor(
-                private val client: HttpClient,
-                private val enterprise: String,
+                private val __client: HttpClient,
+                private val _enterprise: String,
               ) {
                 public suspend operator fun invoke(body: OidcCustomPropertyInclusionInput): Response {
-                  val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo") {
+                  val response = __client.post("enterprises/${this._enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -323,19 +323,19 @@ public class Enterprises internal constructor(
               }
 
               public class CustomPropertyNamePath internal constructor(
-                private val client: HttpClient,
-                private val enterprise: String,
-                private val customPropertyName: String,
+                private val __client: HttpClient,
+                private val _enterprise: String,
+                private val _customPropertyName: String,
               ) {
-                public val delete: Delete = Delete(client, enterprise, customPropertyName)
+                public val delete: Delete = Delete(__client, _enterprise, _customPropertyName)
 
                 public class Delete internal constructor(
-                  private val client: HttpClient,
-                  private val enterprise: String,
-                  private val customPropertyName: String,
+                  private val __client: HttpClient,
+                  private val _enterprise: String,
+                  private val _customPropertyName: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo/${this.customPropertyName.encodeURLParameter()}")
+                    val response = __client.delete("enterprises/${this._enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo/${this._customPropertyName.encodeURLParameter()}")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       400 -> Response.BadRequest
@@ -365,33 +365,33 @@ public class Enterprises internal constructor(
     }
 
     public class CodeSecurity internal constructor(
-      private val client: HttpClient,
-      private val enterprise: String,
+      private val __client: HttpClient,
+      private val _enterprise: String,
     ) {
-      public val configurations: Configurations = Configurations(client, enterprise)
+      public val configurations: Configurations = Configurations(__client, _enterprise)
 
       public class Configurations internal constructor(
-        private val client: HttpClient,
-        private val enterprise: String,
+        private val __client: HttpClient,
+        private val _enterprise: String,
       ) {
-        public val `get`: Get = Get(client, enterprise)
+        public val `get`: Get = Get(__client, _enterprise)
 
-        public val post: Post = Post(client, enterprise)
+        public val post: Post = Post(__client, _enterprise)
 
-        public val defaults: Defaults = Defaults(client, enterprise)
+        public val defaults: Defaults = Defaults(__client, _enterprise)
 
-        public fun configurationId(configurationId: Long): ConfigurationIdPath = ConfigurationIdPath(client, enterprise, configurationId)
+        public fun configurationId(configurationId: Long): ConfigurationIdPath = ConfigurationIdPath(__client, _enterprise, configurationId)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
         ) {
           public suspend operator fun invoke(
             perPage: Long? = 30L,
             before: String? = null,
             after: String? = null,
           ): Response {
-            val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations") {
+            val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -426,8 +426,8 @@ public class Enterprises internal constructor(
         }
 
         public class Post internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
         ) {
           public suspend operator fun invoke(
             name: String,
@@ -454,7 +454,7 @@ public class Enterprises internal constructor(
             privateVulnerabilityReporting: PrivateVulnerabilityReporting? = null,
             enforcement: Enforcement? = null,
           ): Response {
-            val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations") {
+            val response = __client.post("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, description = description, advancedSecurity = advancedSecurity, codeSecurity = codeSecurity, dependencyGraph = dependencyGraph, dependencyGraphAutosubmitAction = dependencyGraphAutosubmitAction, dependencyGraphAutosubmitActionOptions = dependencyGraphAutosubmitActionOptions, dependabotAlerts = dependabotAlerts, dependabotSecurityUpdates = dependabotSecurityUpdates, codeScanningOptions = codeScanningOptions, codeScanningDefaultSetup = codeScanningDefaultSetup, codeScanningDefaultSetupOptions = codeScanningDefaultSetupOptions, codeScanningDelegatedAlertDismissal = codeScanningDelegatedAlertDismissal, secretProtection = secretProtection, secretScanning = secretScanning, secretScanningPushProtection = secretScanningPushProtection, secretScanningValidityChecks = secretScanningValidityChecks, secretScanningNonProviderPatterns = secretScanningNonProviderPatterns, secretScanningGenericSecrets = secretScanningGenericSecrets, secretScanningDelegatedAlertDismissal = secretScanningDelegatedAlertDismissal, secretScanningExtendedMetadata = secretScanningExtendedMetadata, privateVulnerabilityReporting = privateVulnerabilityReporting, enforcement = enforcement))
             }
@@ -805,17 +805,17 @@ public class Enterprises internal constructor(
         }
 
         public class Defaults internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
         ) {
-          public val `get`: Get = Get(client, enterprise)
+          public val `get`: Get = Get(__client, _enterprise)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
           ) {
             public suspend operator fun invoke(): CodeSecurityDefaultConfigurations {
-              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/defaults")
+              val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations/defaults")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -823,29 +823,30 @@ public class Enterprises internal constructor(
         }
 
         public class ConfigurationIdPath internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
-          private val configurationId: Long,
+          private val __client: HttpClient,
+          private val _enterprise: String,
+          private val _configurationId: Long,
         ) {
-          public val delete: Delete = Delete(client, enterprise, configurationId)
+          public val delete: Delete = Delete(__client, _enterprise, _configurationId)
 
-          public val `get`: Get = Get(client, enterprise, configurationId)
+          public val `get`: Get = Get(__client, _enterprise, _configurationId)
 
-          public val patch: Patch = Patch(client, enterprise, configurationId)
+          public val patch: Patch = Patch(__client, _enterprise, _configurationId)
 
-          public val attach: Attach = Attach(client, enterprise, configurationId)
+          public val attach: Attach = Attach(__client, _enterprise, _configurationId)
 
-          public val defaults: Defaults = Defaults(client, enterprise, configurationId)
+          public val defaults: Defaults = Defaults(__client, _enterprise, _configurationId)
 
-          public val repositories: Repositories = Repositories(client, enterprise, configurationId)
+          public val repositories: Repositories =
+              Repositories(__client, _enterprise, _configurationId)
 
           public class Delete internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val configurationId: Long,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _configurationId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}")
+              val response = __client.delete("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations/${this._configurationId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 400 -> Response.BadRequest(response.body())
@@ -878,12 +879,12 @@ public class Enterprises internal constructor(
           }
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val configurationId: Long,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _configurationId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}")
+              val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations/${this._configurationId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 304 -> Response.NotModified
@@ -911,9 +912,9 @@ public class Enterprises internal constructor(
           }
 
           public class Patch internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val configurationId: Long,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _configurationId: Long,
           ) {
             public suspend operator fun invoke(
               name: String? = null,
@@ -940,7 +941,7 @@ public class Enterprises internal constructor(
               privateVulnerabilityReporting: PrivateVulnerabilityReporting? = null,
               enforcement: Enforcement? = null,
             ): Response {
-              val response = client.patch("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}") {
+              val response = __client.patch("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations/${this._configurationId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, description = description, advancedSecurity = advancedSecurity, codeSecurity = codeSecurity, dependencyGraph = dependencyGraph, dependencyGraphAutosubmitAction = dependencyGraphAutosubmitAction, dependencyGraphAutosubmitActionOptions = dependencyGraphAutosubmitActionOptions, dependabotAlerts = dependabotAlerts, dependabotSecurityUpdates = dependabotSecurityUpdates, codeScanningDefaultSetup = codeScanningDefaultSetup, codeScanningDefaultSetupOptions = codeScanningDefaultSetupOptions, codeScanningOptions = codeScanningOptions, codeScanningDelegatedAlertDismissal = codeScanningDelegatedAlertDismissal, secretProtection = secretProtection, secretScanning = secretScanning, secretScanningPushProtection = secretScanningPushProtection, secretScanningValidityChecks = secretScanningValidityChecks, secretScanningNonProviderPatterns = secretScanningNonProviderPatterns, secretScanningGenericSecrets = secretScanningGenericSecrets, secretScanningDelegatedAlertDismissal = secretScanningDelegatedAlertDismissal, secretScanningExtendedMetadata = secretScanningExtendedMetadata, privateVulnerabilityReporting = privateVulnerabilityReporting, enforcement = enforcement))
               }
@@ -1297,19 +1298,19 @@ public class Enterprises internal constructor(
           }
 
           public class Attach internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val configurationId: Long,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _configurationId: Long,
           ) {
-            public val post: Post = Post(client, enterprise, configurationId)
+            public val post: Post = Post(__client, _enterprise, _configurationId)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val configurationId: Long,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _configurationId: Long,
             ) {
               public suspend operator fun invoke(scope: Scope): Response {
-                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}/attach") {
+                val response = __client.post("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations/${this._configurationId}/attach") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(scope = scope))
                 }
@@ -1359,19 +1360,19 @@ public class Enterprises internal constructor(
           }
 
           public class Defaults internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val configurationId: Long,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _configurationId: Long,
           ) {
-            public val put: Put = Put(client, enterprise, configurationId)
+            public val put: Put = Put(__client, _enterprise, _configurationId)
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val configurationId: Long,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _configurationId: Long,
             ) {
               public suspend operator fun invoke(defaultForNewRepos: DefaultForNewRepos? = null): Response {
-                val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}/defaults") {
+                val response = __client.put("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations/${this._configurationId}/defaults") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(defaultForNewRepos = defaultForNewRepos))
                 }
@@ -1444,16 +1445,16 @@ public class Enterprises internal constructor(
           }
 
           public class Repositories internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val configurationId: Long,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _configurationId: Long,
           ) {
-            public val `get`: Get = Get(client, enterprise, configurationId)
+            public val `get`: Get = Get(__client, _enterprise, _configurationId)
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val configurationId: Long,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _configurationId: Long,
             ) {
               public suspend operator fun invoke(
                 perPage: Long? = 30L,
@@ -1461,7 +1462,7 @@ public class Enterprises internal constructor(
                 after: String? = null,
                 status: String? = "all",
               ): Response {
-                val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}/repositories") {
+                val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/code-security/configurations/${this._configurationId}/repositories") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -1503,20 +1504,20 @@ public class Enterprises internal constructor(
     }
 
     public class Dependabot internal constructor(
-      private val client: HttpClient,
-      private val enterprise: String,
+      private val __client: HttpClient,
+      private val _enterprise: String,
     ) {
-      public val alerts: Alerts = Alerts(client, enterprise)
+      public val alerts: Alerts = Alerts(__client, _enterprise)
 
       public class Alerts internal constructor(
-        private val client: HttpClient,
-        private val enterprise: String,
+        private val __client: HttpClient,
+        private val _enterprise: String,
       ) {
-        public val `get`: Get = Get(client, enterprise)
+        public val `get`: Get = Get(__client, _enterprise)
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
         ) {
           public suspend operator fun invoke(
             state: String? = null,
@@ -1533,7 +1534,7 @@ public class Enterprises internal constructor(
             after: String? = null,
             perPage: Long? = 30L,
           ): Response {
-            val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/dependabot/alerts") {
+            val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/dependabot/alerts") {
               if (state != null) {
                 this.url.encodedParameters.append("state", state.encodeURLParameter())
               }
@@ -1709,23 +1710,23 @@ public class Enterprises internal constructor(
     }
 
     public class Teams internal constructor(
-      private val client: HttpClient,
-      private val enterprise: String,
+      private val __client: HttpClient,
+      private val _enterprise: String,
     ) {
-      public val `get`: Get = Get(client, enterprise)
+      public val `get`: Get = Get(__client, _enterprise)
 
-      public val post: Post = Post(client, enterprise)
+      public val post: Post = Post(__client, _enterprise)
 
-      public fun enterpriseTeam(enterpriseTeam: String): EnterpriseTeamPath = EnterpriseTeamPath(client, enterprise, enterpriseTeam)
+      public fun enterpriseTeam(enterpriseTeam: String): EnterpriseTeamPath = EnterpriseTeamPath(__client, _enterprise, enterpriseTeam)
 
-      public fun teamSlug(teamSlug: String): TeamSlugPath = TeamSlugPath(client, enterprise, teamSlug)
+      public fun teamSlug(teamSlug: String): TeamSlugPath = TeamSlugPath(__client, _enterprise, teamSlug)
 
       public class Get internal constructor(
-        private val client: HttpClient,
-        private val enterprise: String,
+        private val __client: HttpClient,
+        private val _enterprise: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams") {
+          val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/teams") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -1752,8 +1753,8 @@ public class Enterprises internal constructor(
       }
 
       public class Post internal constructor(
-        private val client: HttpClient,
-        private val enterprise: String,
+        private val __client: HttpClient,
+        private val _enterprise: String,
       ) {
         public suspend operator fun invoke(
           name: String,
@@ -1762,7 +1763,7 @@ public class Enterprises internal constructor(
           organizationSelectionType: OrganizationSelectionType? = null,
           groupId: Optional<String> = Optional.Absent,
         ): EnterpriseTeam {
-          val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams") {
+          val response = __client.post("enterprises/${this._enterprise.encodeURLParameter()}/teams") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, description = description, syncToOrganizations = syncToOrganizations, organizationSelectionType = organizationSelectionType, groupId = groupId))
           }
@@ -1813,34 +1814,35 @@ public class Enterprises internal constructor(
       }
 
       public class EnterpriseTeamPath internal constructor(
-        private val client: HttpClient,
-        private val enterprise: String,
-        private val enterpriseTeam: String,
+        private val __client: HttpClient,
+        private val _enterprise: String,
+        private val _enterpriseTeam: String,
       ) {
-        public val memberships: Memberships = Memberships(client, enterprise, enterpriseTeam)
+        public val memberships: Memberships = Memberships(__client, _enterprise, _enterpriseTeam)
 
-        public val organizations: Organizations = Organizations(client, enterprise, enterpriseTeam)
+        public val organizations: Organizations =
+            Organizations(__client, _enterprise, _enterpriseTeam)
 
         public class Memberships internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
-          private val enterpriseTeam: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
+          private val _enterpriseTeam: String,
         ) {
-          public val `get`: Get = Get(client, enterprise, enterpriseTeam)
+          public val `get`: Get = Get(__client, _enterprise, _enterpriseTeam)
 
-          public val add: Add = Add(client, enterprise, enterpriseTeam)
+          public val add: Add = Add(__client, _enterprise, _enterpriseTeam)
 
-          public val remove: Remove = Remove(client, enterprise, enterpriseTeam)
+          public val remove: Remove = Remove(__client, _enterprise, _enterpriseTeam)
 
-          public fun username(username: String): UsernamePath = UsernamePath(client, enterprise, enterpriseTeam, username)
+          public fun username(username: String): UsernamePath = UsernamePath(__client, _enterprise, _enterpriseTeam, username)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val enterpriseTeam: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _enterpriseTeam: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
-              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships") {
+              val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/memberships") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -1854,19 +1856,19 @@ public class Enterprises internal constructor(
           }
 
           public class Add internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val enterpriseTeam: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _enterpriseTeam: String,
           ) {
-            public val post: Post = Post(client, enterprise, enterpriseTeam)
+            public val post: Post = Post(__client, _enterprise, _enterpriseTeam)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
             ) {
               public suspend operator fun invoke(usernames: List<String>): List<SimpleUser> {
-                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/add") {
+                val response = __client.post("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/memberships/add") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(usernames = usernames))
                 }
@@ -1882,19 +1884,19 @@ public class Enterprises internal constructor(
           }
 
           public class Remove internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val enterpriseTeam: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _enterpriseTeam: String,
           ) {
-            public val post: Post = Post(client, enterprise, enterpriseTeam)
+            public val post: Post = Post(__client, _enterprise, _enterpriseTeam)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
             ) {
               public suspend operator fun invoke(usernames: List<String>): List<SimpleUser> {
-                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/remove") {
+                val response = __client.post("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/memberships/remove") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(usernames = usernames))
                 }
@@ -1910,25 +1912,25 @@ public class Enterprises internal constructor(
           }
 
           public class UsernamePath internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val enterpriseTeam: String,
-            private val username: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _enterpriseTeam: String,
+            private val _username: String,
           ) {
-            public val delete: Delete = Delete(client, enterprise, enterpriseTeam, username)
+            public val delete: Delete = Delete(__client, _enterprise, _enterpriseTeam, _username)
 
-            public val `get`: Get = Get(client, enterprise, enterpriseTeam, username)
+            public val `get`: Get = Get(__client, _enterprise, _enterpriseTeam, _username)
 
-            public val put: Put = Put(client, enterprise, enterpriseTeam, username)
+            public val put: Put = Put(__client, _enterprise, _enterpriseTeam, _username)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
-              private val username: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
+              private val _username: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/${this.username.encodeURLParameter()}")
+                val response = __client.delete("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/memberships/${this._username.encodeURLParameter()}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -1946,26 +1948,26 @@ public class Enterprises internal constructor(
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
-              private val username: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
+              private val _username: String,
             ) {
               public suspend operator fun invoke(): SimpleUser {
-                val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/${this.username.encodeURLParameter()}")
+                val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/memberships/${this._username.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
-              private val username: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
+              private val _username: String,
             ) {
               public suspend operator fun invoke(): SimpleUser {
-                val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/${this.username.encodeURLParameter()}")
+                val response = __client.put("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/memberships/${this._username.encodeURLParameter()}")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1974,25 +1976,25 @@ public class Enterprises internal constructor(
         }
 
         public class Organizations internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
-          private val enterpriseTeam: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
+          private val _enterpriseTeam: String,
         ) {
-          public val `get`: Get = Get(client, enterprise, enterpriseTeam)
+          public val `get`: Get = Get(__client, _enterprise, _enterpriseTeam)
 
-          public val add: Add = Add(client, enterprise, enterpriseTeam)
+          public val add: Add = Add(__client, _enterprise, _enterpriseTeam)
 
-          public val remove: Remove = Remove(client, enterprise, enterpriseTeam)
+          public val remove: Remove = Remove(__client, _enterprise, _enterpriseTeam)
 
-          public fun org(org: String): OrgPath = OrgPath(client, enterprise, enterpriseTeam, org)
+          public fun org(org: String): OrgPath = OrgPath(__client, _enterprise, _enterpriseTeam, org)
 
           public class Get internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val enterpriseTeam: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _enterpriseTeam: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationSimple> {
-              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations") {
+              val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/organizations") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -2006,19 +2008,19 @@ public class Enterprises internal constructor(
           }
 
           public class Add internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val enterpriseTeam: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _enterpriseTeam: String,
           ) {
-            public val post: Post = Post(client, enterprise, enterpriseTeam)
+            public val post: Post = Post(__client, _enterprise, _enterpriseTeam)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
             ) {
               public suspend operator fun invoke(organizationSlugs: List<String>): List<OrganizationSimple> {
-                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/add") {
+                val response = __client.post("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/organizations/add") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(organizationSlugs = organizationSlugs))
                 }
@@ -2035,19 +2037,19 @@ public class Enterprises internal constructor(
           }
 
           public class Remove internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val enterpriseTeam: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _enterpriseTeam: String,
           ) {
-            public val post: Post = Post(client, enterprise, enterpriseTeam)
+            public val post: Post = Post(__client, _enterprise, _enterpriseTeam)
 
             public class Post internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
             ) {
               public suspend operator fun invoke(organizationSlugs: List<String>) {
-                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/remove") {
+                val response = __client.post("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/organizations/remove") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(organizationSlugs = organizationSlugs))
                 }
@@ -2063,37 +2065,37 @@ public class Enterprises internal constructor(
           }
 
           public class OrgPath internal constructor(
-            private val client: HttpClient,
-            private val enterprise: String,
-            private val enterpriseTeam: String,
-            private val org: String,
+            private val __client: HttpClient,
+            private val _enterprise: String,
+            private val _enterpriseTeam: String,
+            private val _org: String,
           ) {
-            public val delete: Delete = Delete(client, enterprise, enterpriseTeam, org)
+            public val delete: Delete = Delete(__client, _enterprise, _enterpriseTeam, _org)
 
-            public val `get`: Get = Get(client, enterprise, enterpriseTeam, org)
+            public val `get`: Get = Get(__client, _enterprise, _enterpriseTeam, _org)
 
-            public val put: Put = Put(client, enterprise, enterpriseTeam, org)
+            public val put: Put = Put(__client, _enterprise, _enterpriseTeam, _org)
 
             public class Delete internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
-              private val org: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
+              private val _org: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/${this.org.encodeURLParameter()}")
+                val response = __client.delete("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/organizations/${this._org.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
             public class Get internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
-              private val org: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
+              private val _org: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/${this.org.encodeURLParameter()}")
+                val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/organizations/${this._org.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound
@@ -2111,13 +2113,13 @@ public class Enterprises internal constructor(
             }
 
             public class Put internal constructor(
-              private val client: HttpClient,
-              private val enterprise: String,
-              private val enterpriseTeam: String,
-              private val org: String,
+              private val __client: HttpClient,
+              private val _enterprise: String,
+              private val _enterpriseTeam: String,
+              private val _org: String,
             ) {
               public suspend operator fun invoke(): OrganizationSimple {
-                val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/${this.org.encodeURLParameter()}")
+                val response = __client.put("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._enterpriseTeam.encodeURLParameter()}/organizations/${this._org.encodeURLParameter()}")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2127,23 +2129,23 @@ public class Enterprises internal constructor(
       }
 
       public class TeamSlugPath internal constructor(
-        private val client: HttpClient,
-        private val enterprise: String,
-        private val teamSlug: String,
+        private val __client: HttpClient,
+        private val _enterprise: String,
+        private val _teamSlug: String,
       ) {
-        public val delete: Delete = Delete(client, enterprise, teamSlug)
+        public val delete: Delete = Delete(__client, _enterprise, _teamSlug)
 
-        public val `get`: Get = Get(client, enterprise, teamSlug)
+        public val `get`: Get = Get(__client, _enterprise, _teamSlug)
 
-        public val patch: Patch = Patch(client, enterprise, teamSlug)
+        public val patch: Patch = Patch(__client, _enterprise, _teamSlug)
 
         public class Delete internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
-          private val teamSlug: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
+          private val _teamSlug: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.teamSlug.encodeURLParameter()}")
+            val response = __client.delete("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._teamSlug.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden(response.body())
@@ -2161,12 +2163,12 @@ public class Enterprises internal constructor(
         }
 
         public class Get internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
-          private val teamSlug: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
+          private val _teamSlug: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.teamSlug.encodeURLParameter()}")
+            val response = __client.get("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._teamSlug.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden(response.body())
@@ -2186,9 +2188,9 @@ public class Enterprises internal constructor(
         }
 
         public class Patch internal constructor(
-          private val client: HttpClient,
-          private val enterprise: String,
-          private val teamSlug: String,
+          private val __client: HttpClient,
+          private val _enterprise: String,
+          private val _teamSlug: String,
         ) {
           public suspend operator fun invoke(
             name: Optional<String> = Optional.Absent,
@@ -2197,7 +2199,7 @@ public class Enterprises internal constructor(
             organizationSelectionType: OrganizationSelectionType? = null,
             groupId: Optional<String> = Optional.Absent,
           ): Response {
-            val response = client.patch("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.teamSlug.encodeURLParameter()}") {
+            val response = __client.patch("enterprises/${this._enterprise.encodeURLParameter()}/teams/${this._teamSlug.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, description = description, syncToOrganizations = syncToOrganizations, organizationSelectionType = organizationSelectionType, groupId = groupId))
             }

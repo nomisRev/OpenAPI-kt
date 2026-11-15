@@ -13,17 +13,17 @@ import kotlin.Int
 import kotlin.String
 
 public class Referenced internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val put: Put = Put(client)
+  public val put: Put = Put(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(limit: Int, xTraceId: String): Owner {
-      val response = client.get("referenced") {
+      val response = __client.get("referenced") {
         this.url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
       }
@@ -33,10 +33,10 @@ public class Referenced internal constructor(
   }
 
   public class Put internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(xTraceId: String, body: Owner) {
-      val response = client.put("referenced") {
+      val response = __client.put("referenced") {
         `header`("X-Trace-Id", xTraceId)
         contentType(ContentType.Application.Json)
         setBody(body)

@@ -8,15 +8,15 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Tags internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(): List<String> {
-      val response = client.get("tags")
+      val response = __client.get("tags")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

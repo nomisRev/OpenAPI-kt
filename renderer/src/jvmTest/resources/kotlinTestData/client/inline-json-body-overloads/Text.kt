@@ -10,15 +10,15 @@ import kotlin.String
 import kotlinx.serialization.Serializable
 
 public class Text internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body) {
-      val response = client.post("text") {
+      val response = __client.post("text") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -26,7 +26,7 @@ public class Text internal constructor(
     }
 
     public suspend operator fun invoke(body: String) {
-      val response = client.post("text") {
+      val response = __client.post("text") {
         contentType(ContentType.Text.Plain)
         setBody(body)
       }

@@ -9,15 +9,15 @@ import io.ktor.http.contentType
 import kotlin.collections.List
 
 public class Operations internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val patch: Patch = Patch(client)
+  public val patch: Patch = Patch(__client)
 
   public class Patch internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: List<PatchOperation>) {
-      val response = client.patch("operations") {
+      val response = __client.patch("operations") {
         contentType(ContentType("application", "json-patch+json"))
         setBody(body)
       }

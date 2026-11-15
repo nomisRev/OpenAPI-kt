@@ -5,37 +5,37 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 
 public class Pairs internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val xY: XY = XY(client)
+  public val xY: XY = XY(__client)
 
-  public val xY2: XY2 = XY2(client)
+  public val xY2: XY2 = XY2(__client)
 
   public class XY internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("pairs/x@y")
+        val response = __client.get("pairs/x@y")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
   }
 
   public class XY2 internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val `get`: Get = Get(client)
+    public val `get`: Get = Get(__client)
 
     public class Get internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("pairs/x=y")
+        val response = __client.get("pairs/x=y")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

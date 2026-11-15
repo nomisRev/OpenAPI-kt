@@ -14,21 +14,21 @@ import kotlin.Boolean
 import kotlin.String
 
 public class Commands internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public val assist: Assist = Assist(client)
+  public val assist: Assist = Assist(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       muteUpdateNotifications: Boolean? = null,
       fields: String? = "${'$'}type,caret,commands(${'$'}type,description,error,id),comment,id,issues(${'$'}type,id,idReadable,numberInProject),query,suggestions(${'$'}type,caret,completionEnd,completionStart,description,id,matchingEnd,matchingStart,option,prefix,suffix)",
       body: CommandListWrite? = null,
     ): CommandListRead {
-      val response = client.post("commands") {
+      val response = __client.post("commands") {
         if (muteUpdateNotifications != null) {
           this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
         }
@@ -46,15 +46,15 @@ public class Commands internal constructor(
   }
 
   public class Assist internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,caret,commands(${'$'}type,description,error,id),comment,id,issues(${'$'}type,id,idReadable,numberInProject),query,suggestions(${'$'}type,caret,completionEnd,completionStart,description,id,matchingEnd,matchingStart,option,prefix,suffix)", body: CommandListWrite? = null): CommandListRead {
-        val response = client.post("commands/assist") {
+        val response = __client.post("commands/assist") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

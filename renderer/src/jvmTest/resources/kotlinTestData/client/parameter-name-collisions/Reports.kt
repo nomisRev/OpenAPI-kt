@@ -7,15 +7,15 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Reports internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(client: String) {
-      val response = this.client.get("reports") {
+      val response = __client.get("reports") {
         this.url.encodedParameters.append("client", client.encodeURLParameter())
       }
       if (response.status.value != 204) throw ResponseException(response, "")

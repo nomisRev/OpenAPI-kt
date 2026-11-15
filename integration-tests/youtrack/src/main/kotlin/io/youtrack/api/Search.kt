@@ -13,20 +13,20 @@ import io.youtrack.model.SearchSuggestionsWrite
 import kotlin.String
 
 public class Search internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val assist: Assist = Assist(client)
+  public val assist: Assist = Assist(__client)
 
   public class Assist internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,suggestions(${'$'}type,caret,completionEnd,completionStart,description,id,matchingEnd,matchingStart,option,prefix,suffix)", body: SearchSuggestionsWrite? = null): SearchSuggestionsRead {
-        val response = client.post("search/assist") {
+        val response = __client.post("search/assist") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

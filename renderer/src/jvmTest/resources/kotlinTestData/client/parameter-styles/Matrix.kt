@@ -7,22 +7,22 @@ import kotlin.Int
 import kotlin.collections.List
 
 public class Matrix internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public fun ids(ids: List<Int>): IdsPath = IdsPath(client, ids)
+  public fun ids(ids: List<Int>): IdsPath = IdsPath(__client, ids)
 
   public class IdsPath internal constructor(
-    private val client: HttpClient,
-    private val ids: List<Int>,
+    private val __client: HttpClient,
+    private val _ids: List<Int>,
   ) {
-    public val `get`: Get = Get(client, ids)
+    public val `get`: Get = Get(__client, _ids)
 
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val ids: List<Int>,
+      private val __client: HttpClient,
+      private val _ids: List<Int>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("matrix/${if (this.ids.isEmpty()) "" else ";ids=${this.ids.joinToString(",")}"}")
+        val response = __client.get("matrix/${if (this._ids.isEmpty()) "" else ";ids=${this._ids.joinToString(",")}"}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

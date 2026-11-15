@@ -9,19 +9,19 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Search internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       query: String,
       xApiKey: String,
       session: String,
     ) {
-      val response = client.get("search") {
+      val response = __client.get("search") {
         this.url.encodedParameters.append("query", query.encodeURLParameter())
         `header`("X-Api-Key", xApiKey)
         cookie("session", session)

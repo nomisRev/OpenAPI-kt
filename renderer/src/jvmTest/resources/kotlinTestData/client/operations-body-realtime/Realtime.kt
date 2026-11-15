@@ -16,20 +16,20 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 public class Realtime internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val calls: Calls = Calls(client)
+  public val calls: Calls = Calls(__client)
 
   public class Calls internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
-    public val post: Post = Post(client)
+    public val post: Post = Post(__client)
 
     public class Post internal constructor(
-      private val client: HttpClient,
+      private val __client: HttpClient,
     ) {
       public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session? = null): String {
-        val response = client.post("realtime/calls") {
+        val response = __client.post("realtime/calls") {
           setBody(MultiPartFormDataContent(formData {
             append("sdp", sdp, headersOf(HttpHeaders.ContentType, "application/sdp"))
             if (session != null) {
@@ -42,7 +42,7 @@ public class Realtime internal constructor(
       }
 
       public suspend operator fun invoke(body: String): String {
-        val response = client.post("realtime/calls") {
+        val response = __client.post("realtime/calls") {
           contentType(ContentType("application", "sdp"))
           setBody(body)
         }

@@ -8,12 +8,12 @@ import io.ktor.client.request.cookie
 import io.ktor.http.encodeURLParameter
 
 public class Search internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       filter: Filter? = null,
@@ -21,7 +21,7 @@ public class Search internal constructor(
       xFilter: Filter? = null,
       filterCookie: Filter? = null,
     ) {
-      val response = client.get("search") {
+      val response = __client.get("search") {
         if (filter != null) {
           filter.q.valueOrNull?.let { filterQValue ->
             this.url.encodedParameters.append("q", filterQValue.encodeURLParameter())

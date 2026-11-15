@@ -11,37 +11,37 @@ import kotlin.String
 import kotlin.Unit
 
 public class YouTrackRESTAPI internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val activities: Activities = Activities(client)
+  public val activities: Activities = Activities(__client)
 
-  public val activitiesPage: ActivitiesPage = ActivitiesPage(client)
+  public val activitiesPage: ActivitiesPage = ActivitiesPage(__client)
 
-  public val admin: Admin = Admin(client)
+  public val admin: Admin = Admin(__client)
 
-  public val agiles: Agiles = Agiles(client)
+  public val agiles: Agiles = Agiles(__client)
 
-  public val articles: Articles = Articles(client)
+  public val articles: Articles = Articles(__client)
 
-  public val commands: Commands = Commands(client)
+  public val commands: Commands = Commands(__client)
 
-  public val groups: Groups = Groups(client)
+  public val groups: Groups = Groups(__client)
 
-  public val issueLinkTypes: IssueLinkTypes = IssueLinkTypes(client)
+  public val issueLinkTypes: IssueLinkTypes = IssueLinkTypes(__client)
 
-  public val issues: Issues = Issues(client)
+  public val issues: Issues = Issues(__client)
 
-  public val issuesGetter: IssuesGetter = IssuesGetter(client)
+  public val issuesGetter: IssuesGetter = IssuesGetter(__client)
 
-  public val savedQueries: SavedQueries = SavedQueries(client)
+  public val savedQueries: SavedQueries = SavedQueries(__client)
 
-  public val search: Search = Search(client)
+  public val search: Search = Search(__client)
 
-  public val tags: Tags = Tags(client)
+  public val tags: Tags = Tags(__client)
 
-  public val users: Users = Users(client)
+  public val users: Users = Users(__client)
 
-  public val workItems: WorkItems = WorkItems(client)
+  public val workItems: WorkItems = WorkItems(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -60,6 +60,6 @@ public class YouTrackRESTAPI internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 }

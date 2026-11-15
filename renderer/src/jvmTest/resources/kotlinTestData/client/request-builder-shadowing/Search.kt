@@ -11,12 +11,12 @@ import kotlin.String
 import kotlin.collections.List
 
 public class Search internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       url: String,
@@ -28,7 +28,7 @@ public class Search internal constructor(
       `header`: String? = null,
       cookie: String? = null,
     ) {
-      val response = client.get("search") {
+      val response = __client.get("search") {
         this.url.encodedParameters.append("url", url.encodeURLParameter())
         this.url.encodedParameters.append("x", x.toString())
         if (parameter != null) {

@@ -8,12 +8,12 @@ import kotlin.Int
 import kotlin.String
 
 public class Prices internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(
       validUntilDate: String? = null,
@@ -25,7 +25,7 @@ public class Prices internal constructor(
       statusNot: String? = null,
       status: String? = null,
     ) {
-      val response = client.get("prices") {
+      val response = __client.get("prices") {
         if (validUntilDate != null) {
           this.url.encodedParameters.append("ValidUntilDate", validUntilDate.encodeURLParameter())
         }

@@ -12,15 +12,15 @@ import io.ktor.http.formUrlEncode
 import kotlin.String
 
 public class FormOptionalFields internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(q: String? = null) {
-      val response = client.post("form-optional-fields") {
+      val response = __client.post("form-optional-fields") {
         if (q != null) {
           this.url.encodedParameters.append("q", q.encodeURLParameter())
         }
@@ -33,7 +33,7 @@ public class FormOptionalFields internal constructor(
       name: String? = null,
       note: String? = null,
     ) {
-      val response = client.post("form-optional-fields") {
+      val response = __client.post("form-optional-fields") {
         if (q != null) {
           this.url.encodedParameters.append("q", q.encodeURLParameter())
         }

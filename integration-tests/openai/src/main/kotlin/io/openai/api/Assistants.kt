@@ -22,19 +22,19 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public class Assistants internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
   @Deprecated("Deprecated by the API provider")
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
   @Deprecated("Deprecated by the API provider")
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
-  public fun assistantId(assistantId: String): AssistantIdPath = AssistantIdPath(client, assistantId)
+  public fun assistantId(assistantId: String): AssistantIdPath = AssistantIdPath(__client, assistantId)
 
   @Deprecated("Deprecated by the API provider")
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     @Deprecated("Deprecated by the API provider")
     public suspend operator fun invoke(
@@ -43,7 +43,7 @@ public class Assistants internal constructor(
       after: String? = null,
       before: String? = null,
     ): ListAssistantsResponse {
-      val response = client.get("assistants") {
+      val response = __client.get("assistants") {
         if (limit != null) {
           this.url.encodedParameters.append("limit", limit.toString())
         }
@@ -75,11 +75,11 @@ public class Assistants internal constructor(
 
   @Deprecated("Deprecated by the API provider")
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     @Deprecated("Deprecated by the API provider")
     public suspend operator fun invoke(body: CreateAssistantRequest): AssistantObject {
-      val response = client.post("assistants") {
+      val response = __client.post("assistants") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -89,26 +89,26 @@ public class Assistants internal constructor(
   }
 
   public class AssistantIdPath internal constructor(
-    private val client: HttpClient,
-    private val assistantId: String,
+    private val __client: HttpClient,
+    private val _assistantId: String,
   ) {
     @Deprecated("Deprecated by the API provider")
-    public val delete: Delete = Delete(client, assistantId)
+    public val delete: Delete = Delete(__client, _assistantId)
 
     @Deprecated("Deprecated by the API provider")
-    public val `get`: Get = Get(client, assistantId)
+    public val `get`: Get = Get(__client, _assistantId)
 
     @Deprecated("Deprecated by the API provider")
-    public val post: Post = Post(client, assistantId)
+    public val post: Post = Post(__client, _assistantId)
 
     @Deprecated("Deprecated by the API provider")
     public class Delete internal constructor(
-      private val client: HttpClient,
-      private val assistantId: String,
+      private val __client: HttpClient,
+      private val _assistantId: String,
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(): DeleteAssistantResponse {
-        val response = client.delete("assistants/${this.assistantId.encodeURLParameter()}")
+        val response = __client.delete("assistants/${this._assistantId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -116,12 +116,12 @@ public class Assistants internal constructor(
 
     @Deprecated("Deprecated by the API provider")
     public class Get internal constructor(
-      private val client: HttpClient,
-      private val assistantId: String,
+      private val __client: HttpClient,
+      private val _assistantId: String,
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(): AssistantObject {
-        val response = client.get("assistants/${this.assistantId.encodeURLParameter()}")
+        val response = __client.get("assistants/${this._assistantId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -129,12 +129,12 @@ public class Assistants internal constructor(
 
     @Deprecated("Deprecated by the API provider")
     public class Post internal constructor(
-      private val client: HttpClient,
-      private val assistantId: String,
+      private val __client: HttpClient,
+      private val _assistantId: String,
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(body: ModifyAssistantRequest): AssistantObject {
-        val response = client.post("assistants/${this.assistantId.encodeURLParameter()}") {
+        val response = __client.post("assistants/${this._assistantId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }

@@ -15,17 +15,17 @@ import kotlin.collections.List
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Items internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val post: Post = Post(client)
+  public val post: Post = Post(__client)
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(limit: Int? = null): List<String> {
-      val response = client.get("items") {
+      val response = __client.get("items") {
         if (limit != null) {
           this.url.encodedParameters.append("limit", limit.toString())
         }
@@ -36,10 +36,10 @@ public class Items internal constructor(
   }
 
   public class Post internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String): Response {
-      val response = client.post("items") {
+      val response = __client.post("items") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }

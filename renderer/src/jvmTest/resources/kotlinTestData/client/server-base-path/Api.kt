@@ -13,11 +13,11 @@ import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
-  private val client: HttpClient,
+  private val __client: HttpClient,
 ) : AutoCloseable {
-  public val `get`: Get = Get(client)
+  public val `get`: Get = Get(__client)
 
-  public val owners: Owners = Owners(client)
+  public val owners: Owners = Owners(__client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
@@ -36,14 +36,14 @@ public class Api internal constructor(
   )
 
   override fun close() {
-    client.close()
+    __client.close()
   }
 
   public class Get internal constructor(
-    private val client: HttpClient,
+    private val __client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.get("")
+      val response = __client.get("")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
   }
