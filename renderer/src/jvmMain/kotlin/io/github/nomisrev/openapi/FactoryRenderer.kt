@@ -180,7 +180,7 @@ private fun CodeBlock.Builder.addBaseUrlPathEnd(): CodeBlock.Builder =
  */
 internal fun ApiTree.generateServerType(config: RenderConfig): TypeSpec? {
     val strategy = serverStrategy(config)
-    val rootName = name.toPascalCase()
+    val rootName = rootClassName().simpleName
 
     return when (strategy) {
         ServerStrategy.NoServers, ServerStrategy.SingleFixed -> null

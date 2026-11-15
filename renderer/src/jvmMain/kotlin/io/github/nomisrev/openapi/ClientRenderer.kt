@@ -27,7 +27,7 @@ private fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
                 hasInlineNonDiscriminatedBodyUnion() ||
                 hasInlineNonDiscriminatedResponseUnion()
 
-    val rootName = name.toPascalCase()
+    val rootName = rootClassName().simpleName
     val rootClassName = ClassName(config.apiPackage, rootName)
 
     val childFiles = mutableListOf<FileSpec>()
