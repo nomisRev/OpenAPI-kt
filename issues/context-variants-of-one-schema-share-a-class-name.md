@@ -1,6 +1,21 @@
 # Read, Write and "Null" variants of one schema are rendered under one class name
 
-**Status:** open
+**Status:** fixed in `300d9589`. A schema has two shapes when it, or anything it refers to, has `readOnly` or
+`writeOnly`, and the context of a use (Read in a response, Write in a request) reaches every schema beneath it, through
+inline schemas and `$ref`s. Before, an inline wrapper made a `Null` variant with every property (googleapis.com:people,
+retail), and a `$ref` without flags of its own forced `Write` on what it held, so a response could decode into the
+request shape (`Summary { owner: PersonWrite }`, not seen by the census: no duplicate file, no compile error). The
+renderer suffixes `Read`/`Write` only when the variants differ, renders equal ones as one file, and reports an error
+when two different models would still be one file. Proof: `ContextFlowSpec` (typed), `ContextVariantsSpec` with goldens
+`client/context-equal-variants`, `client/context-variants`, `client/context-variants-both`, `client/context-retail`,
+`ContextVariantsRuntimeTest`; the golden `object/plain-model-no-read-suffix` now reads `IssueKey.project` as
+`IssueFolderRead`. Re-checked with `--filter`: of the 28 documents that failed on duplicate files in the twelfth census,
+21 compile; 5 now stop on the new error, all two component schemas with one Kotlin name
+(`schema-names-map-to-one-kotlin-class`: `_metadata`/`metadata` in sendgrid.com, `EventType`/`eventType`,
+`OBRate1_0`/`OB_Rate1_0`, `Endpoint-get-users`/`Endpoint-get-users--`, and bunq.com's component `AvatarRead` next to
+the `Read` variant of `Avatar`); apple.com:sirikit-cloud-media and influxdata.com reach compile and fail on errors the
+duplicate hid (a discriminator base that is not rendered sealed; an unresolved `Post.Body`). The integration-tests
+clients do not change.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** emit (harness check) / wrong output (the Gradle plugin overwrites one variant with the other)
 **Impact:** 18 of 1,547 documents fail at emit (github.com ×6, apideck.com ×4, asana.com, apache.org ×2, adyen.com:LegalEntityService, googleapis.com:people, googleapis.com:retail, intellifi.nl, influxdata.com). In 2 of them the two files differ.
