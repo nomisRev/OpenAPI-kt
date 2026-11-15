@@ -1,6 +1,10 @@
 # The root client class and a first-level path class get the same name, and one replaces the other
 
-**Status:** open
+**Status:** fixed in `8272a0cc`. The root class is named as an identifier (a character that is not a letter or a digit
+is a word break; no title is `Api`; a leading digit is prefixed with `Api`), and a root class with the name of a first
+path segment's class, ignoring case, is named with `Api` after it (`FilesApi`), each with a warning. Proof:
+`RootClassNameSpec`, goldens `client/root-class-name-title` and `client/root-class-name-path`,
+`RootClassNameRuntimeTest`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** emit (harness check) / wrong output (no client entry point is generated)
 **Impact:** 9 of 1,547 documents: 6 fail at emit (tomtom.com:search, tomtom.com:routing, apideck.com:customer-support, getthedata.com:bng2latlong, hubapi.com:files, vtex.local:Marketplace-APIs-), 3 collide only by case (nasa.gov:apod and tl-api.azurewebsites.net "pass" the census without a client class, amazonaws.com:clouddirectory)

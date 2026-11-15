@@ -119,10 +119,15 @@ Not reported yet, seen in that census:
   `api.standards.get.post()`, neither renamed. amazonaws.com:securityhub, amazonaws.com:guardduty and tokenjay.app
   compile (re-checked with `--filter`), which makes 1,297 by that count. Not covered: the same clash on the root
   client class, and a type nested in the operation with the name of one nested in the step (left as two members).
-- The root client class is named from a title with `:` (8 documents, `name contains illegal characters`).
+- Fixed in `8272a0cc`: the root client class is named from a title with `:` (8 documents).
 - A form body that is a `$ref` to a schema with inline enum fields refers to `Post.Body.<Enum>` (6 documents).
 - discourse.local: a generated class name longer than a file name can be (`…And…And….class`, permission denied).
-- icons8.com now reaches the `:` root class name.
+
+A twelfth census after `dadbcc06`, `5ff2e4f4` and `8272a0cc` (`exploration/build/census-2026-11-15g/`): 1,322 generate
+and compile, 49 fail to compile, 94 fail in typed, 28 fail at emit, 41 fail at render. 30 documents newly compile, none
+stops earlier than before: 13 from compile (the `:` root class names and the operation-named steps), 6 from emit (the
+root class with the name of a path class, see `client-root-class-collides-with-path-class.md`), and 11 from render
+(`simpleNames must not contain empty items`: documents without a title, whose root class is now `Api`).
 
 The tables below still carry the counts of the first census.
 
