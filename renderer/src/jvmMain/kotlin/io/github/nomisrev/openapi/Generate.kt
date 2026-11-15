@@ -33,13 +33,15 @@ fun ApiTree.renderWithDiagnostics(config: RenderConfig): GenerationResult {
 }
 
 fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> {
-    val modelsConfig = config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)
+    val modelsConfig = config.withResolvedNames(this)
     return modelFiles(modelsConfig).map(ModelFile::file) + additionalFiles(modelsConfig)
 }
 
 /** A file of a model, with the shape of the model, which tells whether another model with the same file name is equal. */
 internal data class ModelFile(val file: FileSpec, val shape: String) {
-    val key: String get() = "${file.packageName}.${file.name}"
+    /** Compared ignoring case: `Users.kt` and `USERS.kt` are one file on a case-insensitive file system. */
+    val key: String get() = "${file.packageName}.${file.name}".lowercase()
+    val displayName: String get() = "${file.packageName}.${file.name}"
 }
 
 /**
@@ -57,10 +59,10 @@ private fun ApiTree.allModelFiles(config: RenderConfig): List<ModelFile> =
 
 /** An error for each class name that two models of a different shape would be rendered under. */
 internal fun ApiTree.modelFileCollisionDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
-    allModelFiles(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this))
+    allModelFiles(config.withResolvedNames(this))
         .groupBy(ModelFile::key)
         .filterValues { files -> files.map(ModelFile::shape).distinct().size > 1 }
-        .keys.sorted()
+        .values.map { files -> files.first().displayName }.sorted()
         .map { name ->
             GenerationDiagnostic(
                 GenerationDiagnosticSeverity.Error,

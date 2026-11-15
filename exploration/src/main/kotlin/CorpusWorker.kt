@@ -43,7 +43,8 @@ fun main(args: Array<String>) = runBlocking {
         buildJsonObject { put("severity", it.severity.name); put("message", it.message) }
     }).toString())
     phase("emit") {
-        val names = result.files.map { "${it.packageName}.${it.name}" }
+        // Compared ignoring case: `Users.kt` and `USERS.kt` are one file on a case-insensitive file system.
+        val names = result.files.map { "${it.packageName}.${it.name}".lowercase() }
         check(names.distinct().size == names.size) {
             "Duplicate generated files: ${names.groupingBy { it }.eachCount().filterValues { it > 1 }.keys}"
         }

@@ -25,12 +25,26 @@ data class RenderConfig(
      * [generateModels] and [generateClient] fill it when it is empty.
      */
     val pathClassNames: Map<Pair<String, String>, List<String>> = emptyMap(),
+    /**
+     * The simple class name of each schema, by the schema's name and the suffix of its context (`""`, `"Read"` or
+     * `"Write"`). Several schemas can have one Kotlin name (`_metadata` and `metadata`, `HTTPHealthCheck` and
+     * `HttpHealthCheck`), so a name is not always the schema's own, see [modelClassNames]. [generateModels] and
+     * [generateClient] fill it when it is empty; a schema without an entry has its own name.
+     */
+    val modelClassNames: Map<Pair<String, String>, String> = emptyMap(),
 )
 
 enum class KmpTarget {
     JVM,
     JS,
 }
+
+/**
+ * The config the rendering of [tree] uses: the class names of its schemas, the tri-state type's name (which avoids
+ * them), its named models and its path classes. Each is filled once.
+ */
+internal fun RenderConfig.withResolvedNames(tree: ApiTree): RenderConfig =
+    withModelClassNames(tree.models).withOptionalTypeName(tree).withNamedModels(tree.models).withPathClassNames(tree)
 
 internal fun RenderConfig.withNamedModels(models: List<Model>): RenderConfig =
     if (namedModels.isNotEmpty()) this

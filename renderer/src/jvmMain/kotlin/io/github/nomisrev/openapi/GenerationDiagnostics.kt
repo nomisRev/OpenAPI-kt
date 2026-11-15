@@ -44,11 +44,11 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 }
 
 internal fun ApiTree.generationDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
-    requestBodyDiagnostics() + modelFileCollisionDiagnostics(config) + ignoredParameterDiagnostics() + parameterDiagnostics() +
-        renamedArgumentDiagnostics(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)) +
+    requestBodyDiagnostics() + renamedModelDiagnostics(config) + modelFileCollisionDiagnostics(config) + ignoredParameterDiagnostics() + parameterDiagnostics() +
+        renamedArgumentDiagnostics(config.withResolvedNames(this)) +
         children.renamedPathDiagnostics(parentPath = "", operations = operations.keys) + renamedServerDiagnostics() + rootClassNameDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics() +
-        renamedEnumEntryDiagnostics(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)) +
-        renumberedUnionCaseDiagnostics(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this))
+        renamedEnumEntryDiagnostics(config.withResolvedNames(this)) +
+        renumberedUnionCaseDiagnostics(config.withResolvedNames(this))
 
 /**
  * A warning for each union with two cases of one class name, which are numbered so that the code compiles

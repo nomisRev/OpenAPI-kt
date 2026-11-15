@@ -91,9 +91,11 @@ private fun FileSpec.renderKey(): String =
     if (packageName.isBlank()) "$name.kt" else "$packageName.$name.kt"
 
 internal fun renderGeneratedFiles(files: List<FileSpec>): Map<String, String> {
-    val duplicates = files.groupBy(FileSpec::renderKey)
+    // Compared ignoring case: `HTTPHealthCheck.kt` and `HttpHealthCheck.kt` are one file on a case-insensitive file system.
+    val duplicates = files.groupBy { it.renderKey().lowercase() }
         .filterValues { generated -> generated.size > 1 }
-        .keys
+        .values
+        .map { generated -> generated.first().renderKey() }
         .sorted()
     check(duplicates.isEmpty()) {
         "Renderer generated duplicate files: ${duplicates.joinToString()}"

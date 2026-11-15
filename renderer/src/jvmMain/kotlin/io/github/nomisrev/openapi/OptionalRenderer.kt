@@ -63,14 +63,14 @@ internal fun RenderConfig.optionalAbsent(packageName: String): CodeBlock =
 internal fun ApiTree.chooseOptionalTypeName(config: RenderConfig): String {
     val taken = buildSet {
         models.forEach { model ->
-            (model as? Model.ContextHolder)?.context?.toClassName(config)?.let { add(it.topLevelClassName().simpleName) }
+            (model as? Model.ContextHolder)?.context?.toClassName(config)?.let { add(it.topLevelClassName().simpleName.lowercase()) }
         }
-        add(rootClassName().simpleName)
-        children.zip(children.uniqueNames(operations.keys)).forEach { [_, childName] -> add(childName.simpleName) }
+        add(rootClassName().simpleName.lowercase())
+        children.zip(children.uniqueNames(operations.keys)).forEach { [_, childName] -> add(childName.simpleName.lowercase()) }
     }
     return generateSequence(0) { it + 1 }
         .map { if (it == 0) DefaultOptionalTypeName else "${DefaultOptionalTypeName}Property${if (it == 1) "" else it}" }
-        .first { it !in taken }
+        .first { it.lowercase() !in taken }
 }
 
 internal fun RenderConfig.withOptionalTypeName(tree: ApiTree): RenderConfig =

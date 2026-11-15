@@ -11,7 +11,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.UNIT
-import io.github.nomisrev.openapi.routes.SchemaContext
 
 private val HttpResponseType = ClassName("io.ktor.client.statement", "HttpResponse")
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
@@ -55,14 +54,9 @@ fun Model.toTypeName(config: RenderConfig): TypeName = when (this) {
 fun NamingContext.toClassName(config: RenderConfig): ClassName =
     when (val root = head) {
         is NamingContext.Reference -> {
-            val suffix = if (root.name in config.contextSpecificNames && root.context != SchemaContext.Null) {
-                when (root.context) {
-                    SchemaContext.Read -> "Read"
-                    SchemaContext.Write -> "Write"
-                    SchemaContext.Null -> ""
-                }
-            } else ""
-            val baseName = root.name.toPascalCase() + suffix
+            // Unique among the schemas of the rendered tree, see [modelClassNames]; the schema's own name without one.
+            val baseName = config.modelClassNames[root.name to root.classNameSuffix(config)]
+                ?: (root.name.toPascalCase() + root.classNameSuffix(config))
             val simpleNames = listOf(baseName) + nested.map { it.toSimpleName() }
             className(config.modelPackage.toPackageName(), simpleNames)
         }
@@ -117,7 +111,7 @@ private fun className(packageName: String, names: List<String>): ClassName {
     return ClassName(packageName, sanitizedNames.first(), *sanitizedNames.drop(1).toTypedArray())
 }
 
-private fun sanitizeSimpleName(raw: String): String {
+internal fun sanitizeSimpleName(raw: String): String {
     val stripped = raw.replace(Regex("[^A-Za-z0-9_]"), "").ifBlank { "Unnamed" }
     return if (stripped.first().isDigit()) "_$stripped" else stripped
 }
