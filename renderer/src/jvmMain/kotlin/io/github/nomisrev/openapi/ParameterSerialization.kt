@@ -482,6 +482,8 @@ internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
         ).templateText()
     }
 
+    val overloaded = segments.flatMap(PathSegment::toSteps)
+        .mapNotNullTo(mutableSetOf()) { (it.segment as? PathSegment.OverloadedParameter)?.name }
     val inner = segments.map { segment ->
         when (segment) {
             is PathSegment.FixedValue -> CodeBlock.of("%L", templateText(segment.wireValue.encodeURLParameter()))
@@ -495,8 +497,16 @@ internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
                 when (part) {
                     is PathSegment.Composite.Part.Text ->
                         CodeBlock.of("%L", templateText(part.value).replace(' ', '·'))
-                    is PathSegment.Composite.Part.Param -> parameter(part.name, part.model)
+                    is PathSegment.Composite.Part.Param ->
+                        // A union of scalars is held as the string of the case it was given ([PathSegment.toSteps]).
+                        if (part.name in overloaded) {
+                            CodeBlock.of("%L.%M()", part.name.pathProperty(), EncodeURLParameterMember).interpolated()
+                        } else {
+                            parameter(part.name, part.model)
+                        }
                     is PathSegment.Composite.Part.Fragment -> CodeBlock.of("")
+                    is PathSegment.Composite.Part.FixedValue ->
+                        CodeBlock.of("%L", templateText(part.wireValue.encodeURLParameter()))
                 }
             }.joinToCode("")
         }

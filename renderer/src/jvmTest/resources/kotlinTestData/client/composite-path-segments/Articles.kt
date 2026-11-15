@@ -3,39 +3,39 @@ package io.github.nomisrev.render.test.client.composite.path.segments
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.http.encodeURLParameter
-import kotlin.String
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
 public class Articles internal constructor(
   private val client: HttpClient,
 ) {
-  public fun mediaTypeExtension(mediaTypeExtension: MediaTypeExtensionPath.MediaTypeExtension): MediaTypeExtensionPath = MediaTypeExtensionPath(client, mediaTypeExtension)
+  public val json: Json = Json(client)
 
-  public class MediaTypeExtensionPath internal constructor(
+  public val xml: Xml = Xml(client)
+
+  public class Json internal constructor(
     private val client: HttpClient,
-    private val mediaTypeExtension: MediaTypeExtension,
   ) {
-    public val `get`: Get = Get(client, mediaTypeExtension)
-
-    @Serializable
-    public enum class MediaTypeExtension(
-      public val `value`: String,
-    ) {
-      @SerialName("json")
-      Json("json"),
-      @SerialName("xml")
-      Xml("xml"),
-      ;
-    }
+    public val `get`: Get = Get(client)
 
     public class Get internal constructor(
       private val client: HttpClient,
-      private val mediaTypeExtension: MediaTypeExtension,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("articles.${this.mediaTypeExtension.value.encodeURLParameter()}")
+        val response = client.get("articles.json")
+        if (response.status.value != 204) throw ResponseException(response, "")
+      }
+    }
+  }
+
+  public class Xml internal constructor(
+    private val client: HttpClient,
+  ) {
+    public val `get`: Get = Get(client)
+
+    public class Get internal constructor(
+      private val client: HttpClient,
+    ) {
+      public suspend operator fun invoke() {
+        val response = client.get("articles.xml")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

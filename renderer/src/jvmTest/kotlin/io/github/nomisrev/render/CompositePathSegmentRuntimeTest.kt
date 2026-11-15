@@ -1,7 +1,7 @@
 package io.github.nomisrev.render
 
 import io.github.nomisrev.render.test.client.composite.path.segments.Api
-import io.github.nomisrev.render.test.client.composite.path.segments.Articles
+import io.github.nomisrev.render.test.client.composite.path.segments.Reports
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -130,9 +130,46 @@ class CompositePathSegmentRuntimeTest {
     }
 
     @Test
-    fun anEnumParameterIsAPlainParameterOfTheSegment() = runBlocking {
-        api.articles.mediaTypeExtension(Articles.MediaTypeExtensionPath.MediaTypeExtension.Xml).get()
-
+    fun anEnumParameterIsAStepPerValue() = runBlocking {
+        api.articles.xml.get()
         assertEquals("/articles.xml", request.url.encodedPath)
+
+        api.articles.json.get()
+        assertEquals("/articles.json", request.url.encodedPath)
+    }
+
+    @Test
+    fun anEnumParameterBeforeTextIsAStepPerValueWithTheTextBelowIt() = runBlocking {
+        api.orders.status.paid.json.get()
+        assertEquals("/orders/status/Paid.json", request.url.encodedPath)
+
+        // The value is sent as declared, encoded: only its name is made an identifier.
+        api.orders.status.pendingPayment.json.get()
+        assertEquals("/orders/status/Pending%20Payment.json", request.url.encodedPath)
+    }
+
+    @Test
+    fun twoEnumParametersOfOneSegmentAreAStepEach() = runBlocking {
+        api.news.home.json.get()
+        assertEquals("/news/home.json", request.url.encodedPath)
+
+        api.news.world.jsonp.get()
+        assertEquals("/news/world.jsonp", request.url.encodedPath)
+    }
+
+    @Test
+    fun anEnumParameterBeforeAFragmentIsAStepPerValue() = runBlocking {
+        api.policy.agentPermissions.revisionId.get()
+
+        assertEquals("/policy/agentPermissions", request.url.encodedPath)
+    }
+
+    @Test
+    fun aUnionParameterIsANavigationFunctionPerCase() = runBlocking {
+        api.reports.period(7).csv.get()
+        assertEquals("/reports/7.csv", request.url.encodedPath)
+
+        api.reports.period(Reports.Period.Weekly).csv.get()
+        assertEquals("/reports/weekly.csv", request.url.encodedPath)
     }
 }

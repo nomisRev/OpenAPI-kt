@@ -14,6 +14,8 @@ import kotlin.test.assertTrue
  * A path segment can be made of literal text and template expressions (`{id}.json`, `lists.{format}`,
  * `{name}:cancel`, OpenAPI 3.1.1 path templating): it is navigated one step per part, a navigation function for each
  * expression and a property for the text (`api.hackathons.id(id).json`), like the steps of `/`-separated segments.
+ * A parameter that is a fixed enum is a property per value, as it is for a whole segment
+ * (`api.orders.status.paid.json`), and a union of scalars a navigation function per case.
  * `CompositePathSegmentRuntimeTest` checks the request path.
  */
 val compositePathSegmentSpec by testSuite {
@@ -88,6 +90,30 @@ val compositePathSegmentSpec by testSuite {
                     "schema": { "type": "string", "enum": ["json", "xml"] }
                   }
                 ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/orders/status/{status}.json": {
+              "get": {
+                "parameters": [ { "name": "status", "in": "path", "required": true, "schema": { "type": "string", "enum": ["Abandoned", "Pending Payment", "Paid"] } } ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/news/{section}.{format}": {
+              "get": {
+                "parameters": [ { "name": "section", "in": "path", "required": true, "schema": { "type": "string", "enum": ["home", "world"] } }, { "name": "format", "in": "path", "required": true, "schema": { "type": "string", "enum": ["json", "jsonp"] } } ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/policy/{actionGroup}#revisionId": {
+              "get": {
+                "parameters": [ { "name": "actionGroup", "in": "path", "required": true, "schema": { "type": "string", "enum": ["agentPermissions"] } } ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/reports/{period}.csv": {
+              "get": {
+                "parameters": [ { "name": "period", "in": "path", "required": true, "schema": { "oneOf": [ { "type": "string", "enum": ["daily", "weekly"] }, { "type": "integer", "format": "int32" } ] } } ],
                 "responses": { "204": { "description": "No Content" } }
               }
             },

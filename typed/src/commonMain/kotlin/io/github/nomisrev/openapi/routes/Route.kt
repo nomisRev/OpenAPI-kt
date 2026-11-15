@@ -409,8 +409,8 @@ private suspend fun Route.expandFiniteEnumPathSegments(index: Int = 0): List<Rou
 context(ctx: Registry)
 private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>? {
     val segment = segments[index]
-    // A composite segment keeps its parameters as plain parameters: no per-value nodes.
-    if (segment is PathSegment.Literal || segment is PathSegment.FixedValue || segment is PathSegment.Composite) return null
+    if (segment is PathSegment.Composite) return expandFiniteEnumCompositeParts(index, segment)
+    if (segment is PathSegment.Literal || segment is PathSegment.FixedValue) return null
 
     val pathInput = parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == segment.name }
     // A fixed segment or an overload is the value as is: `simple`. A `label` or `matrix` enum or union is reported.
@@ -471,6 +471,34 @@ private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>
     }
 
     return fixedRoutes + listOfNotNull(dynamicRoute)
+}
+
+/**
+ * A parameter of a composite segment that is a fixed enum is a step per value, as a whole segment is:
+ * `/orders/{status}.json` is `orders.paid.json`. Every such parameter of the segment is expanded; a union stays a
+ * parameter. `null` when the segment has none.
+ */
+context(ctx: Registry)
+private suspend fun Route.expandFiniteEnumCompositeParts(index: Int, segment: PathSegment.Composite): List<Route>? {
+    val partIndex = segment.parts.indices.firstOrNull { segment.parts[it].fixedEnumOrNull(this) != null } ?: return null
+    val part = segment.parts[partIndex] as PathSegment.Composite.Part.Param
+    val enum = requireNotNull(part.fixedEnumOrNull(this))
+    return enum.values.map { it.wireValue() }.distinct().flatMap { wireValue ->
+        val parts = segment.parts.mapIndexed { current, existing ->
+            if (current == partIndex) PathSegment.Composite.Part.FixedValue(wireValue, part.name) else existing
+        }
+        val expanded = PathSegment.Composite(parts)
+        val route = replacePathSegment(index = index, paramName = part.name, segment = expanded, replacementType = null)
+        route.expandFiniteEnumCompositeParts(index, expanded) ?: listOf(route)
+    }
+}
+
+context(ctx: Registry)
+private suspend fun PathSegment.Composite.Part.fixedEnumOrNull(route: Route): Model.Enum? {
+    if (this !is PathSegment.Composite.Part.Param) return null
+    val pathInput = route.parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == name }
+    if (pathInput != null && pathInput.style != Style.simple) return null
+    return (pathInput?.type ?: model).closedEnumOrNull()
 }
 
 private fun Route.replacePathSegment(

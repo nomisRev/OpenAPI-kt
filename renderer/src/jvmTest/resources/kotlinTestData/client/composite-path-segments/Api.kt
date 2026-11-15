@@ -27,6 +27,14 @@ public class Api internal constructor(
 
   public val articles: Articles = Articles(client)
 
+  public val orders: Orders = Orders(client)
+
+  public val news: News = News(client)
+
+  public val policy: Policy = Policy(client)
+
+  public val reports: Reports = Reports(client)
+
   public val tags: Tags = Tags(client)
 
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {

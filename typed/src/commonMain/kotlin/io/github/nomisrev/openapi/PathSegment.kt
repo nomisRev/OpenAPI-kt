@@ -30,8 +30,10 @@ sealed interface PathSegment {
      * `{name}:cancel`, `v{version}` (OpenAPI 3.1.1, 4.8.2: `path-segment = 1*( path-literal / template-expression )`).
      * A segment that is exactly `{name}`, or has no braces, is a [Parameter] or a [Literal] instead.
      *
-     * A [Part.Param] is a plain parameter whatever its model: a fixed enum or a union is not expanded into separate
-     * nodes inside a composite. A tree navigates a composite one step per part ([toSteps]). [name] is the segment as written, `{id}.json`.
+     * A [Part.Param] is a plain parameter. A parameter that is a fixed enum is a [Part.FixedValue] per value instead,
+     * as a whole segment is a [PathSegment.FixedValue] per value (`/orders/{status}.json` is `orders.paid.json`); a
+     * union is not expanded inside a composite. A tree navigates a composite one step per part ([toSteps]). [name] is
+     * the segment as written, `{id}.json`.
      */
     @Serializable
     @SerialName("Composite")
@@ -59,6 +61,14 @@ sealed interface PathSegment {
             data class Param(val name: String, val model: Model) : Part {
                 override val template: String
                     get() = "{$name}"
+            }
+
+            /** One value of a fixed enum parameter [sourceName], sent as [wireValue]: a step of its own, never split. */
+            @Serializable
+            @SerialName("FixedValue")
+            data class FixedValue(val wireValue: String, val sourceName: String) : Part {
+                override val template: String
+                    get() = wireValue
             }
 
             /**
@@ -137,7 +147,12 @@ fun PathSegment.toSteps(): List<PathStep> {
             is PathSegment.Composite.Part.Text -> text(part.value)
             is PathSegment.Composite.Part.Fragment -> text("#${part.value}")
             is PathSegment.Composite.Part.Param -> {
-                steps += PathStep(PathSegment.Parameter(part.name, part.model), pending, fromComposite = true)
+                // A union of scalars is a navigation function per case, as it is for a whole segment.
+                steps += PathStep(part.model.toPathSegment(part.name), pending, fromComposite = true)
+                pending = ""
+            }
+            is PathSegment.Composite.Part.FixedValue -> {
+                steps += PathStep(PathSegment.FixedValue(part.wireValue, part.sourceName), pending)
                 pending = ""
             }
         }
