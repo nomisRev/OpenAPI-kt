@@ -56,6 +56,7 @@ Read these numbers with three caveats:
 | [server-case-names-collide](server-case-names-collide.md), [server-case-name-not-identifier](server-case-name-not-identifier.md), [server-empty-description-empty-case-name](server-empty-description-empty-case-name.md) | `796be767` | names over 200 characters are not shortened |
 | [path-literal-segment-loses-navigation-property](path-literal-segment-loses-navigation-property.md) | `3b80f367` | a digit- or separator-only parameter next to a literal of that name (`{1}`, `1`) fails a new check instead of compiling |
 | [context-variants-of-one-schema-share-a-class-name](context-variants-of-one-schema-share-a-class-name.md) | `300d9589` | two component schemas with one Kotlin name now fail with an error instead of one file replacing the other (5 documents, `schema-names-map-to-one-kotlin-class`); apple.com:sirikit-cloud-media and influxdata.com fail to compile on errors the duplicate hid |
+| [schema-names-map-to-one-kotlin-class](schema-names-map-to-one-kotlin-class.md), [schema-names-differ-by-case](schema-names-differ-by-case.md) | `6faa2a6d` | an implicit discriminator over two schemas with one Kotlin name; `OBRate102`-style numbers after a digit; declaration order decides who keeps a name |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none

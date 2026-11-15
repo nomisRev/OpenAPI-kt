@@ -1,6 +1,18 @@
 # Two schemas whose names differ only by case overwrite each other on a case-insensitive file system
 
-**Status:** open
+**Status:** fixed in `6faa2a6d`. Class names are assigned once per schema and per `Read`/`Write` shape, compared
+ignoring case: schemas in declaration order, then the shapes; a taken name is numbered from 2 with a Warning naming
+both schemas (`Metadata2`, `HttpHealthCheck2`, `AvatarRead2`, a component literally named `AvatarRead` keeping its
+name); schemas with one name and one shape (`__string`, `String`) stay one class without a diagnostic; wire names
+(`@SerialName`, discriminator values) are unchanged. The duplicate-file checks of the renderer, `renderGeneratedFiles`
+and the corpus worker ignore case. Proof: `SchemaNameCollisionsSpec`, goldens `client/schema-names-same`,
+`client/schema-names-case`, `client/schema-names-suffix`, `client/schema-names-equal`, `SchemaNameCollisionsRuntimeTest`.
+Re-checked with `--filter`: amazonaws.com:health, openbanking.org.uk:account-info-openapi, daniweb.com, bunq.com,
+googleapis.com:compute (compiled on macOS) and amazonaws.com:dataexchange compile; sendgrid.com gets past render and
+fails to compile on an unresolved `Post.Body` (as influxdata.com). Left open: a discriminator without a mapping whose
+`oneOf` lists two schemas with one Kotlin name renders both subtypes as one nested class (the subtype names come from
+the typed layer); a numbered name that ends in a digit reads oddly (`OBRate1_0` is `OBRate102`); the schema declared
+first keeps the name even when the later one is already PascalCase (`eventType` keeps `EventType`).
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** emit (seen at compile)
 **Impact:** 1 of 1,547 documents confirmed (googleapis.com:compute; no excluded errors, 4 errors in total). 7 more emitted documents have such schema pairs but show no unresolved reference from it (they fail on other errors).
