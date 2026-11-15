@@ -47,6 +47,7 @@ Read these numbers with three caveats:
 | [enum-values-with-one-kotlin-name-silently-dropped](enum-values-with-one-kotlin-name-silently-dropped.md), [enum-entry-name-illegal-characters](enum-entry-name-illegal-characters.md), [enum-empty-identifier](enum-empty-identifier.md) | `bf24fce5` | defaults on optional model properties are not covered by a golden |
 | [dollar-in-path-literal-interpolated](dollar-in-path-literal-interpolated.md), [keyword-path-parameter-unescaped-at-use-sites](keyword-path-parameter-unescaped-at-use-sites.md) | `bb15dd58` | parameter names `_` / empty |
 | [union-case-name-collisions](union-case-name-collisions.md) | `11ac049c` | a `required`-only branch next to `$ref` branches still becomes a free-form JSON case |
+| [shared-error-case-inline-type-wrong-owner](shared-error-case-inline-type-wrong-owner.md) | `a8e070fa` | none known |
 | [response-media-type-without-schema](response-media-type-without-schema.md) | `3e55150c`, and the two commits after `e0a84a6c` | malformed media type keys on responses still abort the document (`malformed-media-type-key-crash`) |
 | [unregistered-status-codes-share-one-response-case](unregistered-status-codes-share-one-response-case.md) | `0862fee5` | the multi-content-type and error-dispatch shapes are covered by a golden only |
 | [server-case-names-collide](server-case-names-collide.md), [server-case-name-not-identifier](server-case-name-not-identifier.md), [server-empty-description-empty-case-name](server-empty-description-empty-case-name.md) | `796be767` | names over 200 characters are not shortened |
@@ -86,6 +87,9 @@ earlier than before. Largest remaining groups: `Duplicate generated files` (95, 
 parameter node` (65, typed), an unresolved inline type under a per-media-type response class such as
 `PdfResponse.BadRequest.ErrorDescription` (43 apisetu.gov.in documents, compile; reached since `3e55150c`), refused
 parameters (36, render), unresolved `$ref` pointers (22, typed), recursive `allOf` (20, typed).
+
+After `a8e070fa` the 43 apisetu.gov.in documents compile (re-checked with `--filter apisetu.gov.in`, the other 138
+apisetu documents unchanged), which makes 1,171 by that count; no full census was run for it.
 
 The tables below still carry the counts of the first census.
 
