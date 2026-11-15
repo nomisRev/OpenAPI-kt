@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -156,20 +157,33 @@ private fun PathNode.toTypeSpec(
             ?.let(builder::addType)
     }
 
+    val namedChildren = children.zip(children.uniqueNames(operations.keys))
+    // A step with the name of an operation of this node (`/standards/get` next to `GET /standards`) and the operation
+    // are one member: `get()` is the operation and `get.post()` is the step, as the paths read.
+    val operationSteps = mutableMapOf<PathNode, TypeSpec>()
     for ([method, route] in orderedOperations) {
-        builder.addProperty(route.toOperationPropertySpec(method, className, currentAccumulatedParams))
-        builder.addType(
-            route.toOperationTypeSpec(
-                method = method,
-                config = config,
-                pathClassName = className,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-                accumulatedParams = currentAccumulatedParams,
-            )
+        val operationTypeSpec = route.toOperationTypeSpec(
+            method = method,
+            config = config,
+            pathClassName = className,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
+            accumulatedParams = currentAccumulatedParams,
         )
+        builder.addProperty(route.toOperationPropertySpec(method, className, currentAccumulatedParams))
+        val step = namedChildren.firstOrNull { [child, name] ->
+            (child.segment is PathSegment.Literal || child.segment is PathSegment.FixedValue) &&
+                name.simpleName == operationTypeSpec.name && name.memberName.unescapeBackticks() == method.value.lowercase()
+        }
+        val merged = step?.let { [child, name] ->
+            child.toTypeSpec(config, className.nestedClass(name.simpleName), currentAccumulatedParams)
+                .withOperation(operationTypeSpec)
+        }
+        if (step != null && merged != null) operationSteps[step.first] = merged
+        builder.addType(merged ?: operationTypeSpec)
     }
 
-    for ([child, name] in children.zip(children.uniqueNames(operations.keys))) {
+    for ([child, name] in namedChildren) {
+        if (child in operationSteps) continue
         val childClassName = className.nestedClass(name.simpleName)
 
         child.segment.addConcreteNavigationMember(
@@ -184,4 +198,28 @@ private fun PathNode.toTypeSpec(
     }
 
     return builder.build()
+}
+
+/**
+ * This class of a path step with the functions and types of [operation], the class of an operation of the step's
+ * parent that has its name. Both are constructed from the client and the path parameters down to the parent. `null`
+ * when a type nested in one has the name of a type nested in the other.
+ */
+private fun TypeSpec.withOperation(operation: TypeSpec): TypeSpec? {
+    val nestedNames = typeSpecs.mapTo(mutableSetOf()) { it.name }
+    if (operation.typeSpecs.any { it.name in nestedNames }) return null
+    val propertyNames = propertySpecs.mapTo(mutableSetOf()) { it.name }
+    val optIn = ClassName("kotlin", "OptIn")
+    // `@OptIn` is not repeatable, and a deprecated operation does not deprecate the step: its functions say so.
+    val optIns = (annotations + operation.annotations).filter { it.typeName == optIn }
+        .flatMap { it.members }.distinctBy { it.toString() }
+    return toBuilder().apply {
+        annotations.removeAll { it.typeName == optIn }
+        if (optIns.isNotEmpty()) {
+            addAnnotation(AnnotationSpec.builder(optIn).apply { optIns.forEach { addMember(it) } }.build())
+        }
+        operation.funSpecs.forEach(::addFunction)
+        operation.propertySpecs.filter { it.name !in propertyNames }.forEach(::addProperty)
+        operation.typeSpecs.forEach(::addType)
+    }.build()
 }
