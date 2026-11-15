@@ -123,26 +123,22 @@ val apiTreeSpec by testSuite {
     fun sharedWorkflowNode(tree: ApiTree): PathNode =
         tree.children.single().children.single()
 
-    fun assertSharedPathParameterConflict(
-        routes: List<Route>,
-        expectedNode: String,
-        vararg expectedFragments: String,
-    ) {
-        val messages = listOf(routes, routes.reversed()).map { ordered ->
-            val error = assertFailsWith<IllegalArgumentException> {
-                ordered.buildTree("Conflicts")
+    /**
+     * Operations that declare one path parameter as different types are a node each below their parent, whatever the
+     * order of the routes, so each operation is reached only with the type it declares.
+     */
+    fun assertSeparatePathParameterNodes(routes: List<Route>) {
+        listOf(routes, routes.reversed()).forEach { ordered ->
+            val parent = ordered.buildTree("Split").children.single()
+            assertEquals(routes.size, parent.children.size)
+            routes.forEach { route ->
+                val node = parent.children.single { it.segment == route.segments[1] }
+                val below = route.segments.drop(2).fold(node) { current, segment ->
+                    current.children.single { it.segment == segment }
+                }
+                assertEquals(mapOf(route.method to route), below.operations)
             }
-            val message = requireNotNull(error.message)
-            assertTrue(
-                message.startsWith("Conflicting shared path parameter node '$expectedNode': "),
-                message
-            )
-            expectedFragments.forEach { fragment ->
-                assertTrue(message.contains(fragment), message)
-            }
-            message
         }
-        assertEquals(messages.first(), messages.last())
     }
 
     test("buildTree empty routes") {
@@ -392,7 +388,7 @@ val apiTreeSpec by testSuite {
         assertEquals(setOf("runs", "history"), reverseNode.children.map { it.segment.name }.toSet())
     }
 
-    test("reproducer: shared multi-enum overloaded path node conflicts when case order differs") {
+    test("buildTree keeps overloaded path parameters whose cases differ in order as separate nodes") {
         fun overloadedMultiEnumWorkflowParam(
             name: String,
             routeKey: String,
@@ -442,17 +438,10 @@ val apiTreeSpec by testSuite {
             literal("history"),
         )
 
-        assertSharedPathParameterConflict(
-            routes = listOf(getRuns, getHistory),
-            expectedNode = "/workflows/{workflowId}",
-            "GET /workflows/{workflowId}/history",
-            "GET /workflows/{workflowId}/runs",
-            "OverloadedParameter(name=workflowId, type=OneOf(cases=[Enum(values=[in-progress]), Enum(values=[queued])]))",
-            "OverloadedParameter(name=workflowId, type=OneOf(cases=[Enum(values=[queued]), Enum(values=[in-progress])]))",
-        )
+        assertSeparatePathParameterNodes(listOf(getRuns, getHistory))
     }
 
-    test("buildTree rejects mixed parameter and overloaded parameter on shared node regardless of insertion order") {
+    test("buildTree keeps a plain and an overloaded declaration of a path parameter as separate nodes in any order") {
         val getRuns = route(
             HttpMethod.Get,
             literal("workflows"),
@@ -466,14 +455,7 @@ val apiTreeSpec by testSuite {
             literal("history"),
         )
 
-        assertSharedPathParameterConflict(
-            routes = listOf(getRuns, getHistory),
-            expectedNode = "/workflows/{workflowId}",
-            "GET /workflows/{workflowId}/history",
-            "GET /workflows/{workflowId}/runs",
-            "Parameter(name=workflowId, model=String)",
-            "OverloadedParameter(name=workflowId, type=OneOf(cases=[Int, Enum(values=[queued, in-progress])]))",
-        )
+        assertSeparatePathParameterNodes(listOf(getRuns, getHistory))
     }
 
     test("buildTree shares a node between declarations of a path parameter that differ by validation or a default") {
@@ -507,21 +489,14 @@ val apiTreeSpec by testSuite {
         assertEquals(constrained, listOf(getItem, getParts).buildTree("Items").children.single().children.single().segment)
     }
 
-    test("buildTree rejects different plain parameter models on shared node regardless of insertion order") {
+    test("buildTree keeps declarations of a path parameter as different types as separate nodes in any order") {
         val getPet = route(HttpMethod.Get, literal("pets"), param("petId"))
         val deletePet = route(HttpMethod.Delete, literal("pets"), intParam("petId"))
 
-        assertSharedPathParameterConflict(
-            routes = listOf(getPet, deletePet),
-            expectedNode = "/pets/{petId}",
-            "DELETE /pets/{petId}",
-            "GET /pets/{petId}",
-            "Parameter(name=petId, model=Int)",
-            "Parameter(name=petId, model=String)",
-        )
+        assertSeparatePathParameterNodes(listOf(getPet, deletePet))
     }
 
-    test("buildTree rejects different shared path parameter flattening shapes") {
+    test("buildTree keeps declarations of a path parameter with different flattening shapes as separate nodes") {
         val flattenedPet = route(
             HttpMethod.Get,
             literal("pets"),
@@ -533,14 +508,7 @@ val apiTreeSpec by testSuite {
             PathSegment.Parameter("petId", objectWrapper("PetIdObject", intType)),
         )
 
-        assertSharedPathParameterConflict(
-            routes = listOf(flattenedPet, wrappedPet),
-            expectedNode = "/pets/{petId}",
-            "DELETE /pets/{petId}",
-            "GET /pets/{petId}",
-            "Parameter(name=petId, model=Object(properties=[value:Int]))",
-            "Parameter(name=petId, model=ScalarWrapper(properties=[value:Int]))",
-        )
+        assertSeparatePathParameterNodes(listOf(flattenedPet, wrappedPet))
     }
 
     test("toApiTree rejects conflicting explicit literal and unrolled enum literal routes") {

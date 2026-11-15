@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi.routes
 
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.PathSegment
@@ -89,9 +90,15 @@ private suspend fun Parameter.toRouteInput(
     }
     val style = style ?: input.defaultStyle
     val explode = explode ?: (style == Style.form)
+    if (input == Parameter.Input.Path && type.isNullable) {
+        ctx.warn(
+            "${method.value} $path declares the path parameter '$name' as nullable. A path segment cannot be null, " +
+                "so it is generated as not nullable."
+        )
+    }
     return Route.Input(
         name = name,
-        type = type,
+        type = if (input == Parameter.Input.Path) type.notNullable() else type,
         contentType = contentType,
         isRequired = required,
         input = input,
@@ -130,3 +137,28 @@ private fun ReferenceOr<Parameter>.resolve(): Parameter =
     resolveComponent("parameters", ctx.openAPI.components.parameters)
 
 
+
+/** The model as a value that is never `null`: what a path parameter is, whatever its schema says. */
+private fun Model.notNullable(): Model = when (this) {
+    is Model.ByteArray -> copy(isNullable = false)
+    is Model.RawResponse -> copy(isNullable = false)
+    is Model.Collection -> copy(isNullable = false)
+    is Model.Dictionary -> copy(isNullable = false)
+    is Model.Date -> copy(isNullable = false)
+    is Model.DateTime -> copy(isNullable = false)
+    is Model.DiscriminatedObject -> copy(isNullable = false)
+    is Model.Enum -> copy(isNullable = false)
+    is Model.FreeFormJson -> copy(isNullable = false)
+    is Model.Object -> copy(isNullable = false)
+    is Model.Primitive.Boolean -> copy(isNullable = false)
+    is Model.Primitive.Double -> copy(isNullable = false)
+    is Model.Primitive.Float -> copy(isNullable = false)
+    is Model.Primitive.Int -> copy(isNullable = false)
+    is Model.Primitive.Long -> copy(isNullable = false)
+    is Model.Primitive.String -> copy(isNullable = false)
+    is Model.Primitive.Unit -> copy(isNullable = false)
+    is Model.Reference -> copy(isNullable = false)
+    is Model.OneOf -> copy(isNullable = false)
+    is Model.AnyOf -> copy(isNullable = false)
+    is Model.Uuid -> copy(isNullable = false)
+}

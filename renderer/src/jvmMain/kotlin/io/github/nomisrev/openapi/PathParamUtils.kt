@@ -42,7 +42,48 @@ internal data class PathNodeName(
     val memberName: String,
     val suffix: Int?,
     val separator: String? = null,
+    /** Set when the node is one of several declarations of a parameter as different types, named by its type. */
+    val typeWord: String? = null,
 )
+
+/**
+ * The word a parameter node is named with next to a sibling that declares the same parameter as another type:
+ * `String`, `Long`, `Uuid`, `IntList`. `null` for a type without a word of its own.
+ */
+private fun Model.pathTypeWord(): String? = when (this) {
+    is Model.Primitive.String -> "String"
+    is Model.Primitive.Int -> "Int"
+    is Model.Primitive.Long -> "Long"
+    is Model.Primitive.Float -> "Float"
+    is Model.Primitive.Double -> "Double"
+    is Model.Primitive.Boolean -> "Boolean"
+    is Model.Uuid -> "Uuid"
+    is Model.Date -> "Date"
+    is Model.DateTime -> "DateTime"
+    is Model.Collection -> inner.pathTypeWord()?.let { it + "List" }
+    is Model.Reference -> (context.head as? NamingContext.Reference)?.name?.toPascalCase()
+    else -> null
+}
+
+/**
+ * The type words of the parameter nodes that are declarations of one parameter as different types, by index. Such
+ * siblings keep one member name, as overloads of one navigation function, and their classes are named with the type.
+ * A group is left out, and numbered like any other collision, when a type has no word, two have the same, or more
+ * than one is a list (lists of different elements are one signature on the JVM).
+ */
+private fun List<PathNode>.typeWords(memberNames: List<String>): Map<Int, String> =
+    indices.filter { this[it].segment is PathSegment.Parameter }
+        .groupBy { memberNames[it].unescapeBackticks() to this[it].joinedBy }
+        .values
+        .filter { it.size > 1 }
+        .flatMap { group ->
+            val models = group.map { (this[it].segment as PathSegment.Parameter).model }
+            val words = models.map { it.pathTypeWord() }
+            val named = words.none { it == null } && words.distinct().size == words.size &&
+                models.count { it is Model.Collection } <= 1
+            if (named) group.zip(words.filterNotNull()) else emptyList()
+        }
+        .toMap()
 
 private val SeparatorWords = mapOf(
     '.' to "dot", ':' to "colon", '-' to "dash", '_' to "underscore", ',' to "comma", ';' to "semicolon",
@@ -90,6 +131,10 @@ private fun PathNode.separatorWord(): String? {
  * its separator, whatever the order of the spec: next to `/hackathons/{id}/json`, which stays `json: Json`,
  * `/hackathons/{id}.json` is `dotJson: DotJson`, and `{name}:cancel` next to `{name}/cancel` is `colonCancel`.
  *
+ * Parameter nodes that declare one parameter as different types (`{id}` a string for one operation and an integer for
+ * another) keep one member name, as overloads of one navigation function, and each class is named with its type,
+ * whatever the order of the spec: `id(id: String): IdStringPath` and `id(id: Long): IdLongPath`.
+ *
  * Of what still collides, the node declared first keeps the name, and a later one with a name already taken is
  * suffixed with the first number from 2 that is free, on both its class and member: `/secret-scanning` is
  * `secretScanning: SecretScanning` and `/secret_scanning` is `secretScanning2: SecretScanning2`. Every node that does
@@ -104,11 +149,16 @@ internal fun List<PathNode>.uniqueNames(): List<PathNodeName> {
             )
     }
     val separators = mapIndexed { index, node -> node.separatorWord()?.takeIf { collides(index) } }
-    val bases = plain.mapIndexed { index, [simpleName, memberName] ->
+    val separated = plain.mapIndexed { index, [simpleName, memberName] ->
         val word = separators[index] ?: return@mapIndexed simpleName to memberName
         val member = word + memberName.unescapeBackticks().replaceFirstChar(Char::uppercase)
         val escaped = if (memberName.startsWith("`") && !member.isValidParamName()) "`$member`" else member
         (word.replaceFirstChar(Char::uppercase) + simpleName) to escaped
+    }
+    val typeWords = typeWords(plain.map { it.second })
+    val bases = separated.mapIndexed { index, [simpleName, memberName] ->
+        val word = typeWords[index] ?: return@mapIndexed simpleName to memberName
+        (simpleName.removeSuffix("Path") + word + "Path") to memberName
     }
     val takenClasses = bases.mapTo(mutableSetOf()) { it.first.lowercase() }
     val takenMembers = bases.mapTo(mutableSetOf()) { it.second.unescapeBackticks() }
@@ -117,8 +167,13 @@ internal fun List<PathNode>.uniqueNames(): List<PathNodeName> {
     return bases.mapIndexed { index, [simpleName, memberName] ->
         val separator = this[index].joinedBy.removePrefix("/").takeIf { separators[index] != null }
         val member = memberName.unescapeBackticks()
-        val collides = !seenClasses.add(simpleName.lowercase()) or !seenMembers.add(member)
-        if (!collides) return@mapIndexed PathNodeName(simpleName, memberName, suffix = null, separator = separator)
+        val typeWord = typeWords[index]
+        // Declarations of one parameter as different types are overloads of one member, so only their classes can collide.
+        val memberTaken = !seenMembers.add(member) && typeWord == null
+        val collides = !seenClasses.add(simpleName.lowercase()) or memberTaken
+        if (!collides) {
+            return@mapIndexed PathNodeName(simpleName, memberName, suffix = null, separator = separator, typeWord = typeWord)
+        }
         val suffix = generateSequence(2) { it + 1 }.first { n ->
             "$simpleName$n".lowercase() !in takenClasses && "$member$n" !in takenMembers
         }
@@ -127,6 +182,6 @@ internal fun List<PathNode>.uniqueNames(): List<PathNodeName> {
         val suffixed = "$member$suffix"
         // A literal's property is escaped as [toParamName] escapes it, a parameter's function name is left to KotlinPoet.
         val escaped = if (memberName.startsWith("`") && !suffixed.isValidParamName()) "`$suffixed`" else suffixed
-        PathNodeName("$simpleName$suffix", escaped, suffix, separator)
+        PathNodeName("$simpleName$suffix", escaped, suffix, separator, typeWord)
     }
 }

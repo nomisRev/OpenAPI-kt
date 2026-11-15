@@ -156,7 +156,8 @@ private fun List<Placement>.operations(): Map<HttpMethod, Route> =
  * it, and is a node of its own otherwise. One spelling stays on one node, so no operation replaces another.
  */
 private fun List<Placement>.childNodes(parentSegments: List<PathSegment>): List<PathNode> {
-    val spellings = filter { it.remaining.isNotEmpty() }.groupBy { it.remaining.first().spellingKey() }.values
+    val spellings = filter { it.remaining.isNotEmpty() }
+        .groupBy { it.remaining.first().spellingKey() to it.remaining.first().parameterShape() }.values
     val clusters = mutableListOf<MutableList<Placement>>()
     for (spelling in spellings) {
         val identity = spelling.first().remaining.first().identityKey()
@@ -224,13 +225,20 @@ private fun PathStep.identitySuffix(): String =
     if (joinedBy == "/" && trailing.isEmpty()) "" else "|$joinedBy|$trailing"
 
 /**
- * Whether two steps of one identity can be one node. A parameter of a composite is a plain parameter, so it shares a
- * node only with a parameter of the same shape; two different shapes are two nodes (and keep their names apart with a
- * suffix) instead of a conflict, since a composite never was one.
+ * Whether two steps of one identity can be one node. Each operation declares its path parameters itself, so two can
+ * declare one parameter as different types (`string` and `integer`, `string` and `uuid`). A node takes the parameter
+ * once, so those are a node each, and an operation is reached only with the type it declares.
  */
-private fun PathStep.canShareNodeWith(other: PathStep): Boolean =
-    !(fromComposite || other.fromComposite) ||
-        segment.normalizedForCompatibility() == other.segment.normalizedForCompatibility()
+private fun PathStep.canShareNodeWith(other: PathStep): Boolean = parameterShape() == other.parameterShape()
+
+/**
+ * What decides the Kotlin type of a parameter step, and so which declarations of it are one node: its model without
+ * descriptions, validation keywords and defaults. `null` for a step that is not a parameter.
+ */
+private fun PathStep.parameterShape(): PathSegment? = when (segment) {
+    is PathSegment.Parameter, is PathSegment.OverloadedParameter -> segment.normalizedForCompatibility()
+    is PathSegment.FixedValue, is PathSegment.Literal, is PathSegment.Composite -> null
+}
 
 private fun PathSegment.spellingKey(): String = when (this) {
     is PathSegment.Literal -> "literal:$name"
