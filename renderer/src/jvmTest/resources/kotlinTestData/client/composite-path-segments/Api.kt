@@ -33,6 +33,8 @@ public class Api internal constructor(
 
   public val policy: Policy = Policy(client)
 
+  public val pulls: Pulls = Pulls(client)
+
   public val reports: Reports = Reports(client)
 
   public val tags: Tags = Tags(client)

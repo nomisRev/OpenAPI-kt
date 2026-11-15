@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+import io.ktor.http.HttpMethod
+
 import com.squareup.kotlinpoet.FileSpec
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
@@ -44,7 +46,7 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 internal fun ApiTree.generationDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
     requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics() +
         renamedArgumentDiagnostics(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)) +
-        children.renamedPathDiagnostics(parentPath = "") + renamedServerDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics() +
+        children.renamedPathDiagnostics(parentPath = "", operations = operations.keys) + renamedServerDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics() +
         renamedEnumEntryDiagnostics(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)) +
         renumberedUnionCaseDiagnostics(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this))
 
@@ -202,8 +204,11 @@ private fun Route.renamedArgumentDiagnostics(config: RenderConfig): List<Generat
         }
 
 /** A warning for each node whose Kotlin name is taken by an earlier sibling, and is suffixed ([uniqueNames]). */
-private fun List<PathNode>.renamedPathDiagnostics(parentPath: String): List<GenerationDiagnostic> =
-    zip(uniqueNames()).flatMap { [node, name] ->
+private fun List<PathNode>.renamedPathDiagnostics(
+    parentPath: String,
+    operations: Set<HttpMethod>,
+): List<GenerationDiagnostic> =
+    zip(uniqueNames(operations)).flatMap { [node, name] ->
         val path = "$parentPath${node.joinedBy}${node.segment.templateText()}${node.trailing}"
         val generatedAs = "Path '$path' is generated as '${name.memberName.unescapeBackticks()}' (class ${name.simpleName})"
         val reason = when {
@@ -212,12 +217,13 @@ private fun List<PathNode>.renamedPathDiagnostics(parentPath: String): List<Gene
                 "operations declare this path parameter as different types, so there is a navigation function for " +
                     "each type, and this one leads to the operations that declare it as ${name.typeWord}."
             name.separator != null ->
-                "another path segment has the same Kotlin name, so this one is named with the text that joins it " +
+                "another path segment or an operation of its parent has the same Kotlin name, so this one is named " +
+                    "with the text that joins it " +
                     "('${name.separator}')."
             else -> null
         }
         val renamed = listOfNotNull(reason).map { GenerationDiagnostic(GenerationDiagnosticSeverity.Warning, "$generatedAs: $it") }
-        renamed + node.children.renamedPathDiagnostics(path)
+        renamed + node.children.renamedPathDiagnostics(path, node.operations.keys)
     }
 
 private fun PathSegment.templateText(): String = when (this) {

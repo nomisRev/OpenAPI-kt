@@ -111,6 +111,21 @@ val compositePathSegmentSpec by testSuite {
                 "responses": { "204": { "description": "No Content" } }
               }
             },
+            "/pulls/{index}": {
+              "patch": {
+                "parameters": [ { "name": "index", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } } ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/pulls/{index}.{diffType}": {
+              "get": {
+                "parameters": [
+                  { "name": "index", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } },
+                  { "name": "diffType", "in": "path", "required": true, "schema": { "type": "string", "enum": ["diff", "patch"] } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
             "/reports/{period}.csv": {
               "get": {
                 "parameters": [ { "name": "period", "in": "path", "required": true, "schema": { "oneOf": [ { "type": "string", "enum": ["daily", "weekly"] }, { "type": "integer", "format": "int32" } ] } } ],
@@ -239,7 +254,7 @@ val compositePathSegmentSpec by testSuite {
         )
 
         val warning = "Path '/hackathons/{id}.json' is generated as 'dotJson' (class DotJson): another path segment " +
-            "has the same Kotlin name, so this one is named with the text that joins it ('.')."
+            "or an operation of its parent has the same Kotlin name, so this one is named with the text that joins it ('.')."
         val result = generate("/hackathons/{id}/json", "/hackathons/{id}.json")
         assertEquals(listOf(warning), result.diagnostics.map { it.message })
         val hackathons = result.files.single { it.name == "Hackathons" }.toString()

@@ -30,7 +30,7 @@ private fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
     val rootClassName = ClassName(config.apiPackage, rootName)
 
     val childFiles = mutableListOf<FileSpec>()
-    for ([child, name] in children.zip(children.uniqueNames())) {
+    for ([child, name] in children.zip(children.uniqueNames(operations.keys))) {
         val childSimpleName = name.simpleName
         val childClassName = ClassName(config.apiPackage, childSimpleName)
         val childTypeSpec = child.toTypeSpec(config, childClassName, emptyList())
@@ -111,7 +111,7 @@ private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): 
         )
     }
 
-    for ([child, name] in children.zip(children.uniqueNames())) {
+    for ([child, name] in children.zip(children.uniqueNames(operations.keys))) {
         val childClassName = ClassName(config.apiPackage, name.simpleName)
         child.segment.addConcreteNavigationMember(
             builder = builder,
@@ -169,7 +169,7 @@ private fun PathNode.toTypeSpec(
         )
     }
 
-    for ([child, name] in children.zip(children.uniqueNames())) {
+    for ([child, name] in children.zip(children.uniqueNames(operations.keys))) {
         val childClassName = className.nestedClass(name.simpleName)
 
         child.segment.addConcreteNavigationMember(

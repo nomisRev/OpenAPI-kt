@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+import io.ktor.http.HttpMethod
+
 /**
  * Simple name for the child interface/class for this [PathNode].
  * Parameter nodes get a "Path" postfix; literal nodes use the raw PascalCase name.
@@ -127,7 +129,8 @@ private fun PathNode.separatorWord(): String? {
  * ignoring case, since `Users.kt` and `USERS.kt` (and their `.class` files) are one file on a case-insensitive file
  * system.
  *
- * A step joined to its parent without a slash (`.json` of `{id}.json`) that has the name of a sibling is named with
+ * A step joined to its parent without a slash (`.json` of `{id}.json`) that has the name of a sibling, or of one of
+ * the [operations] of its parent (`{index}.patch` next to `PATCH /pulls/{index}`, which is `patch`), is named with
  * its separator, whatever the order of the spec: next to `/hackathons/{id}/json`, which stays `json: Json`,
  * `/hackathons/{id}.json` is `dotJson: DotJson`, and `{name}:cancel` next to `{name}/cancel` is `colonCancel`.
  *
@@ -140,14 +143,17 @@ private fun PathNode.separatorWord(): String? {
  * `secretScanning: SecretScanning` and `/secret_scanning` is `secretScanning2: SecretScanning2`. Every node that does
  * not collide keeps its name, so adding a colliding path to a spec renames only that path.
  */
-internal fun List<PathNode>.uniqueNames(): List<PathNodeName> {
+internal fun List<PathNode>.uniqueNames(operations: Set<HttpMethod>): List<PathNodeName> {
     val plain = map { node -> node.segment.routeSegmentSimpleName() to node.segment.navigationMemberName() }
-    fun collides(index: Int): Boolean = plain.indices.any { other ->
-        other != index && (
-            plain[other].first.equals(plain[index].first, ignoreCase = true) ||
-                plain[other].second.unescapeBackticks() == plain[index].second.unescapeBackticks()
-            )
-    }
+    // The operations of the parent are members of its class too: `patch` for `PATCH`, with the class `Patch`.
+    val operationMembers = operations.mapTo(mutableSetOf()) { it.value.lowercase() }
+    fun collides(index: Int): Boolean = plain[index].second.unescapeBackticks().lowercase() in operationMembers ||
+        plain.indices.any { other ->
+            other != index && (
+                plain[other].first.equals(plain[index].first, ignoreCase = true) ||
+                    plain[other].second.unescapeBackticks() == plain[index].second.unescapeBackticks()
+                )
+        }
     val separators = mapIndexed { index, node -> node.separatorWord()?.takeIf { collides(index) } }
     val separated = plain.mapIndexed { index, [simpleName, memberName] ->
         val word = separators[index] ?: return@mapIndexed simpleName to memberName

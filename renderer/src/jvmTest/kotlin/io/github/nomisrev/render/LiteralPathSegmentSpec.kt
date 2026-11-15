@@ -74,7 +74,8 @@ val literalPathSegmentSpec by testSuite {
         assertEquals(
             listOf(
                 "Path '/v1/items:search' is generated as 'colonSearch' (class ColonSearch): another path segment " +
-                    "has the same Kotlin name, so this one is named with the text that joins it (':').",
+                    "or an operation of its parent has the same Kotlin name, so this one is named with the text that joins " +
+                    "it (':').",
                 "Path '/pairs/x=y' is generated as 'xY2' (class XY2): an earlier path segment has the same Kotlin name.",
             ),
             result.diagnostics.map { it.message },

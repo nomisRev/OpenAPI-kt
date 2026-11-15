@@ -66,7 +66,7 @@ internal fun ApiTree.chooseOptionalTypeName(config: RenderConfig): String {
             (model as? Model.ContextHolder)?.context?.toClassName(config)?.let { add(it.topLevelClassName().simpleName) }
         }
         add(name.toPascalCase())
-        children.zip(children.uniqueNames()).forEach { [_, childName] -> add(childName.simpleName) }
+        children.zip(children.uniqueNames(operations.keys)).forEach { [_, childName] -> add(childName.simpleName) }
     }
     return generateSequence(0) { it + 1 }
         .map { if (it == 0) DefaultOptionalTypeName else "${DefaultOptionalTypeName}Property${if (it == 1) "" else it}" }

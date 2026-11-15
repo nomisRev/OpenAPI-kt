@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+import io.ktor.http.HttpMethod
+
 data class RenderConfig(
     val modelPackage: String = "io.github.nomisrev.openapi.generated.model",
     val apiPackage: String = "io.github.nomisrev.openapi.generated.api",
@@ -54,14 +56,14 @@ internal fun RenderConfig.withPathClassNames(tree: ApiTree): RenderConfig =
     if (pathClassNames.isNotEmpty()) this
     else copy(
         pathClassNames = buildMap {
-            fun visit(nodes: List<PathNode>, parents: List<String>) {
-                nodes.zip(nodes.uniqueNames()).forEach { [node, name] ->
+            fun visit(nodes: List<PathNode>, operations: Set<HttpMethod>, parents: List<String>) {
+                nodes.zip(nodes.uniqueNames(operations)).forEach { [node, name] ->
                     val classes = parents + name.simpleName
                     node.operations.forEach { [method, route] -> put(route.segments.pathClassKey() to method.value, classes) }
-                    visit(node.children, classes)
+                    visit(node.children, node.operations.keys, classes)
                 }
             }
-            visit(tree.children, emptyList())
+            visit(tree.children, tree.operations.keys, emptyList())
         }
     )
 

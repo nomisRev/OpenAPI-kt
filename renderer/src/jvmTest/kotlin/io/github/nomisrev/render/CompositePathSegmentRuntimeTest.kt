@@ -172,4 +172,19 @@ class CompositePathSegmentRuntimeTest {
         api.reports.period(Reports.Period.Weekly).csv.get()
         assertEquals("/reports/weekly.csv", request.url.encodedPath)
     }
+
+    @Test
+    fun aStepNamedLikeAnOperationOfItsParentIsNamedWithItsSeparator() = runBlocking {
+        // `patch` is the PATCH operation of `/pulls/{index}`, so the value `patch` of `{index}.{diffType}` is `dotPatch`.
+        api.pulls.index(7).patch()
+        assertEquals(HttpMethod.Patch, request.method)
+        assertEquals("/pulls/7", request.url.encodedPath)
+
+        api.pulls.index(7).dotPatch.get()
+        assertEquals(HttpMethod.Get, request.method)
+        assertEquals("/pulls/7.patch", request.url.encodedPath)
+
+        api.pulls.index(7).diff.get()
+        assertEquals("/pulls/7.diff", request.url.encodedPath)
+    }
 }
