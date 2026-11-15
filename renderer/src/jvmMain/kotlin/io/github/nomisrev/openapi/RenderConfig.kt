@@ -16,6 +16,13 @@ data class RenderConfig(
      * `null`.
      */
     val optionalTypeName: String? = null,
+    /**
+     * The classes of the path nodes down to each operation of the rendered [ApiTree], by the operation's path template
+     * and method. A node's class is not always named after its segment alone ([uniqueNames] renames a sibling with a
+     * name already taken), and a type declared inline in an operation is nested in these classes.
+     * [generateModels] and [generateClient] fill it when it is empty.
+     */
+    val pathClassNames: Map<Pair<String, String>, List<String>> = emptyMap(),
 )
 
 enum class KmpTarget {
@@ -42,3 +49,29 @@ internal fun RenderConfig.resolve(reference: Model.Reference): Model? =
                 (context.head as? NamingContext.Reference)?.name == name && context.nested == reference.context.nested
             }?.value
         }
+
+internal fun RenderConfig.withPathClassNames(tree: ApiTree): RenderConfig =
+    if (pathClassNames.isNotEmpty()) this
+    else copy(
+        pathClassNames = buildMap {
+            fun visit(nodes: List<PathNode>, parents: List<String>) {
+                nodes.zip(nodes.uniqueNames()).forEach { [node, name] ->
+                    val classes = parents + name.simpleName
+                    node.operations.forEach { [method, route] -> put(route.segments.pathClassKey() to method.value, classes) }
+                    visit(node.children, classes)
+                }
+            }
+            visit(tree.children, emptyList())
+        }
+    )
+
+/** The path template of these segments, as the key of [RenderConfig.pathClassNames]. */
+internal fun List<PathSegment>.pathClassKey(): String = joinToString("/") { segment ->
+    when (segment) {
+        is PathSegment.FixedValue -> segment.wireValue
+        is PathSegment.Literal -> segment.name
+        is PathSegment.Parameter -> "{${segment.name}}"
+        is PathSegment.OverloadedParameter -> "{${segment.name}}"
+        is PathSegment.Composite -> segment.name
+    }
+}

@@ -88,6 +88,24 @@ val sharedPathParameterSpec by testSuite {
               }
             },
             "/vaults/{id}/files": {
+              "put": {
+                "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+                "requestBody": { "required": true, "content": { "application/json": { "schema": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "kind": { "type": "string", "enum": ["text", "binary"] },
+                    "owner": { "type": "object", "properties": { "name": { "type": "string" } } }
+                  }
+                } } } },
+                "responses": {
+                  "200": { "description": "OK", "content": { "application/json": { "schema": {
+                    "type": "object",
+                    "properties": { "state": { "type": "string", "enum": ["stored", "queued"] } }
+                  } } } }
+                }
+              },
               "get": {
                 "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
                 "responses": { "204": { "description": "No Content" } }

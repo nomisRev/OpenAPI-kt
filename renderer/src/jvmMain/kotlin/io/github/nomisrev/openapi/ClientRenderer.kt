@@ -14,7 +14,7 @@ fun ApiTree.generateClientWithDiagnostics(config: RenderConfig): GenerationResul
     val diagnostics = generationDiagnostics(config)
     val filteredTree = withSupportedRequestBodiesOnly()
     return GenerationResult(
-        files = filteredTree.generateClientFiles(config.withOptionalTypeName(this).withNamedModels(models)),
+        files = filteredTree.generateClientFiles(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)),
         diagnostics = diagnostics,
     )
 }

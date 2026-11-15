@@ -33,7 +33,7 @@ fun ApiTree.renderWithDiagnostics(config: RenderConfig): GenerationResult {
 }
 
 fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> {
-    val modelsConfig = config.withOptionalTypeName(this).withNamedModels(models)
+    val modelsConfig = config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)
     return models.mapNotNull { model -> model.toFileSpecOrNull(modelsConfig) } + additionalFiles(modelsConfig)
 }
 

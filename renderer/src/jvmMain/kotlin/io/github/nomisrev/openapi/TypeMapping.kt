@@ -68,9 +68,11 @@ fun NamingContext.toClassName(config: RenderConfig): ClassName =
         }
 
         is NamingContext.Path -> {
-            val rootSegmentNames = root.segments.flatMap(PathSegment::toSteps)
-                .map { it.segment.routeSegmentSimpleName() }
-                .ifEmpty { listOf("Root") }
+            val segmentNames = root.segments.flatMap(PathSegment::toSteps).map { it.segment.routeSegmentSimpleName() }
+            // The classes the nodes of this operation really have, when one of them is renamed among its siblings.
+            val nodeNames = config.pathClassNames[root.segments.pathClassKey() to root.method.value]
+                ?.takeIf { it.size == segmentNames.size }
+            val rootSegmentNames = (nodeNames ?: segmentNames).ifEmpty { listOf("Root") }
             val methodName = root.method.value.lowercase().replaceFirstChar { it.uppercase() }
             val simpleNames = rootSegmentNames.toMutableList()
             nested.forEach { nestedContext ->

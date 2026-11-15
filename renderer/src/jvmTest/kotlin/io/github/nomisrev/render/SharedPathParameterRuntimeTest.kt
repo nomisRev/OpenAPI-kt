@@ -3,7 +3,13 @@ package io.github.nomisrev.render
 import io.github.nomisrev.render.test.client.shared.path.parameter.validation.Api
 import io.github.nomisrev.render.test.client.shared.path.parameter.types.Api as TypesApi
 import io.github.nomisrev.render.test.client.shared.path.parameter.types.Vaults
+import io.github.nomisrev.render.test.client.shared.path.parameter.types.Vaults.IdUuidPath.Files.Put
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.content.OutgoingContent
+import io.ktor.http.headersOf
+import io.ktor.serialization.kotlinx.json.json
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import io.ktor.client.HttpClient
@@ -79,6 +85,30 @@ class SharedPathParameterRuntimeTest {
         assertEquals("/vaults/123e4567-e89b-12d3-a456-426614174000/items", path)
         byUuid.files.get()
         assertEquals("/vaults/123e4567-e89b-12d3-a456-426614174000/files", path)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun typesDeclaredInlineBelowATypedNodeAreNestedInItsClass() = runBlocking {
+        val json = HttpClient(
+            MockEngine { request ->
+                requests += request
+                respond("""{"state":"queued"}""", HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            }
+        ) {
+            defaultRequest { url("https://example.com") }
+            install(ContentNegotiation) { json() }
+        }
+
+        val response = TypesApi(json).vaults.id(Uuid.parse("123e4567-e89b-12d3-a456-426614174000")).files
+            .put(name = "notes", kind = Put.Kind.Text, owner = Put.Owner(name = "me"))
+
+        assertEquals(Put.Response(state = Put.Response.State.Queued), response)
+        assertEquals("/vaults/123e4567-e89b-12d3-a456-426614174000/files", path)
+        assertEquals(
+            """{"name":"notes","kind":"text","owner":{"name":"me"}}""",
+            (requests.last().body as OutgoingContent.ByteArrayContent).bytes().decodeToString(),
+        )
     }
 
     @Test
