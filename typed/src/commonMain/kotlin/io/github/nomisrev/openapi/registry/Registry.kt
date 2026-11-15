@@ -121,7 +121,10 @@ class Registry(
             }
             is ReferenceOr.Reference -> {
                 val peeked = peek()
-                val contextSpecific = readOnly == true || writeOnly == true || peeked.readOrWriteOnly()
+                // `readOnly` or `writeOnly` next to this `$ref` is about the property that holds it: it is left out of
+                // one shape of its parent. Whether the schema referred to has two shapes depends on its own content only,
+                // so that a use and the definition of one schema agree on its name.
+                val contextSpecific = peeked.readOrWriteOnly()
                 val resolvedRef = if (contextSpecific) {
                     forceContext ?: context
                 } else {
@@ -230,7 +233,8 @@ class Registry(
         } else {
             val name = ref.drop("#/components/schemas/".length)
             val schema = peek(ref)
-            val contextSpecific = this.readOnly == true || this.writeOnly == true || schema.readOrWriteOnly()
+            // As in the other `resolve`: an annotation next to the `$ref` does not give its target two shapes.
+            val contextSpecific = schema.readOrWriteOnly()
             val schemaContext = if (contextSpecific) context else SchemaContext.Null
             val reference = NamingContext.Reference(name, schemaContext)
             val namingContext = NamingContext(reference, emptyList())
