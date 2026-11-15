@@ -1,0 +1,48 @@
+package io.github.nomisrev.render.test.client.shared.path.parameter.validation
+
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
+import io.ktor.client.request.`get`
+import kotlin.Int
+
+public class Pages internal constructor(
+  private val client: HttpClient,
+) {
+  public fun number(number: Int): NumberPath = NumberPath(client, number)
+
+  public class NumberPath internal constructor(
+    private val client: HttpClient,
+    private val number: Int,
+  ) {
+    public val `get`: Get = Get(client, number)
+
+    public val lines: Lines = Lines(client, number)
+
+    public class Get internal constructor(
+      private val client: HttpClient,
+      private val number: Int,
+    ) {
+      public suspend operator fun invoke() {
+        val response = client.get("pages/${this.number}")
+        if (response.status.value != 204) throw ResponseException(response, "")
+      }
+    }
+
+    public class Lines internal constructor(
+      private val client: HttpClient,
+      private val number: Int,
+    ) {
+      public val `get`: Get = Get(client, number)
+
+      public class Get internal constructor(
+        private val client: HttpClient,
+        private val number: Int,
+      ) {
+        public suspend operator fun invoke() {
+          val response = client.get("pages/${this.number}/lines")
+          if (response.status.value != 204) throw ResponseException(response, "")
+        }
+      }
+    }
+  }
+}

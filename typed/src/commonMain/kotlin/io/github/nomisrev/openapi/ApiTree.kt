@@ -251,6 +251,31 @@ private fun PathSegment.identityKey(): String = when (this) {
 private fun PathSegment.preferredRepresentation(other: PathSegment): PathSegment = when {
     this is PathSegment.FixedValue -> this
     other is PathSegment.FixedValue -> other
+    // Operations may declare one parameter with different validation keywords or defaults. The node is all of them,
+    // so it keeps those only when every declaration has the same, whatever the order of the routes.
+    this is PathSegment.Parameter && other is PathSegment.Parameter && !model.sameValidationAs(other.model) ->
+        copy(model = model.withoutValidation())
+    else -> this
+}
+
+/** Whether two models of one shape also have the same validation keywords and defaults. */
+private fun Model.sameValidationAs(other: Model): Boolean =
+    normalizedForCompatibility() == other.normalizedForCompatibility()
+
+/**
+ * The model without its validation keywords (`minLength`, `pattern`, `maximum`, `maxItems`) and its default. They do
+ * not change the Kotlin type of a path parameter or how it is written into the path, so two declarations of one path
+ * parameter that differ only by them are one parameter.
+ */
+private fun Model.withoutValidation(): Model = when (this) {
+    is Model.Primitive.Int -> copy(default = null, constraint = null)
+    is Model.Primitive.Long -> copy(default = null, constraint = null)
+    is Model.Primitive.Float -> copy(default = null, constraint = null)
+    is Model.Primitive.Double -> copy(default = null, constraint = null)
+    is Model.Primitive.Boolean -> copy(default = null)
+    is Model.Primitive.String -> copy(default = null, constraint = null)
+    is Model.Collection -> copy(inner = inner.withoutValidation(), default = null, constraint = null)
+    is Model.Enum -> copy(inner = inner.withoutValidation(), default = null)
     else -> this
 }
 
@@ -323,11 +348,15 @@ private fun List<PathSegment>.toPathTemplate(): String {
 private fun PathSegment.normalizedForCompatibility(): PathSegment = when (this) {
     is PathSegment.FixedValue -> PathSegment.Literal(wireValue.normalizeSegmentSeparators())
     is PathSegment.Literal -> PathSegment.Literal(name.normalizeSegmentSeparators())
-    is PathSegment.Parameter -> copy(model = model.normalizedForCompatibility())
+    is PathSegment.Parameter -> copy(model = model.normalizedForCompatibility().withoutValidation())
     is PathSegment.OverloadedParameter -> copy(type = type.normalizedForCompatibility() as Model.Union)
     is PathSegment.Composite -> copy(
         parts = parts.map { part ->
-            if (part is PathSegment.Composite.Part.Param) part.copy(model = part.model.normalizedForCompatibility()) else part
+            if (part is PathSegment.Composite.Part.Param) {
+                part.copy(model = part.model.normalizedForCompatibility().withoutValidation())
+            } else {
+                part
+            }
         }
     )
 }

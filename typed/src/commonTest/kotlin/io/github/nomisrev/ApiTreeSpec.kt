@@ -476,6 +476,37 @@ val apiTreeSpec by testSuite {
         )
     }
 
+    test("buildTree shares a node between declarations of a path parameter that differ by validation or a default") {
+        val constrained = stringType.copy(
+            constraint = io.github.nomisrev.openapi.Constraints.Text(minLength = 34, maxLength = 34, pattern = "^HA[0-9a-f]{32}$"),
+        )
+        val defaulted = stringType.copy(default = Model.Default.Value("x"))
+        val getItem = route(HttpMethod.Get, literal("items"), param("id"))
+        val getParts = route(HttpMethod.Get, literal("items"), PathSegment.Parameter("id", constrained), literal("parts"))
+        val getTags = route(HttpMethod.Get, literal("items"), PathSegment.Parameter("id", defaulted), literal("tags"))
+
+        val routes = listOf(getItem, getParts, getTags)
+        // Whatever the order, the node has the parameter without what only some of its operations declare.
+        listOf(routes, routes.reversed(), listOf(getParts, getTags, getItem)).forEach { ordered ->
+            val items = ordered.buildTree("Items").children.single()
+            val id = items.children.single()
+            assertEquals(param("id"), id.segment)
+            assertEquals(mapOf(HttpMethod.Get to getItem), id.operations)
+            assertEquals(setOf("parts", "tags"), id.children.mapTo(mutableSetOf()) { (it.segment as PathSegment.Literal).name })
+        }
+    }
+
+    test("buildTree keeps the validation and the default that every declaration of a path parameter has") {
+        val constrained = PathSegment.Parameter(
+            "id",
+            stringType.copy(constraint = io.github.nomisrev.openapi.Constraints.Text(minLength = 1, maxLength = null, pattern = null)),
+        )
+        val getItem = route(HttpMethod.Get, literal("items"), constrained)
+        val getParts = route(HttpMethod.Get, literal("items"), constrained, literal("parts"))
+
+        assertEquals(constrained, listOf(getItem, getParts).buildTree("Items").children.single().children.single().segment)
+    }
+
     test("buildTree rejects different plain parameter models on shared node regardless of insertion order") {
         val getPet = route(HttpMethod.Get, literal("pets"), param("petId"))
         val deletePet = route(HttpMethod.Delete, literal("pets"), intParam("petId"))
