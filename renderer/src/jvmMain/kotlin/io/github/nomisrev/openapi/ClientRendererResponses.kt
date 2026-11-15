@@ -518,17 +518,23 @@ private fun buildRangeResponseCaseTypeSpec(
         .build()
 }
 
+/**
+ * A response case that is the inline model itself. [ownerClassName] is the class the case is declared in, which the
+ * types nested in it are named under. It is [responseClassName] for a case of one sealed response, and the method's
+ * class for a case shared by the response of every media type, which is declared next to them.
+ */
 private fun buildInlineResponseCaseTypeSpec(
     model: Model,
     config: RenderConfig,
     responseClassName: ClassName,
     caseName: String,
     externalTypeNames: Map<ClassName, TypeName>,
+    ownerClassName: ClassName = responseClassName,
 ): TypeSpec? =
     buildInlineResponseBodyTypeSpec(
         model = model,
         config = config,
-        ownerClassName = responseClassName,
+        ownerClassName = ownerClassName,
         nameOverride = caseName,
         externalTypeNames = externalTypeNames,
     )?.toBuilder()
@@ -728,6 +734,7 @@ private fun buildSharedResponseCaseTypeSpec(
             responseClassName = firstSuperinterface as ClassName,
             caseName = caseName,
             externalTypeNames = inlineModelScope.externalTypeNames(),
+            ownerClassName = methodClassName,
         )
     } else {
         null
