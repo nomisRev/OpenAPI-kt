@@ -132,6 +132,18 @@ stops earlier than before: 13 from compile (the `:` root class names and the ope
 root class with the name of a path class, see `client-root-class-collides-with-path-class.md`), and 11 from render
 (`simpleNames must not contain empty items`: documents without a title, whose root class is now `Api`).
 
+A thirteenth census after `3b80f367` and `300d9589`, the first on GitHub Actions (`.github/workflows/census.yml`, run
+43744071184 at `2c665cb1`, 16 shards, 31 minutes, 360 seconds per process; the snapshot it downloaded has the same
+index hash and spec bytes as the 2026-11-01 one, so it compares one-to-one): 1,345 generate and compile, 47 fail to
+compile, 94 fail in typed, none fail at emit (was 28), 46 fail at render, 4 time out. None stops earlier than in the
+twelfth census. 19 documents went from emit to compiling, 3 from a compile failure (keycloak.local and xtrf.eu: the
+private state names; googleapis.com:compute only because Linux file names are case-sensitive, its case-only pair is
+fixed in `6faa2a6d`), 1 from a timeout (gsmtasks.com), 5 from emit to render on the new error for two schemas with one class name, which `6faa2a6d`
+fixes (re-checked with `--filter`: 4 of them compile). Largest remaining groups: refused parameters and other render
+errors (46), recursive `allOf` (20, typed), an unresolved `Body` of a request with several media types (14, compile),
+conflicting declarations (11, compile). The 4 timeouts are amazonaws.com:quicksight, docusign.net and two github.com:ghec
+versions, which compile locally.
+
 The tables below still carry the counts of the first census.
 
 ## Suggested order
