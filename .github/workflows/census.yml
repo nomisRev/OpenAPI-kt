@@ -1,0 +1,174 @@
+name: "Corpus census"
+
+# Runs the API Guru corpus census (exploration/README.md), split over four runners. Start it from the Actions tab or
+# with `gh workflow run census.yml --ref <branch>`. The first run downloads an API Guru snapshot and keeps it in the
+# Actions cache under SNAPSHOT_KEY, so later runs check the same documents; the summary prints the index hash, which
+# changes when the cache was evicted (7 days unused) and a new snapshot was taken. Change SNAPSHOT_KEY to re-pin.
+# Results are the `census` artifact and the run summary.
+
+on:
+  workflow_dispatch:
+    inputs:
+      timeout:
+        description: 'Seconds per worker/compiler process'
+        required: false
+        default: '120'
+
+env:
+  SNAPSHOT_KEY: corpus-snapshot-1
+  SHARDS: 4
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/cache/restore@v4
+        id: restore
+        with:
+          path: ${{ runner.temp }}/snapshot
+          key: ${{ env.SNAPSHOT_KEY }}
+          lookup-only: true
+
+      - uses: actions/checkout@v5
+        if: steps.restore.outputs.cache-hit != 'true'
+
+      - uses: actions/setup-java@v5
+        if: steps.restore.outputs.cache-hit != 'true'
+        with:
+          distribution: 'zulu'
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.restore.outputs.cache-hit != 'true'
+
+      - name: Download a snapshot
+        if: steps.restore.outputs.cache-hit != 'true'
+        run: |
+          ./gradlew :exploration:run --args="--fetch-only --jobs 8 --output $RUNNER_TEMP/fetch"
+          mkdir -p "$RUNNER_TEMP/snapshot"
+          mv "$RUNNER_TEMP/fetch/index.json" "$RUNNER_TEMP/fetch/specs" "$RUNNER_TEMP/snapshot/"
+
+      - uses: actions/cache/save@v4
+        if: steps.restore.outputs.cache-hit != 'true'
+        with:
+          path: ${{ runner.temp }}/snapshot
+          key: ${{ env.SNAPSHOT_KEY }}
+
+  shard:
+    needs: snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/snapshot
+          key: ${{ env.SNAPSHOT_KEY }}
+          fail-on-cache-miss: true
+
+      - name: Seed the output directory with the snapshot
+        run: |
+          mv "$RUNNER_TEMP/snapshot" "$RUNNER_TEMP/census"
+          test -f "$RUNNER_TEMP/census/index.json" && test -d "$RUNNER_TEMP/census/specs"
+
+      - name: Run shard ${{ matrix.shard }} of ${{ env.SHARDS }}
+        run: >
+          ./gradlew :exploration:run
+          --args="--jobs 4 --timeout ${{ inputs.timeout || '120' }} --shard ${{ matrix.shard }}/$SHARDS --output $RUNNER_TEMP/census"
+
+      - name: Keep only the evidence (no inputs, sources or classes)
+        if: always()
+        run: |
+          cd "$RUNNER_TEMP/census"
+          rm -rf specs index.json
+          find results -mindepth 2 -maxdepth 2 -type d \( -name sources -o -name classes \) -exec rm -rf {} +
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: census-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/census
+          retention-days: 30
+
+  summary:
+    needs: shard
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: census-shard-*
+          path: ${{ runner.temp }}/shards
+
+      - name: Merge the shards
+        run: |
+          merged="$RUNNER_TEMP/census"
+          mkdir -p "$merged/results"
+          count=0
+          for shard in "$RUNNER_TEMP"/shards/census-shard-*; do
+            count=$((count + 1))
+            cat "$shard/results.jsonl" >> "$merged/results.jsonl"
+            cp -R "$shard/results/." "$merged/results/"
+            cp "$shard/manifest.json" "$merged/manifest-$(basename "$shard").json"
+          done
+          test "$count" -eq "$SHARDS" || { echo "::error::Only $count of $SHARDS shards produced results"; exit 1; }
+
+      - name: Summarize
+        run: ./gradlew :exploration:run --args="--summarize-only --output $RUNNER_TEMP/census"
+
+      - name: Write the run summary
+        run: |
+          s="$RUNNER_TEMP/census/summary.json"
+          {
+            echo "## Corpus census at \`${GITHUB_SHA::8}\`"
+            echo
+            echo "Documents: $(jq .documents "$s"), index \`$(jq -r .index_sha256 "$RUNNER_TEMP/census/manifest-census-shard-1.json" | cut -c1-12)\`"
+            echo
+            echo "| Count | Value |"
+            echo "| --- | ---: |"
+            jq -r '.counts | to_entries[] | "| \(.key) | \(.value) |"' "$s"
+            echo
+            echo "### Phase failures"
+            echo
+            echo "| Docs | Signature | Example |"
+            echo "| ---: | --- | --- |"
+            jq -r '.failure_groups[:25][] | "| \(.count) | \(.signature | gsub("\\|"; "\\\\|")) | \(.example) |"' "$s"
+            echo
+            echo "### Compiler failures"
+            echo
+            echo "| Docs | Message | Example |"
+            echo "| ---: | --- | --- |"
+            jq -r '.compiler_failure_groups[:25][] | "| \(.documents) | \(.message | gsub("\\|"; "\\\\|")) | \(.example) |"' "$s"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: census
+          path: ${{ runner.temp }}/census
+          retention-days: 90
