@@ -1,6 +1,6 @@
 # `additionalProperties` next to an `allOf` of a non-object is treated as `type: object` and reported as a contradiction
 
-**Status:** open — false rejection, introduced with 0e374d2f ("Merge an untyped allOf member as the type its keywords imply")
+**Status:** fixed in `fc10b47d`. A typeless `additionalProperties: true`, `false` or `{}` next to a type that does not permit objects is merged as an annotation, without a warning (the schema accepts the same values). The report's broader rule (`properties` and `items` vacuous too) was not taken: it contradicts the decisions pinned in `AllOfUntypedMemberSpec` (a `oneOf [array, string]` with untyped `items` is the array branch). Those, and a schema-valued `additionalProperties`, are still rejected, and the error now names the implying keyword. Side effect: `oneOf [string, integer]` next to `{additionalProperties: false}` keeps both branches, where `mergeCompositeUnion` used to drop both silently. Re-checked with `--filter`: linqr.app compiles. Not changed: a single-member `allOf` alias with a sibling `additionalProperties` ignores it silently, which is equally vacuous.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** typed
 **Impact:** 1 of 1,547 documents (linqr.app)
