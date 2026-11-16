@@ -149,7 +149,10 @@ private fun TypeSpec.Builder.addOperationInlineTypes(context: OperationTypeSpecC
 private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpecContext) {
     when (val strategy = context.route.returns.contentTypeStrategy()) {
         ContentTypeStrategy.SingleContentType -> {
-            if (!context.route.returns.isSingleUnitResponse() && !context.route.returns.isSingleDirectModelResponse()) {
+            if (!context.route.returns.isSingleUnitResponse() &&
+                !context.route.returns.isSingleDirectModelResponse() &&
+                !context.route.returns.isSingleDirectRawResponse()
+            ) {
                 addType(context.route.buildResponseTypeSpec(context.config, context.methodClassName, context.inlineModelScope))
             }
         }
