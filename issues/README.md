@@ -149,6 +149,20 @@ errors (46), recursive `allOf` (20, typed), an unresolved `Body` of a request wi
 conflicting declarations (11, compile). The 4 timeouts are amazonaws.com:quicksight, docusign.net and two github.com:ghec
 versions, which compile locally.
 
+A fourteenth census after `83961659` and `84ab0bcd` (run 43839785549 at `8a23566a`; compared with run 43830034336 at
+`7bf24f56`, which already had `6faa2a6d` and `c4ef6f6f`): 1,348 generate and compile, 54 fail to compile or time out,
+94 fail in typed, 46 fail in the new `diagnostics` phase, none at render (was 41), 5 generate no files (was 11). The 41
+render failures stop one phase later, with their warnings. Five documents that compiled with an operation whose body
+was dropped are now refused, as intended: salesloft.com, apacta.com, fungenerators.com:barcode,
+digitallocker.gov.in:authpartner, mineskin.org. 9 newly compile through the webhook models. docusign.net timed out
+compiling with the same 469 files (one of the known CI timeouts).
+
+A fifteenth census after `7e2f5586` (run 43844407605 at `ccf7f728`): 1,352 generate and compile, 52 fail to compile or
+time out, 92 fail in typed, 46 in `diagnostics`. beezup.com compiles; nexmo.com:reports reaches compile and stops on a
+default outside its enum. googleapis.com:displayvideo timed out compiling with the same 372 files and diagnostics, and
+compiles when re-checked with `--filter`; the github documents that timed out in the fourteenth compile in this one.
+linqr.app compiles since `fc10b47d` (re-checked with `--filter`, after this census).
+
 The tables below still carry the counts of the first census.
 
 ## Suggested order
