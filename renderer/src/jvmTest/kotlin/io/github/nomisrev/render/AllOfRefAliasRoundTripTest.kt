@@ -3,6 +3,8 @@ package io.github.nomisrev.render
 import io.github.nomisrev.render.test.client.allof.ref.alias.AllOfRefAliasHolder
 import io.github.nomisrev.render.test.client.allof.ref.alias.Api
 import io.github.nomisrev.render.test.client.allof.ref.alias.ListAllOf
+import io.github.nomisrev.render.test.client.allof.ref.alias.MyString
+import io.github.nomisrev.render.test.client.allof.ref.alias.Names
 import io.github.nomisrev.render.test.client.allof.ref.alias.NullableListAllOf
 import io.github.nomisrev.render.test.client.allof.ref.alias.NullablePrimAllOf
 import io.github.nomisrev.render.test.client.allof.ref.alias.PrimAllOf
@@ -52,8 +54,8 @@ class AllOfRefAliasRoundTripTest {
         listAllOfs = listOf(ListAllOf(listOf("i")), ListAllOf(emptyList())),
         nullablePrimAllOf = NullablePrimAllOf("j"),
         nullableListAllOf = NullableListAllOf(listOf("k")),
-        inlinePrimAllOf = "l",
-        inlineListAllOf = listOf("m"),
+        inlinePrimAllOf = MyString("l"),
+        inlineListAllOf = Names(listOf("m")),
     )
 
     @Test

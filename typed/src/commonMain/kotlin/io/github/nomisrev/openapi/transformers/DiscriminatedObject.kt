@@ -877,11 +877,7 @@ private suspend fun AdditionalProperties?.merge(other: AdditionalProperties?): A
             is AdditionalProperties.PSchema -> when (b) {
                 // `false` forbids every additional property, whatever the schema allows; `true` allows them all.
                 is Allowed -> if (b.value) a else b
-                is AdditionalProperties.PSchema -> AdditionalProperties.PSchema(
-                    ReferenceOr.value(
-                        a.value.peek().merge(b.value.peek())
-                    )
-                )
+                is AdditionalProperties.PSchema -> AdditionalProperties.PSchema(a.value.combine(b.value))
             }
 
             is Allowed -> when (b) {
@@ -890,3 +886,23 @@ private suspend fun AdditionalProperties?.merge(other: AdditionalProperties?): A
             }
         }
     }
+
+/**
+ * The `$ref` of an `allOf` whose other members only annotate, constrain or restate it: such an `allOf` is that `$ref`,
+ * so it is no schema to merge. Null when the members add structure, change what the `$ref` permits, or make it
+ * `readOnly` or `writeOnly` (which the merge keeps, and the `$ref` alone would lose).
+ */
+context(ctx: Registry.Scope)
+internal suspend fun List<ReferenceOr<Schema>>.restatedRefOrNull(): ReferenceOr.Reference? {
+    val reference = filterIsInstance<ReferenceOr.Reference>().singleOrNull() ?: return null
+    val others = filterIsInstance<ReferenceOr.Value<Schema>>()
+    if (others.size != size - 1) return null
+    if (reference.readOnly == true || reference.writeOnly == true) return null
+    if (others.any { it.value.readOnly == true || it.value.writeOnly == true }) return null
+    val target = reference.peek()
+    val keepsNullability = listOf<ReferenceOr<Schema>>(reference).allOfNullability().permitsNull() ==
+            allOfNullability().permitsNull()
+    return reference.takeIf {
+        keepsNullability && others.all { it.value.restates(target) && !it.value.requiresOptionalPropertyOf(target) }
+    }
+}

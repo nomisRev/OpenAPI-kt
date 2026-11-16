@@ -153,5 +153,7 @@ private inline fun testScope(api: OpenAPI, block: context(Registry.Scope) () -> 
             requireNotNull(api.components.schemas.getValue(ref.schemaName()).valueOrNull())
 
         override fun registry(): Registry = Registry(api)
+
+        override fun expandingMerge(source: Schema, name: NamingContext): Registry.Scope = this
     })
 }

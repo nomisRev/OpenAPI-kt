@@ -145,11 +145,14 @@ val singleBranchReferenceAliasSpec by testSuite {
             )
         }
 
-        test("Inline allOf: [\$ref X] (not a component) to a $kind is X's bare $kind") {
-            val inline = modelOf(allOfAlias, openAPI(allOfAlias, target))
+        // Like a plain `$ref` and an inline `oneOf: [$ref X]`: the `allOf` restates X, so it is X's own model.
+        test("Inline allOf: [\$ref X] (not a component) to a $kind is X itself, as a plain \$ref X") {
+            val openAPI = openAPI(allOfAlias, target)
+            val inline = modelOf(allOfAlias, openAPI)
             assertTrue(
-                inline is Model.Primitive.String || inline is Model.Collection,
-                "inline allOf: [\$ref X] should be X's bare $kind: $inline"
+                inline is Model.Object && inline.isTransparentWrapper &&
+                    inline.context == NamingContext.reference("X", SchemaContext.Null),
+                "inline allOf: [\$ref X] should be X's value wrapper: $inline"
             )
         }
     }

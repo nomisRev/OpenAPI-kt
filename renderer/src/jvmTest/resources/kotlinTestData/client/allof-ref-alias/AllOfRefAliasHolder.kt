@@ -20,6 +20,6 @@ public data class AllOfRefAliasHolder(
   public val listAllOfs: List<ListAllOf>,
   public val nullablePrimAllOf: NullablePrimAllOf?,
   public val nullableListAllOf: NullableListAllOf?,
-  public val inlinePrimAllOf: String,
-  public val inlineListAllOf: List<String>,
+  public val inlinePrimAllOf: MyString,
+  public val inlineListAllOf: Names,
 )

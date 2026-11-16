@@ -17,6 +17,7 @@ import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.peek
+import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.schemaName
 import io.github.nomisrev.openapi.registry.toModel
 
@@ -45,17 +46,34 @@ private suspend fun ResolvedSchema.resolveAllOf(
     context: SchemaContext
 ): Model = when (val single = allOf.singleOrNull()) {
     is ReferenceOr.Reference if this is ResolvedSchema.Reference -> singleBranch(single, context)
-    else -> with(scope.registry()) {
-        val merged = try {
-            allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) }
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("allOf members of '${name.describe()}' are incompatible: ${e.message}", e)
-        }
-        when (val resolved = this@resolveAllOf) {
-            is ResolvedSchema.Reference ->
-                engine.transform(scope, this, ResolvedSchema.Reference(resolved.reference, merged), context, true)
+    else -> {
+        val restated = if (this is ResolvedSchema.Reference) null else allOf.restatedRefOrNull()
+        if (restated != null) {
+            // `allOf: [{$ref: X}, {description: ...}]` is X with an annotation: resolved as the `$ref`, so a way back
+            // to a schema being expanded is a reference to it, and X is not generated again where it is used.
+            restated.toModel(name, context)
+        } else {
+            val registry = scope.registry()
+            val merged = try {
+                with(scope) { allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) } }
+            } catch (e: IllegalArgumentException) {
+                throw IllegalArgumentException("allOf members of '${name.describe()}' are incompatible: ${e.message}", e)
+            }
+            when (val resolved = this@resolveAllOf) {
+                is ResolvedSchema.Reference ->
+                    registry.engine.transform(scope, registry, ResolvedSchema.Reference(resolved.reference, merged), context, true)
 
-            else -> ReferenceOr.value(merged).toModel(name, context)
+                else -> {
+                    // The merged object is the type the inline `allOf` is: where its members lead back to this same
+                    // `allOf`, it is that type, which is a reference to the object named here.
+                    val inner = if (merged.properties != null) scope.expandingMerge(schema, name) else scope
+                    with(inner) {
+                        ReferenceOr.value(merged).resolve(name, context) { s, r ->
+                            registry.engine.transform(s, registry, r, context, true)
+                        }
+                    }
+                }
+            }
         }
     }
 }

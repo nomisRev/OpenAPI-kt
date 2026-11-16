@@ -6,7 +6,7 @@ import de.infix.testBalloon.framework.core.testSuite
  * A named component `allOf: [{$ref: X}]` to a primitive or collection X is its own value class named after the
  * component, like `anyOf`/`oneOf: [{$ref: X}]` (`client/single-ref-alias`): the component is generated, and every
  * use site (property, list item, map value, request and response body) uses it. `nullable: true` on the component
- * makes its properties nullable. An inline (unnamed) `allOf: [{$ref: X}]` is still X's bare `String`/`List<String>`.
+ * makes its properties nullable. An inline (unnamed) `allOf: [{$ref: X}]` is X itself, as a plain `$ref: X` is.
  * `AllOfRefAliasRoundTripTest` decodes these goldens.
  */
 val allOfRefAliasSpec by testSuite {

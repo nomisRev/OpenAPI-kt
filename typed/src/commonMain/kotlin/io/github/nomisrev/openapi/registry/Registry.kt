@@ -142,6 +142,12 @@ class Registry(
         suspend fun peek(ref: String): Schema
 
         fun registry(): Registry
+
+        /**
+         * A scope in which [source], an inline `allOf` schema that is modelled as an object named [name] by merging
+         * its members, resolves to a reference to that object: a member that leads back to it is the same type.
+         */
+        fun expandingMerge(source: Schema, name: NamingContext): Scope
     }
 
     /** A use of a referenced schema: [schema] as it is used there, and whether keywords next to the `$ref` [shaped] it. */
@@ -151,8 +157,11 @@ class Registry(
     private inner class ScopeImpl(
         private val currentAnchor: Pair<NamingContext, Schema>?,
         private val expanding: Set<NamingContext>,
+        private val merging: Map<Schema, NamingContext> = emptyMap(),
     ) : Scope {
         override fun registry(): Registry = this@Registry
+        override fun expandingMerge(source: Schema, name: NamingContext): Scope =
+            ScopeImpl(currentAnchor, expanding, merging + (source to name))
         override suspend fun ReferenceOr<Schema>.peek(): Schema = when (this) {
             is ReferenceOr.Value<Schema> -> value
             is ReferenceOr.Reference if ref == "#" -> currentAnchor?.second
@@ -232,7 +241,9 @@ class Registry(
                 // merged with them, named where it is used.
                 if (use.shaped) {
                     val nextAnchor = if (use.schema.recursiveAnchor == true) Pair(name, use.schema) else currentAnchor
-                    return block(ScopeImpl(nextAnchor, expanding), ResolvedSchema.Value(name, use.schema))
+                    merging[use.schema]?.let { return block(this@ScopeImpl, ResolvedSchema.Recursive(it, use.schema)) }
+                    val nextMerging = if (use.schema.properties != null) merging + (use.schema to name) else merging
+                    return block(ScopeImpl(nextAnchor, expanding, nextMerging), ResolvedSchema.Value(name, use.schema))
                 }
                 val peeked = use.schema
                 // `readOnly` or `writeOnly` next to this `$ref` is about the property that holds it: it is left out of
@@ -249,12 +260,14 @@ class Registry(
                     ResolvedSchema.Reference(reference, peeked)
                 }
                 val nextAnchor = if (peeked.recursiveAnchor == true) Pair(namingContext, peeked) else currentAnchor
-                block(ScopeImpl(nextAnchor, expanding + namingContext), resolved)
+                block(ScopeImpl(nextAnchor, expanding + namingContext, merging), resolved)
             }
             is ReferenceOr.Value<Schema> -> {
                 // An inline schema is part of the schema that holds it: the context flows through it.
                 val nextAnchor = if (value.recursiveAnchor == true) Pair(name, value) else currentAnchor
-                block(ScopeImpl(nextAnchor, expanding), ResolvedSchema.Value(name, value))
+                val merged = merging[value]
+                if (merged != null) return block(this@ScopeImpl, ResolvedSchema.Recursive(merged, value))
+                block(ScopeImpl(nextAnchor, expanding, merging), ResolvedSchema.Value(name, value))
             }
         }
 
@@ -288,7 +301,7 @@ class Registry(
 //            cache.add(reference)
 
             val currentAnchor = if (schema.recursiveAnchor == true) Pair(namingContext, schema) else null
-            block(ScopeImpl(currentAnchor, expanding + namingContext), resolved)
+            block(ScopeImpl(currentAnchor, expanding + namingContext, merging), resolved)
         }
     }
 }
