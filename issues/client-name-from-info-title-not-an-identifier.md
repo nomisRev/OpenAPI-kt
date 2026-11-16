@@ -1,6 +1,13 @@
 # The client class is named `info.title` verbatim: empty titles crash, titles with `:` do not compile
 
-**Status:** open
+**Status:** fixed. `8272a0cc` (2026-11-15) names the class from the title's words (`CSGOV3Scores`), `Api` for an empty
+title, with a warning; all 17 documents compile since the twelfth census. `0fc8ae5c` adds `clientName` (Gradle extension
+and `RenderConfig`), used as written, an error when it is not a class name or a first path segment's class has it.
+`d758ac59` keeps the name clear of its own server class (`Pets` next to `/pets-server`) and of `StatusCodes.kt` and
+`AttemptDeserialize.kt` in the client package (none in the corpus). Left open: no length cap (the longest name in the
+corpus is 72 bytes); non-ASCII letters are kept as they are (none in the corpus); the warning quotes the title after
+PascalCase (`'CS:GOV3Scores'`); `generateOpenApi` does not delete the files of an earlier run, so renaming the client
+leaves the old root class next to the new one.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** render (empty title) / compile (illegal characters)
 **Impact:** 17 of 1,547 documents: 10 crash at render (ote-godaddy.com ×8, hubapi.com:auth, drchrono.com), 7 fail to compile (icons8.com, geodesystems.com, sportsdata.io:csgo-v3-scores, sportsdata.io:csgo-v3-stats, listennotes.com, etsi.local:MEC010-2_AppPkgMgmt, betfair.com). 172 more get a class name that only exists in back-ticks

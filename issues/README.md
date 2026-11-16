@@ -65,6 +65,7 @@ Read these numbers with three caveats:
 | [allof-closed-object-merge-loses-closedness](allof-closed-object-merge-loses-closedness.md) | `e4b1f0db` | the warning names no owning schema; absent and `false` additionalProperties generate alike |
 | [allof-union-merge-drops-branches-silently](allof-union-merge-drops-branches-silently.md) | `cfba4c52` | the warning names no owning schema |
 | [recursive-allof-ref-stack-overflow](recursive-allof-ref-stack-overflow.md) | `4da55e34` | cyclic `allOf` inheritance still overflows; atlassian.com:jira stops on a refused query parameter |
+| [client-name-from-info-title-not-an-identifier](client-name-from-info-title-not-an-identifier.md) | `8272a0cc`, `0fc8ae5c`, `d758ac59` | no length cap on a name from a long title; `generateOpenApi` leaves the files of an earlier run, so a renamed client keeps its old root class next to the new one |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none
@@ -167,6 +168,16 @@ compiles when re-checked with `--filter`; the github documents that timed out in
 linqr.app compiles since `fc10b47d` (re-checked with `--filter`, after this census).
 
 A sixteenth census after `fc10b47d` (run 43851070607): 1,352 generate and compile, 53 fail to compile or time out, 91 fail in typed, 46 in `diagnostics`. linqr.app compiles; the two github.com:ghec documents timed out compiling with the same 415 files (CI timing), and googleapis.com:displayvideo compiles again. The commits after it (`e4b1f0db`, `cfba4c52`, `4da55e34`) were re-checked with `--filter` only: the local disk was too full for a census.
+
+A seventeenth census after `e4b1f0db`, `cfba4c52` and `4da55e34` (run 43880463367 at `30ece36e`): 1,371 generate and
+compile, 49 fail to compile, 5 compile not run, 4 time out, 71 fail in typed, 47 in `diagnostics`. All 20 documents of
+the recursive `allOf` family left typed: 19 compile (18 amazonaws.com, among them dynamodb, glue, sagemaker and ssm, and
+dataflowkit.com), and atlassian.com:jira stops in `diagnostics` on a refused query parameter. amazonaws.com:quicksight
+compiles again. github.com:api.github.com.2022-11-28 timed out compiling with the same 387 files that compiled in the
+sixteenth (CI timing, like docusign.net and the two github.com:ghec documents). None stops earlier. The census predates
+`0fc8ae5c` and `d758ac59`, which change no name of a document that does not set `clientName`: the 17 documents of
+`client-name-from-info-title-not-an-identifier` were re-checked with `--filter` after `0fc8ae5c` and compile, and no
+compile log of the census has a server class declared twice (the case `d758ac59` renames).
 
 Not reported yet, found 2026-11-16: `allOf: [{$ref: X}, {readOnly: true}]` on a property does not leave it out of the write model (the merge drops `readOnly`); pinned in `RecursiveAllOfSpec` as "not resolved as the `$ref`" only.
 
