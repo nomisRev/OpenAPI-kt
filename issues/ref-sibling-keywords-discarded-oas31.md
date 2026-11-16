@@ -1,6 +1,13 @@
 # Keywords next to a `$ref` are discarded in OpenAPI 3.1 documents (`required`, `description`, `default`, `deprecated`, ...)
 
-**Status:** open
+**Status:** fixed in `c4ef6f6f`, for OpenAPI 3.0 and 3.1 documents alike (decided 2026-11-16: 3.0 says to ignore these
+keywords, but authors write them to be read; every change they make in a 3.0 document is reported). Keywords that shape
+the value (`required`, `properties`, `items`, `additionalProperties`, `enum`, composites) are merged into the referenced
+schema; a property becomes an inline class. `nullable: true` and `type: [..., "null"]` make that use nullable, with a
+warning (strictly, 2020-12 reads them as non-null). A contradicting `type` or shape is ignored with a warning.
+Not done: `description`, `title`, `deprecated` and `default` are kept by the parser but change nothing, since no
+property gets KDoc or `@Deprecated` yet (a separate feature); `toYaml()` still writes a reference without its keywords.
+The "Correct final API" below overstated what was possible: property KDoc did not exist for inline properties either.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming); parser half pinned by `CorpusRoundTripAuditTest`
 **Stage:** wrong output (parse drops the keywords; the generated model is weaker than the schema)
 **Impact:** 30 of the 36 OpenAPI 3.1 documents in the census have keywords beside a schema `$ref` (1,275 locations): `description` 1,040 in 30 documents, `x-addedInVersion` 182 in 11, `nullable` 23 in 5, `readOnly` 9 in 3 (kept), `deprecated` 6 in 3, `minLength`/`maxLength` 4 each in 1, `required` 1, `properties` 1, `type` 1.
