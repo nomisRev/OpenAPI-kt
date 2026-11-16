@@ -5,18 +5,20 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents a base article entity.
  */
-@OptIn(ExperimentalSerializationApi::class)
-@JsonClassDiscriminator("${'$'}type")
-@Serializable
+@Serializable(with = BaseArticleRead.Serializer::class)
 public sealed interface BaseArticleRead {
   public val id: String?
 
@@ -32,7 +34,8 @@ public sealed interface BaseArticleRead {
 
   @SerialName("BaseArticle")
   @OptIn(ExperimentalSerializationApi::class)
-  @Serializable
+  @KeepGeneratedSerializer
+  @Serializable(with = Default.Serializer::class)
   public data class Default(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
@@ -46,11 +49,14 @@ public sealed interface BaseArticleRead {
     override val summary: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val visibility: VisibilityRead? = null,
-  ) : BaseArticleRead
+  ) : BaseArticleRead {
+    public object Serializer : TaggedCaseSerializer<Default>(Default.generatedSerializer(), "${'$'}type", "BaseArticle")
+  }
 
   @SerialName("Article")
   @OptIn(ExperimentalSerializationApi::class)
-  @Serializable
+  @KeepGeneratedSerializer
+  @Serializable(with = Article.Serializer::class)
   public data class Article(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
@@ -92,5 +98,15 @@ public sealed interface BaseArticleRead {
     public val updated: Long? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val updatedBy: UserRead? = null,
-  ) : BaseArticleRead
+  ) : BaseArticleRead {
+    public object Serializer : TaggedCaseSerializer<Article>(Article.generatedSerializer(), "${'$'}type", "Article")
+  }
+
+  public object Serializer : JsonContentPolymorphicSerializer<BaseArticleRead>(BaseArticleRead::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<BaseArticleRead> = when (val tag = element.discriminatorValue("${'$'}type")) {
+      "BaseArticle" -> Default.serializer()
+      "Article" -> Article.serializer()
+      else -> throw SerializationException("'${'$'}type' of BaseArticleRead selects none of BaseArticle, Article: " + tag)
+    }
+  }
 }

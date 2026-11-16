@@ -2,15 +2,23 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
-private val JsonClassDiscriminatorType = ClassName("kotlinx.serialization.json", "JsonClassDiscriminator")
+private val JsonContentPolymorphicSerializerType =
+    ClassName("kotlinx.serialization.json", "JsonContentPolymorphicSerializer")
+private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
+private val DeserializationStrategyType = ClassName("kotlinx.serialization", "DeserializationStrategy")
+private val SerializationExceptionType = ClassName("kotlinx.serialization", "SerializationException")
 private val OptInType = ClassName("kotlin", "OptIn")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
 
@@ -24,19 +32,20 @@ fun Model.DiscriminatedObject.toTypeSpec(
         renderAbstractProperty(jsonName, property, config, className.packageName)
     }
 
+    val cases = subtypes.map { it to it.discriminatorValue() }
+    val serializerName = freeNestedName("Serializer", cases.mapTo(mutableSetOf()) { [subtype, _] ->
+        subtype.context.toClassName(config).simpleName
+    })
+
+    // The tag is written and checked by each case's serializer, so that a case serialized on its own (an operation's
+    // body, a property, a union branch) carries it too; the base only selects the case by it.
     val builder = TypeSpec.interfaceBuilder(className.simpleName)
         .addModifiers(KModifier.SEALED)
         .addAnnotation(
-            AnnotationSpec.builder(OptInType)
-                .addMember("%T::class", ExperimentalSerializationApi::class)
+            AnnotationSpec.builder(Serializable::class)
+                .addMember("with = %T.%N::class", className, serializerName)
                 .build()
         )
-        .addAnnotation(
-            AnnotationSpec.builder(JsonClassDiscriminatorType)
-                .addMember("%S", discriminator)
-                .build()
-        )
-        .addAnnotation(Serializable::class)
 
     if (renderedAbstractProperties.any { it.usesUuid }) {
         builder.addAnnotation(
@@ -52,17 +61,19 @@ fun Model.DiscriminatedObject.toTypeSpec(
 
     renderedAbstractProperties.forEach { builder.addProperty(it.propertySpec) }
 
-    subtypes
-        .map { subtype ->
-            val discriminatorValue = subtype.discriminatorValue()
+    cases
+        .map { [subtype, tag] ->
             subtype.toTypeSpec(
-                    config = config,
-                    parentInterface = className,
-                    serialName = discriminatorValue,
-                    overridePropertyNames = abstractProperties.keys,
-                )
+                config = config,
+                parentInterface = className,
+                serialName = tag,
+                overridePropertyNames = abstractProperties.keys,
+                discriminatorTag = DiscriminatorTag(discriminator, tag),
+            )
         }
         .forEach(builder::addType)
+
+    builder.addType(baseSerializerTypeSpec(config, serializerName, className, cases))
 
     return builder.build()
 }
@@ -76,6 +87,45 @@ fun Model.DiscriminatedObject.toFileSpec(config: RenderConfig): FileSpec {
                 addImport("kotlinx.serialization.json", "jsonObject")
             }
         }
+        .build()
+}
+
+/** Selects the case of a value by its tag; the case's serializer writes and checks the tag. */
+private fun Model.DiscriminatedObject.baseSerializerTypeSpec(
+    config: RenderConfig,
+    name: String,
+    className: ClassName,
+    cases: List<Pair<Model.Object, String>>,
+): TypeSpec {
+    val select = CodeBlock.builder()
+        .beginControlFlow(
+            "return when (val tag = element.%M(%S))",
+            MemberName(config.modelPackage.toPackageName(), DiscriminatorValueName),
+            discriminator,
+        )
+        .apply {
+            cases.forEach { [subtype, tag] ->
+                addStatement("%S -> %T.serializer()", tag, subtype.context.toClassName(config))
+            }
+        }
+        .addStatement(
+            "else -> throw %T(%S + tag)",
+            SerializationExceptionType,
+            "'$discriminator' of ${className.simpleName} selects none of ${cases.joinToString(", ") { it.second }}: ",
+        )
+        .endControlFlow()
+        .build()
+    return TypeSpec.objectBuilder(name)
+        .superclass(JsonContentPolymorphicSerializerType.parameterizedBy(className))
+        .addSuperclassConstructorParameter("%T::class", className)
+        .addFunction(
+            FunSpec.builder("selectDeserializer")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("element", JsonElementType)
+                .returns(DeserializationStrategyType.parameterizedBy(className))
+                .addCode(select)
+                .build()
+        )
         .build()
 }
 

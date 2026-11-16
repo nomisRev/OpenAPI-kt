@@ -17,6 +17,8 @@ public class PetsApi internal constructor(
 
   public val cats: Cats = Cats(__client)
 
+  public val owners: Owners = Owners(__client)
+
   public constructor(baseUrl: String, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(baseUrl) }
     block()

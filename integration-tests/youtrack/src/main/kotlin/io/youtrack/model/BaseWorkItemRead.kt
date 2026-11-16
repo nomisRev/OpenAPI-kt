@@ -4,32 +4,38 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents a basic ancestor for work items.
  */
-@OptIn(ExperimentalSerializationApi::class)
-@JsonClassDiscriminator("${'$'}type")
-@Serializable
+@Serializable(with = BaseWorkItemRead.Serializer::class)
 public sealed interface BaseWorkItemRead {
   public val id: String?
 
   @SerialName("BaseWorkItem")
   @OptIn(ExperimentalSerializationApi::class)
-  @Serializable
+  @KeepGeneratedSerializer
+  @Serializable(with = Default.Serializer::class)
   public data class Default(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
-  ) : BaseWorkItemRead
+  ) : BaseWorkItemRead {
+    public object Serializer : TaggedCaseSerializer<Default>(Default.generatedSerializer(), "${'$'}type", "BaseWorkItem")
+  }
 
   @SerialName("IssueWorkItem")
   @OptIn(ExperimentalSerializationApi::class)
-  @Serializable
+  @KeepGeneratedSerializer
+  @Serializable(with = IssueWorkItem.Serializer::class)
   public data class IssueWorkItem(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
@@ -55,5 +61,15 @@ public sealed interface BaseWorkItemRead {
     public val issue: IssueRead? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val attributes: List<WorkItemAttribute>? = null,
-  ) : BaseWorkItemRead
+  ) : BaseWorkItemRead {
+    public object Serializer : TaggedCaseSerializer<IssueWorkItem>(IssueWorkItem.generatedSerializer(), "${'$'}type", "IssueWorkItem")
+  }
+
+  public object Serializer : JsonContentPolymorphicSerializer<BaseWorkItemRead>(BaseWorkItemRead::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<BaseWorkItemRead> = when (val tag = element.discriminatorValue("${'$'}type")) {
+      "BaseWorkItem" -> Default.serializer()
+      "IssueWorkItem" -> IssueWorkItem.serializer()
+      else -> throw SerializationException("'${'$'}type' of BaseWorkItemRead selects none of BaseWorkItem, IssueWorkItem: " + tag)
+    }
+  }
 }

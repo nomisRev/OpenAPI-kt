@@ -4,15 +4,17 @@ import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
 
-@OptIn(ExperimentalSerializationApi::class)
-@JsonClassDiscriminator("${'$'}type")
-@Serializable
+@Serializable(with = UserRead.Serializer::class)
 public sealed interface UserRead {
   public val id: String?
 
@@ -40,7 +42,8 @@ public sealed interface UserRead {
 
   @SerialName("User")
   @OptIn(ExperimentalSerializationApi::class)
-  @Serializable
+  @KeepGeneratedSerializer
+  @Serializable(with = Default.Serializer::class)
   public data class Default(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
@@ -66,11 +69,14 @@ public sealed interface UserRead {
     override val avatarUrl: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val profiles: UserProfiles? = null,
-  ) : UserRead
+  ) : UserRead {
+    public object Serializer : TaggedCaseSerializer<Default>(Default.generatedSerializer(), "${'$'}type", "User")
+  }
 
   @SerialName("VcsUnresolvedUser")
   @OptIn(ExperimentalSerializationApi::class)
-  @Serializable
+  @KeepGeneratedSerializer
+  @Serializable(with = VcsUnresolvedUser.Serializer::class)
   public data class VcsUnresolvedUser(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
@@ -98,11 +104,14 @@ public sealed interface UserRead {
     override val profiles: UserProfiles? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
-  ) : UserRead
+  ) : UserRead {
+    public object Serializer : TaggedCaseSerializer<VcsUnresolvedUser>(VcsUnresolvedUser.generatedSerializer(), "${'$'}type", "VcsUnresolvedUser")
+  }
 
   @SerialName("Me")
   @OptIn(ExperimentalSerializationApi::class)
-  @Serializable
+  @KeepGeneratedSerializer
+  @Serializable(with = Me.Serializer::class)
   public data class Me(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
@@ -128,5 +137,16 @@ public sealed interface UserRead {
     override val avatarUrl: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val profiles: UserProfiles? = null,
-  ) : UserRead
+  ) : UserRead {
+    public object Serializer : TaggedCaseSerializer<Me>(Me.generatedSerializer(), "${'$'}type", "Me")
+  }
+
+  public object Serializer : JsonContentPolymorphicSerializer<UserRead>(UserRead::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<UserRead> = when (val tag = element.discriminatorValue("${'$'}type")) {
+      "User" -> Default.serializer()
+      "VcsUnresolvedUser" -> VcsUnresolvedUser.serializer()
+      "Me" -> Me.serializer()
+      else -> throw SerializationException("'${'$'}type' of UserRead selects none of User, VcsUnresolvedUser, Me: " + tag)
+    }
+  }
 }

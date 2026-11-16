@@ -7,7 +7,7 @@ import io.github.nomisrev.openapi.routes.SchemaContext
  * these names: it is numbered instead. The tri-state type has the other direction: it takes the first of `Optional`,
  * `OptionalProperty`... that no entry of [RenderConfig.modelClassNames] has ([chooseOptionalTypeName]).
  */
-private val SupportClassNames = listOf("AttemptDeserialize", "UnionSerializationException", "OptionalSerializer")
+private val SupportClassNames = listOf("AttemptDeserialize", "UnionSerializationException", "OptionalSerializer", TaggedCaseSerializerName)
 
 /** The suffix a use of a schema in this context adds to its class name: `Read`, `Write` or none. */
 internal fun NamingContext.Reference.classNameSuffix(config: RenderConfig): String =

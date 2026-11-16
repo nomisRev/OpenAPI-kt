@@ -61,6 +61,7 @@ fun Model.Object.toTypeSpec(
     overridePropertyNames: Set<String> = emptySet(),
     classNameOverride: ClassName? = null,
     externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
+    discriminatorTag: DiscriminatorTag? = null,
 ): TypeSpec {
     val className = context.toClassName(config)
     val effectiveClassName = classNameOverride ?: if (nameOverride != null) {
@@ -84,6 +85,9 @@ fun Model.Object.toTypeSpec(
     }
     val additionalProperty = renderAdditionalProperty(config)
     val allProperties = renderedProperties + listOfNotNull(additionalProperty?.rendered)
+    val isValueClass = isTransparentWrapper && allProperties.size == 1 && additionalProperty == null
+    // A value class is its bare value on the wire, so it has no object to put a tag in.
+    val caseTag = discriminatorTag?.takeUnless { isValueClass }
 
     val builder = when {
         // A schema that had properties in the spec but all were stripped by the Read/Write context
@@ -100,7 +104,7 @@ fun Model.Object.toTypeSpec(
         // render as a `value class`: kotlinx.serialization encodes a value class as its bare
         // underlying value, which is exactly their wire format. A real object schema with a single
         // property is `{"name": value}` on the wire and falls through to `data class` below.
-        isTransparentWrapper && allProperties.size == 1 && additionalProperty == null -> {
+        isValueClass -> {
             TypeSpec.classBuilder(simpleName)
                 .addModifiers(KModifier.VALUE)
                 .primaryConstructor(
@@ -148,7 +152,7 @@ fun Model.Object.toTypeSpec(
     val optInMarkers = listOfNotNull(
         ExperimentalUuidApiType.takeIf { allProperties.any { it.usesUuid } },
         ExperimentalSerializationApi::class.asClassName()
-            .takeIf { additionalProperty != null || allProperties.any { it.usesEncodeDefault } },
+            .takeIf { additionalProperty != null || caseTag != null || allProperties.any { it.usesEncodeDefault } },
     )
     if (optInMarkers.isNotEmpty()) {
         builder.addAnnotation(
@@ -156,17 +160,6 @@ fun Model.Object.toTypeSpec(
                 .apply { optInMarkers.forEach { addMember("%T::class", it) } }
                 .build()
         )
-    }
-
-    if (additionalProperty != null) {
-        builder.addAnnotation(AnnotationSpec.builder(KeepGeneratedSerializerType).build())
-        builder.addAnnotation(
-            AnnotationSpec.builder(Serializable::class)
-                .addMember("with = %T.Serializer::class", effectiveClassName)
-                .build()
-        )
-    } else {
-        builder.addAnnotation(Serializable::class)
     }
 
     inline
@@ -214,8 +207,38 @@ fun Model.Object.toTypeSpec(
         }
         .forEach(builder::addType)
 
-    additionalProperty
-        ?.let { builder.addType(serializerTypeSpec(config, effectiveClassName, renderedProperties, it.kind)) }
+    val nestedNames = builder.typeSpecs.mapNotNullTo(mutableSetOf()) { it.name }
+    val serializerName = freeNestedName("Serializer", nestedNames)
+    if (additionalProperty != null || caseTag != null) {
+        builder.addAnnotation(AnnotationSpec.builder(KeepGeneratedSerializerType).build())
+        builder.addAnnotation(
+            AnnotationSpec.builder(Serializable::class)
+                .addMember("with = %T.%N::class", effectiveClassName, serializerName)
+                .build()
+        )
+    } else {
+        builder.addAnnotation(Serializable::class)
+    }
+
+    val generated = CodeBlock.of("%T.generatedSerializer()", effectiveClassName)
+    when {
+        additionalProperty != null && caseTag != null -> {
+            val additionalName = freeNestedName("AdditionalPropertiesSerializer", nestedNames + serializerName)
+            builder.addType(
+                serializerTypeSpec(config, effectiveClassName, renderedProperties, additionalProperty.kind, additionalName)
+            )
+            builder.addType(
+                taggedCaseSerializerTypeSpec(config, serializerName, effectiveClassName, CodeBlock.of("%N", additionalName), caseTag)
+            )
+        }
+
+        additionalProperty != null -> builder.addType(
+            serializerTypeSpec(config, effectiveClassName, renderedProperties, additionalProperty.kind, serializerName)
+        )
+
+        caseTag != null ->
+            builder.addType(taggedCaseSerializerTypeSpec(config, serializerName, effectiveClassName, generated, caseTag))
+    }
 
     return builder.build()
 }
@@ -370,9 +393,10 @@ private fun serializerTypeSpec(
     config: RenderConfig,
     className: ClassName,
     renderedProperties: List<RenderedProperty>,
-    additionalPropertyKind: AdditionalPropertyKind
+    additionalPropertyKind: AdditionalPropertyKind,
+    name: String,
 ): TypeSpec =
-    TypeSpec.objectBuilder("Serializer")
+    TypeSpec.objectBuilder(name)
         .addSuperinterface(KSerializerType.parameterizedBy(className))
         .addProperty(
             PropertySpec.builder("descriptor", SerialDescriptorType)
@@ -401,6 +425,30 @@ private fun serializerTypeSpec(
                 .build()
         )
         .build()
+
+/** The case of a discriminated base that [tag] selects in the property [discriminator]. */
+data class DiscriminatorTag(val discriminator: String, val tag: String)
+
+/** The serializer of a case: [delegate], the class's own, with the case's tag (`TaggedCaseSerializer`). */
+private fun taggedCaseSerializerTypeSpec(
+    config: RenderConfig,
+    name: String,
+    className: ClassName,
+    delegate: CodeBlock,
+    tag: DiscriminatorTag,
+): TypeSpec =
+    TypeSpec.objectBuilder(name)
+        .superclass(ClassName(config.modelPackage.toPackageName(), TaggedCaseSerializerName).parameterizedBy(className))
+        .addSuperclassConstructorParameter("%L", delegate)
+        .addSuperclassConstructorParameter("%S", tag.discriminator)
+        .addSuperclassConstructorParameter("%S", tag.tag)
+        .build()
+
+/** [preferred], or the first of `preferred2`, `preferred3`... that is not in [taken]. */
+internal fun freeNestedName(preferred: String, taken: Set<String>): String =
+    generateSequence(1) { it + 1 }
+        .map { if (it == 1) preferred else "$preferred$it" }
+        .first { it !in taken }
 
 private fun serializerSerializeCode(
     config: RenderConfig,

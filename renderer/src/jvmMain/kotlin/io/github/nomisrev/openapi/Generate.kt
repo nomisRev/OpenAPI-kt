@@ -87,7 +87,8 @@ internal fun ApiTree.modelFileCollisionDiagnostics(config: RenderConfig): List<G
 
 private fun ApiTree.additionalFiles(config: RenderConfig): List<FileSpec> {
     val needsSerializationUtils = models.any(Model::requiresSerializationUtils)
-    val utils = if (needsSerializationUtils) listOf(generateSerializationUtils(config)) else emptyList()
+    val discriminated = models.any(Model::isDiscriminatedObjectFile)
+    val utils = if (needsSerializationUtils) listOf(generateSerializationUtils(config, discriminated)) else emptyList()
     val modelPackage = config.modelPackage.toPackageName()
     val optionalPackages = buildSet { models.forEach { it.collectOptionalPackages(config, this) } }
     val optional = if (optionalPackages.isNotEmpty()) listOf(generateOptionalSupport(config, modelPackage)) else emptyList()
@@ -111,12 +112,18 @@ private fun Model.toFileSpecOrNull(config: RenderConfig): FileSpec? = when (this
     is Model.Primitive -> null
 }
 
+/** Whether this model is rendered as a file of a discriminated hierarchy, as [toFileSpecOrNull] does. */
+private fun Model.isDiscriminatedObjectFile(): Boolean = when (this) {
+    is Model.Collection -> inner.isDiscriminatedObjectFile()
+    is Model.Dictionary -> inner.isDiscriminatedObjectFile()
+    else -> this is Model.DiscriminatedObject
+}
+
 private fun Model.requiresSerializationUtils(): Boolean = when (this) {
     is Model.Collection -> inner.requiresSerializationUtils()
     is Model.Dictionary -> inner.requiresSerializationUtils()
-    is Model.DiscriminatedObject ->
-        abstractProperties.values.any { it.model.requiresSerializationUtils() } ||
-                subtypes.any(Model.Object::requiresSerializationUtils)
+    // Each case is serialized by a `TaggedCaseSerializer`, and the base selects it with `discriminatorValue`.
+    is Model.DiscriminatedObject -> true
     is Model.Enum,
     is Model.Reference,
     is Model.ByteArray,
