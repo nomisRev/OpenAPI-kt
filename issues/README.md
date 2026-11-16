@@ -63,6 +63,7 @@ Read these numbers with three caveats:
 | [allof-property-two-refs-rejected](allof-property-two-refs-rejected.md) | `7e2f5586` | two unions or recursive schemas are still rejected; a closed object merged with an open one loses `additionalProperties: false`; merging unions drops failing branches silently; nexmo.com:reports stops on `enum-default-not-in-enum` |
 | [allof-additional-properties-implies-object](allof-additional-properties-implies-object.md) | `fc10b47d` | `properties` or `items` next to another type are still rejected (they are read as shape intent); the error names no schema on the union path |
 | [allof-closed-object-merge-loses-closedness](allof-closed-object-merge-loses-closedness.md) | `e4b1f0db` | the warning names no owning schema; absent and `false` additionalProperties generate alike |
+| [allof-union-merge-drops-branches-silently](allof-union-merge-drops-branches-silently.md) | `cfba4c52` | the warning names no owning schema |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none

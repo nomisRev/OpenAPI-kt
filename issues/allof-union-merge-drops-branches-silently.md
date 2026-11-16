@@ -1,6 +1,6 @@
 # An `allOf` that merges a union with another schema drops failing branches without a diagnostic, and an all-failing union becomes free-form JSON
 
-**Status:** open
+**Status:** fixed in `cfba4c52`. A branch with no value in common with the other members is dropped with a warning; a branch whose intersection exists but is not generated (`UngeneratedIntersection`, split from `ContradictoryDeclarations`) fails the document instead of being dropped; no branch left fails like an allOf without a union (decided: fail, not `JsonElement`); every other failure, cancellation included, propagates. The five documents that reach the merge stop where they did (re-checked with `--filter`). Not changed: the warning names no owning schema.
 **Confirmed:** found while fixing `fc10b47d` (2026-11-16), reproduced at HEAD `8405f814`; instrumented corpus pass 2026-11-16
 **Stage:** typed
 **Impact:** 0 of 1,547 documents at HEAD drop a branch (counted with a temporary stderr print in a throwaway worktree, full pass over every 3.x document of the preferred census, not sampled; see Affected documents). 5 documents reach `mergeCompositeUnion` and all their branches merge. Before `fc10b47d` the pattern lost both branches of a union in linqr.app's `Icon`-style `allOf`. A lower bound: the 92 documents that stop in the typed phase at HEAD may reach the path later. The defect is latent and silent: the output compiles and is wrong.
