@@ -3,7 +3,9 @@
 **Status:** open
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
-**Impact:** 2 of 1,547 documents (art19.com, anchore.io); neither has excluded errors
+**Impact:** 2 of 1,547 documents (art19.com, anchore.io); neither has excluded errors. A third since `e1cbf0e7`:
+twitter.com:current, whose first path segment `/2` is the class `` `2` `` while the default names its enum under
+`_2` (`_2.DmConversations.With.ParticipantIdPath.DmEvents.EventTypes.MessageCreate`, 9 errors)
 **Source spec valid:** yes — `default` on an array schema whose `items` is an inline enum (OAS 3.0.3 §4.7.24)
 
 ## Symptom

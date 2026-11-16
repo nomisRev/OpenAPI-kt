@@ -1,6 +1,16 @@
 # A discriminator whose mapping does not list the base schema itself crashes with NoSuchElementException
 
-**Status:** open
+**Status:** fixed in `e1cbf0e7` and `c291f8a5`. The base is a case only when its mapping lists it; a subtype's parent
+is the `allOf` member that is or extends the base, through every intermediate parent; every other `allOf` member and
+the `properties` next to `allOf` are merged (rebilly's second `$ref`, just-eat's sibling `properties` were dropped);
+a schema that extends the base without a mapping entry is a case under its schema name (the implicit mapping); a mapped
+schema that does not extend the base is a case with a warning. A `$ref` to a subtype refers to the case its tag
+selects (it used the schema name, `Pet.Cat` for the tag `feline`). Re-checked with `--filter`: viator.com and
+just-eat.co.uk compile; twitter.com:current stops at compile on `inline-enum-list-default-qualifier`; rebilly.com stops
+in typed on `Transaction.paymentInstrument` (two `$ref`s, one discriminated, see `allof-property-two-refs-rejected`);
+microsoft.com:graph reaches render and runs out of the census worker's 1 GB heap (653 cases under `entity`). Found
+while fixing: `discriminated-subtype-serializer-without-tag`, `discriminator-default-mapping-oas32`,
+`discriminator-without-mapping-ignored`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** typed
 **Impact:** 5 of 1,547 documents (viator, twitter, microsoft graph, rebilly, just-eat)

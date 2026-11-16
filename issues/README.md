@@ -65,6 +65,7 @@ Read these numbers with three caveats:
 | [allof-closed-object-merge-loses-closedness](allof-closed-object-merge-loses-closedness.md) | `e4b1f0db` | the warning names no owning schema; absent and `false` additionalProperties generate alike |
 | [allof-union-merge-drops-branches-silently](allof-union-merge-drops-branches-silently.md) | `cfba4c52` | the warning names no owning schema |
 | [recursive-allof-ref-stack-overflow](recursive-allof-ref-stack-overflow.md) | `4da55e34` | cyclic `allOf` inheritance still overflows; atlassian.com:jira stops on a refused query parameter |
+| [discriminator-mapping-without-base-entry](discriminator-mapping-without-base-entry.md) | `e1cbf0e7`, `c291f8a5` | microsoft.com:graph runs out of the census's 1 GB heap at render; rebilly.com stops on a discriminated `$ref` merged with another in an `allOf` property; an operation typed as a case decodes without the tag (`discriminated-subtype-serializer-without-tag`) |
 | [client-name-from-info-title-not-an-identifier](client-name-from-info-title-not-an-identifier.md) | `8272a0cc`, `0fc8ae5c`, `d758ac59` | no length cap on a name from a long title; `generateOpenApi` leaves the files of an earlier run, so a renamed client keeps its old root class next to the new one |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
@@ -207,6 +208,7 @@ Counts are documents affected; see each report for how they were counted.
 | [webhooks-and-unreferenced-schemas-generate-nothing](webhooks-and-unreferenced-schemas-generate-nothing.md) | Webhook-only documents emit nothing, without a diagnostic | 11 |
 | [render-with-diagnostics-throws-on-parameter-errors](render-with-diagnostics-throws-on-parameter-errors.md) | Parameter errors throw, form errors are returned; operations lose their body | 57 |
 | [allof-union-merge-drops-branches-silently](allof-union-merge-drops-branches-silently.md) | An `allOf` of a union drops branches that fail to merge (also wrongly, for an unsupported intersection) without a diagnostic; all failing is free-form JSON; cancellation is swallowed. Found 2026-11-16 | 0 today (latent) |
+| [discriminated-subtype-serializer-without-tag](discriminated-subtype-serializer-without-tag.md) | An operation that returns or sends a subtype (`Pet.Feline`) uses the case's serializer, which neither writes nor accepts the tag: with the default `Json` every such response fails to decode (YouTrack's `GET /articles/{id}`). Found 2026-11-16 | 3 |
 | [allof-closed-object-merge-loses-closedness](allof-closed-object-merge-loses-closedness.md) | A closed object merged with an open one has the properties of both, without a warning; next to a typed `additionalProperties` the `false` is lost. Found 2026-11-16 | 4 |
 
 ### 2. Regressions from this branch
@@ -242,6 +244,8 @@ Counts are documents affected; see each report for how they were counted.
 
 - Typed:
   [discriminator-mapping-without-base-entry](discriminator-mapping-without-base-entry.md) (5),
+  [discriminator-without-mapping-ignored](discriminator-without-mapping-ignored.md) (8),
+  [discriminator-default-mapping-oas32](discriminator-default-mapping-oas32.md) (0, OAS 3.2 feature),
   [form-urlencoded-non-object-body](form-urlencoded-non-object-body.md) (8, includes Stripe),
   [null-type-schema-crash](null-type-schema-crash.md) (1),
   [remote-references-not-supported](remote-references-not-supported.md) (0 in the corpus).
