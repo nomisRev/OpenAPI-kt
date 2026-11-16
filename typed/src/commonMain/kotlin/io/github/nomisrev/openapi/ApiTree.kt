@@ -84,10 +84,10 @@ suspend fun OpenAPI.toApiTree(
         val globalServers = preprocessed.servers.normalizeForClientGeneration()
         val routes = with(registry) { preprocessed.toRoutes() }
         val models = with(registry) {
-            routes
-                .flatMapTo(mutableSetOf()) { it.topLevelNames() }
+            (routes.flatMapTo(mutableSetOf()) { it.topLevelNames() } + preprocessed.webhookModelNames(registry))
                 .topLevelModels(registry)
         }
+        preprocessed.unreferencedSchemasWarning()?.let(registry::warn)
         routes.buildTree(name = name, models = models, servers = globalServers).copy(warnings = registry.warnings())
     }
 }

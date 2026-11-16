@@ -97,6 +97,10 @@ class Registry(
         }
     }
 
+    /** The name of the component schema [name] as used in [context]: that context when it has two shapes, else none. */
+    fun componentReference(name: String, context: SchemaContext): NamingContext.Reference =
+        NamingContext.Reference(name, if (name in contextSpecificComponents) context else SchemaContext.Null)
+
     private fun isContextSpecific(ref: String, peeked: Schema): Boolean =
         if (ref.startsWith("#/components/schemas/")) ref.schemaName() in contextSpecificComponents
         else peeked.isContextSpecific()

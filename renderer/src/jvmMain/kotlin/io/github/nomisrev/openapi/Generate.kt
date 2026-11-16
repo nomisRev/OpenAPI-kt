@@ -26,11 +26,18 @@ fun ApiTree.renderWithDiagnostics(config: RenderConfig): GenerationResult {
     val enrichedConfig = config.copy(contextSpecificNames = models.contextSpecificNames())
     val diagnostics = generationDiagnostics(enrichedConfig)
     val filteredTree = withSupportedRequestBodiesOnly()
+    val files = filteredTree.generateModels(enrichedConfig) + filteredTree.generateClient(enrichedConfig)
     return GenerationResult(
-        files = filteredTree.generateModels(enrichedConfig) + filteredTree.generateClient(enrichedConfig),
-        diagnostics = diagnostics,
+        files = files,
+        diagnostics = diagnostics + listOfNotNull(NoFilesDiagnostic.takeIf { files.isEmpty() }),
     )
 }
+
+/** An empty output directory is almost never what was asked for, and is otherwise a green build. */
+private val NoFilesDiagnostic = GenerationDiagnostic(
+    GenerationDiagnosticSeverity.Warning,
+    "The document has no operations, and no webhooks or schemas they refer to: no files are generated.",
+)
 
 fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> {
     val modelsConfig = config.withResolvedNames(this)
