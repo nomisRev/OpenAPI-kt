@@ -65,8 +65,9 @@ Read these numbers with three caveats:
 | [allof-closed-object-merge-loses-closedness](allof-closed-object-merge-loses-closedness.md) | `e4b1f0db` | the warning names no owning schema; absent and `false` additionalProperties generate alike |
 | [allof-union-merge-drops-branches-silently](allof-union-merge-drops-branches-silently.md) | `cfba4c52` | the warning names no owning schema |
 | [recursive-allof-ref-stack-overflow](recursive-allof-ref-stack-overflow.md) | `4da55e34` | cyclic `allOf` inheritance still overflows; atlassian.com:jira stops on a refused query parameter |
-| [discriminator-mapping-without-base-entry](discriminator-mapping-without-base-entry.md) | `e1cbf0e7`, `c291f8a5` | microsoft.com:graph runs out of the census's 1 GB heap at render; rebilly.com stops on a discriminated `$ref` merged with another in an `allOf` property; an operation typed as a case decodes without the tag (`discriminated-subtype-serializer-without-tag`) |
+| [discriminator-mapping-without-base-entry](discriminator-mapping-without-base-entry.md) | `e1cbf0e7`, `c291f8a5` | microsoft.com:graph runs out of the census's 1 GB heap at render; rebilly.com stops on a discriminated `$ref` merged with another in an `allOf` property; an operation typed as a case decoded without the tag (`discriminated-subtype-serializer-without-tag`, fixed) |
 | [client-name-from-info-title-not-an-identifier](client-name-from-info-title-not-an-identifier.md) | `8272a0cc`, `0fc8ae5c`, `d758ac59` | no length cap on a name from a long title; `generateOpenApi` leaves the files of an earlier run, so a renamed client keeps its old root class next to the new one |
+| [discriminated-subtype-serializer-without-tag](discriminated-subtype-serializer-without-tag.md) | `8a45c189` | microsoft.com:graph was not re-run; a schema mapped under several tags stops in typed (`discriminator-schema-mapped-under-several-tags`) |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none
@@ -208,7 +209,6 @@ Counts are documents affected; see each report for how they were counted.
 | [webhooks-and-unreferenced-schemas-generate-nothing](webhooks-and-unreferenced-schemas-generate-nothing.md) | Webhook-only documents emit nothing, without a diagnostic | 11 |
 | [render-with-diagnostics-throws-on-parameter-errors](render-with-diagnostics-throws-on-parameter-errors.md) | Parameter errors throw, form errors are returned; operations lose their body | 57 |
 | [allof-union-merge-drops-branches-silently](allof-union-merge-drops-branches-silently.md) | An `allOf` of a union drops branches that fail to merge (also wrongly, for an unsupported intersection) without a diagnostic; all failing is free-form JSON; cancellation is swallowed. Found 2026-11-16 | 0 today (latent) |
-| [discriminated-subtype-serializer-without-tag](discriminated-subtype-serializer-without-tag.md) | An operation that returns or sends a subtype (`Pet.Feline`) uses the case's serializer, which neither writes nor accepts the tag: with the default `Json` every such response fails to decode (YouTrack's `GET /articles/{id}`). Found 2026-11-16 | 3 |
 | [allof-closed-object-merge-loses-closedness](allof-closed-object-merge-loses-closedness.md) | A closed object merged with an open one has the properties of both, without a warning; next to a typed `additionalProperties` the `false` is lost. Found 2026-11-16 | 4 |
 
 ### 2. Regressions from this branch
@@ -218,6 +218,7 @@ Counts are documents affected; see each report for how they were counted.
 | [query-parameter-named-url-shadows-request-builder](query-parameter-named-url-shadows-request-builder.md) | `f43c8ec9` | 24 |
 | [allof-property-two-refs-rejected](allof-property-two-refs-rejected.md) | `29766c84` | 2 |
 | [allof-additional-properties-implies-object](allof-additional-properties-implies-object.md) | `0e374d2f` | 1 |
+| [discriminator-schema-mapped-under-several-tags](discriminator-schema-mapped-under-several-tags.md) | `e1cbf0e7` / `c291f8a5`: sirikit failed compile before, now typed. Needs a design decision | 1 |
 
 ### 3. Largest blockers
 
