@@ -37,6 +37,9 @@ class Registry(
 
     fun warnings(): List<String> = warnings.toList()
 
+    /** The pairs of `$ref`s being intersected, so the intersection of two recursive schemas fails instead of looping. */
+    internal val intersecting: MutableSet<Set<String>> = mutableSetOf()
+
     @Suppress("RedundantSuspendModifier")
     private suspend fun remoteSchema(url: String): Schema =
         TODO("Remote schemas $url not supported yet.")

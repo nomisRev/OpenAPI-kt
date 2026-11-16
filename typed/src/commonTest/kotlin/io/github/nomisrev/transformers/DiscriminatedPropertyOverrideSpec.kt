@@ -137,7 +137,7 @@ val discriminatedPropertyOverrideSpec by testSuite {
 
     listOf(
         Triple("disjoint enums", """{ "type": "string", "enum": ["a"] }""", """{ "type": "string", "enum": ["b"] }"""),
-        Triple("unrelated \$refs", ref("Owner"), ref("Other")),
+        Triple("\$refs to an object and a string", ref("Owner"), ref("Text")),
         Triple(
             "incompatible formats",
             """{ "type": "string", "format": "date" }""",
@@ -152,6 +152,7 @@ val discriminatedPropertyOverrideSpec by testSuite {
                     "Multi" to subtype("Item", """"p": $declared"""),
                     "Owner" to """{ "type": "object", "properties": { "name": { "type": "string" } } }""",
                     "Other" to """{ "type": "object", "properties": { "id": { "type": "integer" } } }""",
+                    "Text" to """{ "type": "string" }""",
                 )
             )
             val expected = discriminated(
@@ -160,11 +161,25 @@ val discriminatedPropertyOverrideSpec by testSuite {
                     "Multi" to subtype("Item", """"p": $declared"""),
                     "Owner" to """{ "type": "object", "properties": { "name": { "type": "string" } } }""",
                     "Other" to """{ "type": "object", "properties": { "id": { "type": "integer" } } }""",
+                    "Text" to """{ "type": "string" }""",
                 )
             )
             assertEquals(expected.property("Multi", "p"), model.property("Multi", "p"))
             assertEquals(listOf("p"), model.overriddenProperties.map { it.property })
         }
+    }
+
+    test("a redeclaration with an unrelated \$ref a value of both satisfies is their intersection, and is no override") {
+        val model = discriminated(
+            mapOf(
+                "Item" to parent(""""p": ${ref("Owner")}""", "Multi"),
+                "Multi" to subtype("Item", """"p": ${ref("Other")}"""),
+                "Owner" to """{ "type": "object", "properties": { "name": { "type": "string" } } }""",
+                "Other" to """{ "type": "object", "properties": { "id": { "type": "integer" } } }""",
+            )
+        )
+        assertEquals(setOf("name", "id"), assertIs<Model.Object>(model.property("Multi", "p")).properties.keys)
+        assertEquals(emptyList(), model.overriddenProperties)
     }
 
     test("a compatible redeclaration is still the intersection, and is no override") {

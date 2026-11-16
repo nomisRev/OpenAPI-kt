@@ -20,9 +20,10 @@ import kotlin.test.assertTrue
  * declaration, so the merged property is the intersection of them: whatever the declarations are (inline primitives,
  * `$ref`s, or a mix) and in whichever order the members list them. It is nullable only when every declaration permits
  * `null`, its constraints intersect, its `format` is kept, a `$ref` is kept when the other declaration only annotates,
- * constrains or restates its type, the more specific of two `$ref`s that extend one another is kept, and declarations
- * no value can satisfy (`string` and `integer`), or that are an intersection of two unrelated named types the client
- * cannot express, are rejected with an error rather than resolved by picking one of them.
+ * constrains or restates its type, the more specific of two `$ref`s that extend one another is kept, two `$ref`s that do
+ * not extend one another are merged (keeping a `$ref` whose schema is the intersection), and declarations no value can
+ * satisfy (`string` and `integer`), or whose intersection no generated type expresses (two recursive or union schemas),
+ * are rejected with an error rather than resolved by picking one of them.
  */
 val allOfPropertyMergeSpec by testSuite {
     fun Model.Reference.name(): String = (context.head as NamingContext.Reference).name
@@ -38,6 +39,22 @@ val allOfPropertyMergeSpec by testSuite {
         "Dog" to """{ "allOf": [${ref("Pet")}, { "type": "object", "properties": { "bark": { "type": "boolean" } } }] }""",
         "NullableAliasOwner" to """{ "allOf": [${ref("Owner")}], "nullable": true }""",
         "Puppy" to """{ "allOf": [${ref("Dog")}, { "type": "object", "properties": { "age": { "type": "integer" } } }] }""",
+        // nexmo.com:reports: one enum under two names, which differ only in annotations.
+        "ProductA" to """{ "type": "string", "enum": ["SMS", "VOICE"], "example": "SMS", "description": "A product" }""",
+        "ProductB" to """{ "type": "string", "enum": ["SMS", "VOICE"], "example": "VOICE" }""",
+        "EnumAB" to """{ "type": "string", "enum": ["a", "b"] }""",
+        "EnumA" to """{ "type": "string", "enum": ["a"] }""",
+        "EnumBC" to """{ "type": "string", "enum": ["b", "c"] }""",
+        "EnumC" to """{ "type": "string", "enum": ["c"] }""",
+        "DefaultA" to """{ "type": "string", "enum": ["a", "b"], "default": "a" }""",
+        "DefaultB" to """{ "type": "string", "enum": ["a", "b"], "default": "b" }""",
+        // beezup.com: two open objects with different properties.
+        "ObjA" to """{ "type": "object", "properties": { "a": { "type": "string" } } }""",
+        "ObjB" to """{ "type": "object", "properties": { "b": { "type": "string" } } }""",
+        "RecA" to """{ "type": "object", "properties": { "x": { "type": "string" }, "next": ${ref("RecA")} } }""",
+        "RecB" to """{ "type": "object", "properties": { "y": { "type": "string" }, "next": ${ref("RecB")} } }""",
+        "UnionA" to """{ "oneOf": [${ref("ObjA")}, { "type": "string" }] }""",
+        "UnionB" to """{ "oneOf": [${ref("ObjB")}, { "type": "integer" }] }""",
     )
 
     fun member(property: String, required: Boolean = false): String =
@@ -56,16 +73,20 @@ val allOfPropertyMergeSpec by testSuite {
         """.trimIndent()
     }
 
-    /** The model of property `p` of `Merged`, the `allOf` of a member declaring [first] and one declaring [second]. */
-    suspend fun property(first: String, second: String, context: SchemaContext = SchemaContext.Write): Model? {
+    /** The model of `Merged`, the `allOf` of a member declaring [first] and one declaring [second], and the warnings. */
+    suspend fun merged(first: String, second: String, context: SchemaContext): Pair<Model.Object, List<String>> {
         val api = OpenAPI.fromJson(document(first, second))
         return Registry(api).use { registry ->
             val merged = with(registry) {
                 ReferenceOr.schema("Merged").toModel(NamingContext.reference("Merged", SchemaContext.Null), context)
             }
-            (merged as Model.Object).properties["p"]?.model
+            (merged as Model.Object) to registry.warnings()
         }
     }
+
+    /** The model of property `p` of `Merged`, the `allOf` of a member declaring [first] and one declaring [second]. */
+    suspend fun property(first: String, second: String, context: SchemaContext = SchemaContext.Write): Model? =
+        merged(first, second, context).first.properties["p"]?.model
 
     /** Checks [first] and [second] in both member orders: `allOf` is an intersection, the order must not matter. */
     fun bothOrders(label: String, first: String, second: String, check: suspend (Model?) -> Unit) {
@@ -242,10 +263,65 @@ val allOfPropertyMergeSpec by testSuite {
         assertEquals("Owner", assertIs<Model.Reference>(model).name())
     }
 
+    // Two $refs that do not extend one another are their intersection: a $ref whose schema it is, or an inline type.
+    test("allOf property \$refs to one enum differing in annotations is the later \$ref") {
+        assertEquals("ProductB", assertIs<Model.Reference>(property(ref("ProductA"), ref("ProductB"))).name())
+        assertEquals("ProductA", assertIs<Model.Reference>(property(ref("ProductB"), ref("ProductA"))).name())
+    }
+
+    bothOrders("\$ref enum and \$ref of a subset of it is the subset", ref("EnumAB"), ref("EnumA")) { model ->
+        assertEquals("EnumA", assertIs<Model.Reference>(model).name())
+    }
+
+    bothOrders("\$refs to overlapping enums is an enum of the shared values", ref("EnumAB"), ref("EnumBC")) { model ->
+        assertEquals(listOf("b"), assertIs<Model.Enum>(model).values.map { it.rawValue })
+    }
+
+    bothOrders("\$refs to two open objects is an object with the properties of both", ref("ObjA"), ref("ObjB")) { model ->
+        assertEquals(setOf("a", "b"), assertIs<Model.Object>(model).properties.keys)
+    }
+
+    bothOrders("\$ref object and the same object as nullable is the non-null \$ref", ref("Owner"), ref("NullableOwner")) { model ->
+        val reference = assertIs<Model.Reference>(model)
+        assertEquals("Owner", reference.name())
+        assertFalse(reference.isNullable, "$reference")
+    }
+
+    bothOrders(
+        "arrays of \$refs to two open objects is an array of an object with the properties of both",
+        """{ "type": "array", "items": ${ref("ObjA")} }""",
+        """{ "type": "array", "items": ${ref("ObjB")} }""",
+    ) { model ->
+        val inner = assertIs<Model.Collection>(model).inner
+        assertEquals(setOf("a", "b"), assertIs<Model.Object>(inner).properties.keys)
+    }
+
+    // A default is generated as a Kotlin default value, so enums that differ in it are not one schema. Their merge
+    // keeps the default of the first member, as for inline declarations, so it is the first member's $ref.
+    test("allOf property \$refs to one enum with different defaults is the \$ref whose default the merge keeps") {
+        assertEquals("DefaultA", assertIs<Model.Reference>(property(ref("DefaultA"), ref("DefaultB"))).name())
+        assertEquals("DefaultB", assertIs<Model.Reference>(property(ref("DefaultB"), ref("DefaultA"))).name())
+    }
+
+    test("allOf property \$refs merged into an inline type is reported") {
+        val warnings = merged(ref("ObjA"), ref("ObjB"), SchemaContext.Write).second
+        assertTrue(
+            warnings.any { "ObjA" in it && "ObjB" in it && "intersection" in it },
+            "Expected a warning naming ObjA and ObjB, got $warnings"
+        )
+    }
+
+    test("allOf property \$ref kept as the intersection of two \$refs is not reported") {
+        assertEquals(emptyList(), merged(ref("EnumAB"), ref("EnumA"), SchemaContext.Write).second)
+    }
+
     // Unsatisfiable or unrepresentable intersections.
     rejected("string and integer", string, """{ "type": "integer" }""", "p", "string", "integer")
     rejected("\$ref object and string", ref("Owner"), string, "p", "Owner")
-    rejected("unrelated \$refs", ref("Owner"), ref("NullableOwner"), "p", "Owner", "NullableOwner")
+    rejected("\$ref string and \$ref object", ref("MyString"), ref("Owner"), "p", "MyString", "Owner", "string", "object")
+    rejected("disjoint enum \$refs", ref("EnumA"), ref("EnumC"), "p", "EnumA", "EnumC")
+    rejected("\$refs to two recursive objects", ref("RecA"), ref("RecB"), "p", "RecA", "RecB", "recursive")
+    rejected("\$refs to two unions", ref("UnionA"), ref("UnionB"), "p", "UnionA", "UnionB", "oneOf")
     rejected("disjoint enums", """{ "type": "string", "enum": ["a"] }""", """{ "type": "string", "enum": ["b"] }""", "p")
     rejected(
         "conflicting formats",

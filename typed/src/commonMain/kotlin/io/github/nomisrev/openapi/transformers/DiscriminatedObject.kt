@@ -244,8 +244,9 @@ private fun ReferenceOr<Schema>.toJson(): String = when (this) {
 }
 
 /**
- * Two declarations no value satisfies both of, such as `string` and `integer`, two `$ref`s that do not extend one
- * another, disjoint enums or different formats, as opposed to a merge that fails for another reason.
+ * Two declarations no value satisfies both of, such as `string` and `integer`, disjoint enums or different formats, or
+ * whose intersection no generated type expresses (two unrelated unions or recursive schemas), as opposed to a merge that
+ * fails for another reason.
  */
 private class ContradictoryDeclarations(message: String, cause: Throwable? = null) :
     IllegalArgumentException(message, cause)
@@ -265,8 +266,7 @@ private fun IllegalArgumentException.wrap(message: String): IllegalArgumentExcep
  *    Otherwise the inline schema adds structure, or excludes `null` the referenced type permits, and the result is
  *    the inline merge of the referenced schema with it.
  *  - of two `$ref`s the one that extends the other (`allOf`, transitively) is kept, it validates against both.
- *    Two `$ref`s that do not extend one another are an intersection of two named types no generated type expresses,
- *    and are rejected rather than resolved by picking one.
+ *    Two `$ref`s that do not extend one another are merged ([intersect]), rather than resolved by picking one.
  * Declarations no value satisfies, such as `string` and `integer`, are rejected.
  */
 context(ctx: Registry.Scope)
@@ -326,10 +326,7 @@ private suspend fun ReferenceOr.Reference.combine(other: ReferenceOr.Reference):
     val [specific, general] = when {
         target == otherTarget || extends(other) -> this to other
         other.extends(this) -> other to this
-        else -> throw ContradictoryDeclarations(
-            "${ref.schemaName()} and ${other.ref.schemaName()} do not extend one another, so a value of both is an " +
-                    "intersection of two named types that no generated type represents."
-        )
+        else -> return intersect(other, target, otherTarget)
     }
     val keepsNullability = listOf(specific).allOfNullability().permitsNull() ==
             listOf(specific, general).allOfNullability().permitsNull()
@@ -340,6 +337,83 @@ private suspend fun ReferenceOr.Reference.combine(other: ReferenceOr.Reference):
         }
     )
 }
+
+/**
+ * The intersection of two `$ref`s that do not extend one another, whose schemas are [target] and [otherTarget]:
+ *  - one schema under two names (equal but for annotations) is the later `$ref`, as an override of a discriminated
+ *    subtype is the later declaration;
+ *  - otherwise the merge of both schemas, which is the `$ref` whose schema it is (an enum and a subset of it is the
+ *    subset), or an inline type, reported because neither name appears in the generated code.
+ * Two unions are not merged (a branch that is in neither would be lost), nor two recursive schemas, whose intersection
+ * is a recursive type that is not generated: both are rejected, as are schemas no value satisfies.
+ */
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr.Reference.intersect(
+    other: ReferenceOr.Reference,
+    target: Schema,
+    otherTarget: Schema,
+): ReferenceOr<Schema> {
+    val names = "${ref.schemaName()} and ${other.ref.schemaName()}"
+    // The kept `$ref` is also `readOnly` or `writeOnly` when the other declaration is.
+    fun ReferenceOr.Reference.keptNextTo(dropped: ReferenceOr.Reference, droppedSchema: Schema) = withAccess(
+        dropped.readOnly.or(droppedSchema.readOnly),
+        dropped.writeOnly.or(droppedSchema.writeOnly),
+    )
+
+    if (target.withoutAnnotations() == otherTarget.withoutAnnotations()) return other.keptNextTo(this, target)
+    if (listOf(target, otherTarget).any { it.compositeUnionOrNull() != null || it.discriminator != null }) {
+        throw ContradictoryDeclarations(
+            "$names do not extend one another, and one of them is a union (`oneOf`/`anyOf`) or has a " +
+                "discriminator; their intersection is not generated."
+        )
+    }
+    val pair = setOf(ref, other.ref)
+    val intersecting = ctx.registry().intersecting
+    if (!intersecting.add(pair)) {
+        throw ContradictoryDeclarations(
+            "$names refer to themselves, so their intersection is a recursive type that is not generated."
+        )
+    }
+    val merged = try {
+        target.merge(otherTarget)
+    } catch (e: IllegalArgumentException) {
+        throw e.wrap("$names cannot be intersected: ${e.message}")
+    } finally {
+        intersecting.remove(pair)
+    }
+    return when (merged.withoutAnnotations()) {
+        otherTarget.withoutAnnotations() -> other.keptNextTo(this, target)
+        target.withoutAnnotations() -> keptNextTo(other, otherTarget)
+        else -> {
+            ctx.registry().warn(
+                "allOf members declare one value as both `\$ref: ${ref}` and `\$ref: ${other.ref}`, which do not " +
+                    "extend one another: it is generated as their intersection, an inline type."
+            )
+            ReferenceOr.value(
+                merged.copy(
+                    readOnly = merged.readOnly.or(readOnly).or(other.readOnly),
+                    writeOnly = merged.writeOnly.or(writeOnly).or(other.writeOnly),
+                )
+            )
+        }
+    }
+}
+
+/**
+ * The schema without the keywords that only annotate it: two schemas equal without them accept the same values and are
+ * generated alike. `default` is not one of them, it is generated as a Kotlin default value.
+ */
+private fun Schema.withoutAnnotations(): Schema = copy(
+    title = null,
+    description = null,
+    example = null,
+    deprecated = null,
+    externalDocs = null,
+    xml = null,
+    readOnly = null,
+    writeOnly = null,
+    nullable = nullable.takeIf { it == true },
+)
 
 context(ctx: Registry.Scope)
 private suspend fun ReferenceOr.Reference.mergeTarget(target: Schema, value: Schema): Schema =
