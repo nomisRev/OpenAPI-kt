@@ -1,5 +1,7 @@
 package io.github.nomisrev.render
 
+import io.github.nomisrev.render.test.client.root.`class`.name.option.ListenNotes
+import io.github.nomisrev.render.test.client.root.`class`.name.option.ListenNotesServer
 import io.github.nomisrev.render.test.client.root.`class`.name.path.Files
 import io.github.nomisrev.render.test.client.root.`class`.name.path.FilesApi
 import io.github.nomisrev.render.test.client.root.`class`.name.title.CSGOV3Scores
@@ -43,5 +45,13 @@ class RootClassNameRuntimeTest {
         files.id("7").get()
 
         assertEquals("/files/7", requests.last().url.encodedPath)
+    }
+
+    @Test
+    fun aConfiguredClientNameIsTheClientClassAndNamesItsServer() = runBlocking {
+        ListenNotes(client).scores.id("7").get()
+
+        assertEquals("/scores/7", requests.last().url.encodedPath)
+        assertEquals("https://us.example.com", ListenNotesServer(region = "us").url)
     }
 }

@@ -55,7 +55,7 @@ internal fun ApiTree.generationDiagnostics(config: RenderConfig): List<Generatio
         rendered.ignoredParameterDiagnostics() + parameterDiagnostics() +
         rendered.renamedArgumentDiagnostics(renderedConfig) +
         rendered.children.renamedPathDiagnostics(parentPath = "", operations = rendered.operations.keys) +
-        rendered.renamedServerDiagnostics() + rendered.rootClassNameDiagnostics() + rendered.propertyOverrideDiagnostics() +
+        rendered.renamedServerDiagnostics() + rendered.rootClassNameDiagnostics(config) + rendered.propertyOverrideDiagnostics() +
         rendered.typedWarningDiagnostics() +
         rendered.renamedEnumEntryDiagnostics(renderedConfig) +
         rendered.renumberedUnionCaseDiagnostics(renderedConfig)

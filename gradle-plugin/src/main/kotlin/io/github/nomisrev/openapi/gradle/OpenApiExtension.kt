@@ -11,6 +11,12 @@ abstract class OpenApiExtension @Inject constructor(objects: ObjectFactory) {
     val specFile: RegularFileProperty = objects.fileProperty()
     val modelPackage: Property<String> = objects.property(String::class.java)
     val apiPackage: Property<String> = objects.property(String::class.java)
+
+    /**
+     * The name of the generated client class, as it is. Unset, the class is named from the document's `info.title`;
+     * a name that is not a Kotlin class name fails the generation.
+     */
+    val clientName: Property<String> = objects.property(String::class.java)
     val targets: SetProperty<String> = objects.setProperty(String::class.java)
     val excludedPaths: SetProperty<String> = objects.setProperty(String::class.java)
     val outputDirectory: DirectoryProperty = objects.directoryProperty()

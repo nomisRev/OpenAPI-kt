@@ -20,6 +20,7 @@ fun openApiPlugin(project: Project) {
         specFile = extension.specFile,
         modelPackage = extension.modelPackage,
         apiPackage = extension.apiPackage,
+        clientName = extension.clientName,
         targets = extension.targets,
         excludedPaths = extension.excludedPaths,
     )

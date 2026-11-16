@@ -4,7 +4,9 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.GenerationDiagnosticSeverity
 import io.github.nomisrev.openapi.KmpTarget
 import io.github.nomisrev.openapi.RenderConfig
+import io.github.nomisrev.openapi.generateClient
 import io.github.nomisrev.openapi.generateClientWithDiagnostics
+import io.github.nomisrev.openapi.generateModels
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.toApiTree
 import kotlin.test.assertEquals
@@ -37,19 +39,68 @@ val rootClassNameSpec by testSuite {
 
     renderSpec(spec("CS:GO v3 Scores"), "client/root-class-name-title")
     renderSpec(spec("files", path = "/files/{id}"), "client/root-class-name-path")
+    renderSpec(spec("Listen API: Podcast Search"), "client/root-class-name-option") { tree, config ->
+        val named = config.copy(clientName = "ListenNotes")
+        tree.generateModels(named) + tree.generateClient(named)
+    }
 
-    suspend fun generate(title: String, path: String = "/scores/{id}") =
+    suspend fun generate(title: String, path: String = "/scores/{id}", clientName: String? = null) =
         OpenAPI.fromJson(spec(title, path)).toApiTree().generateClientWithDiagnostics(
-            RenderConfig(modelPackage = "test.model", apiPackage = "test.api", targets = setOf(KmpTarget.JVM))
+            RenderConfig(
+                modelPackage = "test.model",
+                apiPackage = "test.api",
+                targets = setOf(KmpTarget.JVM),
+                clientName = clientName,
+            )
         )
 
-    suspend fun rootOf(title: String, path: String = "/scores/{id}"): Pair<String, List<String>> {
-        val result = generate(title, path)
+    suspend fun rootOf(
+        title: String,
+        path: String = "/scores/{id}",
+        clientName: String? = null,
+    ): Pair<String, List<String>> {
+        val result = generate(title, path, clientName)
         assertTrue(result.diagnostics.all { it.severity == GenerationDiagnosticSeverity.Warning })
         val names = result.files.map { it.name }
         assertEquals(names.size, names.map(String::lowercase).distinct().size, "Two files with one name: $names")
         val root = result.files.single { file -> "public constructor" in file.toString() || "fun close" in file.toString() }
         return root.name to result.diagnostics.map { it.message }
+    }
+
+    suspend fun errorsOf(clientName: String, path: String = "/scores/{id}"): List<String> =
+        generate("Pet Store", path, clientName).diagnostics
+            .filter { it.severity == GenerationDiagnosticSeverity.Error }
+            .map { it.message }
+
+    test("a configured client name is the root class as it is, without a warning") {
+        assertEquals("ListenNotes" to emptyList(), rootOf("Listen API: Podcast Search", clientName = "ListenNotes"))
+        assertEquals("Api" to emptyList(), rootOf("", clientName = "Api"))
+        assertEquals("scores_v3" to emptyList(), rootOf("Scores", clientName = "scores_v3"))
+    }
+
+    test("a configured client name that is not a Kotlin class name is an error") {
+        for (name in listOf("Listen Notes", "CS:GO", "1Password", "object", "", "Pet-Store")) {
+            assertEquals(
+                listOf(
+                    "The client name '$name' is not a Kotlin class name: use letters, digits and '_', not starting " +
+                        "with a digit, and no keyword."
+                ),
+                errorsOf(name),
+                name,
+            )
+        }
+    }
+
+    test("a configured client name with the name of a first path segment's class is an error") {
+        val expected = listOf(
+            "The client name 'Scores' is the name of the class of a first path segment, which would be the same file."
+        )
+        assertEquals(expected, errorsOf("Scores"))
+        // One file on a case-insensitive file system.
+        assertEquals(
+            listOf("The client name 'SCORES' is the name of the class of a first path segment, which would be the same file."),
+            errorsOf("SCORES"),
+        )
     }
 
     test("a title that is a Kotlin name is the root class as it is") {

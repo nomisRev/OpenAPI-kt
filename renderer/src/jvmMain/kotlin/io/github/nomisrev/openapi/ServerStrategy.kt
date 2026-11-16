@@ -27,7 +27,7 @@ internal sealed interface ServerStrategy {
 
 /** Determine the [ServerStrategy] for this [ApiTree]. */
 internal fun ApiTree.serverStrategy(config: RenderConfig): ServerStrategy {
-    val rootName = rootClassName().simpleName
+    val rootName = rootClassName(config).simpleName
     val serverClassName = ClassName(config.apiPackage, "${rootName}Server")
 
     return when {

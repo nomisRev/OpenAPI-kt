@@ -6,6 +6,12 @@ data class RenderConfig(
     val modelPackage: String = "io.github.nomisrev.openapi.generated.model",
     val apiPackage: String = "io.github.nomisrev.openapi.generated.api",
     val targets: Set<KmpTarget> = setOf(KmpTarget.JVM, KmpTarget.JS),
+    /**
+     * The simple name of the client's root class, as it is. `null` names it from the document's `info.title`
+     * ([ApiTree.rootClassName]); a name that is not a Kotlin class name, or that a first path segment's class has, is
+     * an error.
+     */
+    val clientName: String? = null,
     val contextSpecificNames: Set<String> = emptySet(),
     /**
      * The named models of the rendered [ApiTree], by the [NamingContext] a [Model.Reference] to them carries.

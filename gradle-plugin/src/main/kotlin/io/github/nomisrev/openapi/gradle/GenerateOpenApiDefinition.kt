@@ -24,6 +24,7 @@ fun generateOpenApi(
     specFile: GInputFile,
     modelPackage: String,
     apiPackage: String,
+    clientName: String?,
     targets: Set<String>,
     excludedPaths: Set<String>,
     outputDirectory: GOutputDirectory,
@@ -41,6 +42,7 @@ fun generateOpenApi(
     val config = RenderConfig(
         modelPackage = modelPackage,
         apiPackage = apiPackage,
+        clientName = clientName,
         targets = renderTargets,
     )
     val preprocessor = OpenApiPreprocessors.excludePaths(excludedPaths)

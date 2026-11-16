@@ -65,7 +65,7 @@ internal fun ApiTree.chooseOptionalTypeName(config: RenderConfig): String {
         models.forEach { model ->
             (model as? Model.ContextHolder)?.context?.toClassName(config)?.let { add(it.topLevelClassName().simpleName.lowercase()) }
         }
-        add(rootClassName().simpleName.lowercase())
+        add(rootClassName(config).simpleName.lowercase())
         children.zip(children.uniqueNames(operations.keys)).forEach { [_, childName] -> add(childName.simpleName.lowercase()) }
     }
     return generateSequence(0) { it + 1 }

@@ -4,7 +4,8 @@ package io.github.nomisrev.openapi
 internal data class RootClassName(val simpleName: String, val reason: String?)
 
 /**
- * The name of the root class of the client, from the title of the document.
+ * The name of the root class of the client: [RenderConfig.clientName] as it is when it is set (and can be a class
+ * name, see [rootClassNameDiagnostics]), otherwise from the title of the document.
  *
  * A character that is not a letter or a digit is a word break, so the name is an identifier without back-ticks
  * (`CS:GO v3 Scores` is `CSGOV3Scores`, a `:` is not legal in a class name at all). A title without a letter or a
@@ -15,7 +16,24 @@ internal data class RootClassName(val simpleName: String, val reason: String?)
  * it, or be replaced by it, so the root class is then named with `Api` after it (`FilesApi`), or `Client` when that is
  * taken too.
  */
-internal fun ApiTree.rootClassName(): RootClassName {
+internal fun ApiTree.rootClassName(config: RenderConfig): RootClassName {
+    val taken = firstSegmentClassNames()
+    val configured = config.clientName
+    return if (configured != null && configured.isClientName() && configured.lowercase() !in taken) {
+        RootClassName(configured, null)
+    } else derivedRootClassName(taken)
+}
+
+/** The lower-cased names of the classes of the first path segments, which are files in the root class's package. */
+private fun ApiTree.firstSegmentClassNames(): Set<String> =
+    children.uniqueNames(operations.keys).mapTo(mutableSetOf()) { it.simpleName.lowercase() }
+
+/** A name a user can give the root class: a Kotlin class name without back-ticks. */
+private fun String.isClientName(): Boolean = matches(ClientNameRegex) && this !in KOTLIN_KEYWORDS
+
+private val ClientNameRegex = Regex("[A-Za-z_][A-Za-z0-9_]*")
+
+private fun ApiTree.derivedRootClassName(taken: Set<String>): RootClassName {
     val plain = name.toPascalCase()
     val words = name.map { if (it.isLetterOrDigit()) it else ' ' }.joinToString("").toPascalCase()
     val identifier = when {
@@ -23,7 +41,6 @@ internal fun ApiTree.rootClassName(): RootClassName {
         words.first().isDigit() -> "Api$words"
         else -> words
     }
-    val taken = children.uniqueNames(operations.keys).mapTo(mutableSetOf()) { it.simpleName.lowercase() }
     val unique = sequenceOf(identifier, "${identifier}Api", "${identifier}Client")
         .plus(generateSequence(2) { it + 1 }.map { "$identifier$it" })
         .first { it.lowercase() !in taken }
@@ -40,9 +57,25 @@ internal fun ApiTree.rootClassName(): RootClassName {
     return RootClassName(unique, reason)
 }
 
-/** A warning when the root class is not named with the title as it is. */
-internal fun ApiTree.rootClassNameDiagnostics(): List<GenerationDiagnostic> {
-    val root = rootClassName()
+/**
+ * A warning when the root class is not named with the title as it is, or an error when the configured
+ * [RenderConfig.clientName] cannot be its name. The client is then generated under the name from the title, so the
+ * error is not followed by others about a class that does not exist.
+ */
+internal fun ApiTree.rootClassNameDiagnostics(config: RenderConfig): List<GenerationDiagnostic> {
+    config.clientName?.let { configured ->
+        val reason = when {
+            !configured.isClientName() ->
+                "is not a Kotlin class name: use letters, digits and '_', not starting with a digit, and no keyword."
+            configured.lowercase() in firstSegmentClassNames() ->
+                "is the name of the class of a first path segment, which would be the same file."
+            else -> return emptyList()
+        }
+        return listOf(
+            GenerationDiagnostic(GenerationDiagnosticSeverity.Error, "The client name '$configured' $reason")
+        )
+    }
+    val root = rootClassName(config)
     val reason = root.reason ?: return emptyList()
     return listOf(
         GenerationDiagnostic(
