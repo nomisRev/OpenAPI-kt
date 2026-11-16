@@ -1,6 +1,11 @@
 # Documents without path operations generate nothing, silently: webhooks and unreferenced component schemas are ignored
 
-**Status:** open
+**Status:** fixed in `83961659`. Webhook payload schemas are generated (request body read, responses written); the 6
+adyen webhook documents compile (re-checked with `--filter`). Decision 2 was taken as the warning: unreferenced component
+schemas are reported (up to 25 names), not generated. A document with no files gets a warning (firstinspires.org,
+ipinfodb.com, zenoti.com, googleapis.com:youtubeAnalytics, twilio.com:twilio_numbers_v1). Not done: inline webhook
+payloads are reported but not generated (no name), `x-webhooks` (lost at the parser, `root-extensions-dropped`), callbacks,
+and a typed receiver for webhooks.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** wrong output (every phase passes, zero files, zero diagnostics)
 **Impact:** 11 of 1,547 documents emit no source file: 6 `adyen.com:*Notification*` (OpenAPI 3.1 `webhooks` only, 5–83 component schemas each), twilio.com:twilio_numbers_v1 (one path item with no operation, 3 schemas), and 4 empty documents (firstinspires.org, googleapis.com:youtubeAnalytics, zenoti.com, ipinfodb.com). The underlying rule — only schemas reachable from a path operation are generated — affects every document with unreferenced schemas or webhooks (openai.yaml has 15 webhooks; 23 census documents have a root `x-webhooks`).
