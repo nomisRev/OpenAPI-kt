@@ -1,6 +1,6 @@
 # An `allOf` of a closed object (`additionalProperties: false`) and an object with other properties is generated as the union of the properties, without a diagnostic
 
-**Status:** open
+**Status:** fixed in `e4b1f0db`. The properties of both members are still generated (the allOf read as an extension), with a warning naming the closed member's properties and the forbidden ones (required ones called out); `false` next to a typed `additionalProperties` now wins in both orders, with a warning. The 4 documents generate the same files and compile (re-checked with `--filter`). Not changed: an absent `additionalProperties` and `false` generate alike (`Object.kt:88`), so closedness has no runtime effect; the warnings name no owning schema.
 **Confirmed:** found while fixing `fc10b47d` (2026-11-16), reproduced at HEAD `8405f814`; instrumented corpus pass 2026-11-16
 **Stage:** typed
 **Impact:** 4 of 1,547 documents merge a closed object with another object that declares properties the closed one does not (bbc.com, json2video.com, shipengine.com, tl-api.azurewebsites.net), counted with a temporary `System.err` print in a throwaway worktree over a full pass of the 3.x documents of the preferred census (not sampled). All 4 emit and compile. Three of them (bbc.com, json2video.com, shipengine.com) also merge a required property the closed member forbids. A separate variant, a closed object next to a typed `additionalProperties` schema, is wrong in the generated code (it gains an `additional` map) but no corpus document has it.
