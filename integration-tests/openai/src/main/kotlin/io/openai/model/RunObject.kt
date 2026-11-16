@@ -66,7 +66,7 @@ public data class RunObject(
   @SerialName("parallel_tool_calls")
   public val parallelToolCalls: ParallelToolCalls,
   @SerialName("response_format")
-  public val responseFormat: AssistantsApiResponseFormatOption,
+  public val responseFormat: AssistantsApiResponseFormatOption?,
 ) {
   /**
    * Details on why the run is incomplete. Will be `null` if the run is not incomplete.

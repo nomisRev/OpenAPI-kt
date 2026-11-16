@@ -30,7 +30,7 @@ public data class CreateChatCompletionStreamResponse(
   public val systemFingerprint: String? = null,
   public val `object`: Object,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
-  public val usage: CompletionUsage? = null,
+  public val usage: Optional<CompletionUsage> = Optional.Absent,
 ) {
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable

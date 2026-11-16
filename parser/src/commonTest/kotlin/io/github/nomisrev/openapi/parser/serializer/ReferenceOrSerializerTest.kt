@@ -226,4 +226,65 @@ class ReferenceOrSerializerTest {
         assertNull(ref.readOnly)
         assertNull(ref.writeOnly)
     }
+
+    // ── Keywords next to a schema $ref ────────────────────────────────────────
+
+    @Test
+    fun `json schema ref keeps its sibling keywords`() {
+        val json = """{"${"$"}ref":"#/components/schemas/Foo","required":["name"],"nullable":true,"description":"A foo","readOnly":true}"""
+        val ref = assertIs<ReferenceOr.Reference>(
+            OpenAPI.Json.decodeFromString(ReferenceOr.serializer(Schema.serializer()), json)
+        )
+        assertEquals("#/components/schemas/Foo", ref.ref)
+        assertEquals(true, ref.readOnly)
+        assertEquals(Schema(required = listOf("name"), nullable = true, description = ReferenceOr.value("A foo")), ref.siblings)
+    }
+
+    @Test
+    fun `yaml schema ref keeps its sibling keywords`() {
+        val yaml = """
+            ${'$'}ref: "#/components/schemas/Foo"
+            type: [object, "null"]
+            writeOnly: true
+        """.trimIndent()
+        val ref = assertIs<ReferenceOr.Reference>(
+            OpenAPI.Yaml.decodeFromString(ReferenceOr.serializer(Schema.serializer()), yaml)
+        )
+        assertEquals(true, ref.writeOnly)
+        assertEquals(
+            Schema(type = Schema.Type.Array(listOf(Schema.Type.Basic.Object, Schema.Type.Basic.Null))),
+            ref.siblings,
+        )
+    }
+
+    @Test
+    fun `a ref with nothing but readOnly or writeOnly has no siblings`() {
+        val json = """{"${"$"}ref":"#/components/schemas/Foo","readOnly":true}"""
+        val ref = assertIs<ReferenceOr.Reference>(
+            OpenAPI.Json.decodeFromString(ReferenceOr.serializer(Schema.serializer()), json)
+        )
+        assertNull(ref.siblings)
+    }
+
+    @Test
+    fun `siblings that are no schema are ignored as before`() {
+        // A value of the wrong JSON type next to a `$ref` (codat.io has `type: application/json`) is dropped,
+        // never fails the document.
+        val json = """{"${"$"}ref":"#/components/schemas/Foo","required":"name"}"""
+        val ref = assertIs<ReferenceOr.Reference>(
+            OpenAPI.Json.decodeFromString(ReferenceOr.serializer(Schema.serializer()), json)
+        )
+        assertEquals("#/components/schemas/Foo", ref.ref)
+        assertNull(ref.siblings)
+    }
+
+    @Test
+    fun `json schema ref with siblings serializes them next to the ref`() {
+        val ref = ReferenceOr.Reference("#/components/schemas/Foo", readOnly = true, siblings = Schema(required = listOf("name")))
+        val json = OpenAPI.Json.encodeToString(ReferenceOr.serializer(Schema.serializer()), ref)
+        assertEquals(
+            OpenAPI.Json.parseToJsonElement("""{"${"$"}ref":"#/components/schemas/Foo","readOnly":true,"required":["name"]}"""),
+            OpenAPI.Json.parseToJsonElement(json),
+        )
+    }
 }

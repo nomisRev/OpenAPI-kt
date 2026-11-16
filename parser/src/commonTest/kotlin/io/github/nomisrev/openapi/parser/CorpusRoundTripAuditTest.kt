@@ -8,8 +8,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
 /**
- * Round trips of values seen in the corpus. The `$ref` sibling and root extension cases still characterize
- * unresolved data loss, not correct OpenAPI behavior.
+ * Round trips of values seen in the corpus. The root extension case still characterizes unresolved data loss, not
+ * correct OpenAPI behavior.
  */
 class CorpusRoundTripAuditTest {
     private fun roundTripSchema(schema: String): JsonObject {
@@ -40,10 +40,19 @@ class CorpusRoundTripAuditTest {
     }
 
     @Test
-    fun `OpenAPI 3_1 schema reference siblings are currently discarded`() {
+    fun `schema reference siblings are kept`() {
         // Codat Commerce: TaxComponent.allOf[2] (reference target renamed in this reduction)
-        val actual = roundTripSchema("""{"${'$'}ref":"#/components/schemas/Name","required":["name"]}""")
-        assertEquals(Json.parseToJsonElement("""{"${'$'}ref":"#/components/schemas/Name"}"""), actual)
+        val actual = roundTripSchema("""{"${'$'}ref":"#/components/schemas/Name","required":["name"],"description":"Dates"}""")
+        assertEquals(
+            Json.parseToJsonElement("""{"${'$'}ref":"#/components/schemas/Name","required":["name"],"description":"Dates"}"""),
+            actual,
+        )
+    }
+
+    @Test
+    fun `a reference with readOnly only round trips unchanged`() {
+        val actual = roundTripSchema("""{"${'$'}ref":"#/components/schemas/Name","readOnly":true}""")
+        assertEquals(Json.parseToJsonElement("""{"${'$'}ref":"#/components/schemas/Name","readOnly":true}"""), actual)
     }
 
     @Test

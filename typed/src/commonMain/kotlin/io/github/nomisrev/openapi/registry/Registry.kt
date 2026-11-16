@@ -8,6 +8,8 @@ import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.pipeline.SchemaTransformerEngine
+import io.github.nomisrev.openapi.transformers.describe
+import io.github.nomisrev.openapi.transformers.merge
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.yield
 
@@ -78,6 +80,7 @@ class Registry(
                 is ReferenceOr.Reference -> {
                     if (refOrSchema.readOnly == true || refOrSchema.writeOnly == true) direct = true
                     if (refOrSchema.ref != "#") refs += refOrSchema.ref
+                    refOrSchema.siblings?.let(::scan)
                 }
                 is ReferenceOr.Value<Schema> -> scan(refOrSchema.value)
             }
@@ -134,6 +137,9 @@ class Registry(
         fun registry(): Registry
     }
 
+    /** A use of a referenced schema: [schema] as it is used there, and whether keywords next to the `$ref` [shaped] it. */
+    private class Use(val schema: Schema, val shaped: Boolean)
+
     // Layer of indirection to keep `Registry.Scope` construction private
     private inner class ScopeImpl(
         private val currentAnchor: Pair<NamingContext, Schema>?,
@@ -145,7 +151,41 @@ class Registry(
             is ReferenceOr.Reference if ref == "#" -> currentAnchor?.second
                 ?: error("Cannot resolve top-level schema without anchor.")
 
-            is ReferenceOr.Reference -> peek(ref)
+            // Only what changes the shape is reported here: a peek has no use to name, and the use is resolved too.
+            is ReferenceOr.Reference -> useOf(peek(ref), "`\$ref: $ref`", reportUse = false).schema
+        }
+
+        /**
+         * [target], the schema this reference points to, as this use of it: with the keywords next to the `$ref`
+         * applied ([ReferenceSiblings]). Warnings name the use as [use]; [reportUse] reports the ones about that use
+         * only (a `type` that is ignored, `nullable`) too.
+         */
+        private suspend fun ReferenceOr.Reference.useOf(target: Schema, use: String, reportUse: Boolean = true): Use {
+            val siblings = siblings?.let(::ReferenceSiblings) ?: return Use(target, shaped = false)
+            val ignoredIn30 = " (OpenAPI 3.0 says to ignore keywords next to a `\$ref`)"
+                .takeIf { openAPI.openapi.startsWith("3.0") }.orEmpty()
+            if (reportUse && siblings.contradictsTypeOf(target)) {
+                warn("$use: `type` next to `\$ref: $ref` is ignored: no value is of that type and of the referenced schema's type.")
+            }
+            val keywords = siblings.shapeKeywords.joinToString { "`$it`" }
+            val shaped = siblings.shape?.let { shape ->
+                try {
+                    target.merge(shape).also {
+                        if (ignoredIn30.isNotEmpty()) warn("$use: $keywords next to `\$ref: $ref` is applied to the referenced schema$ignoredIn30.")
+                    }
+                } catch (e: IllegalArgumentException) {
+                    warn("$use: $keywords next to `\$ref: $ref` is ignored: ${e.message}")
+                    null
+                }
+            }
+            val schema = shaped ?: target
+            return Use(
+                if (siblings.nullable && schema.nullable != true) {
+                    if (reportUse) warn("$use: `nullable` next to `\$ref: $ref` is read as making this use of it nullable$ignoredIn30.")
+                    schema.copy(nullable = true)
+                } else schema,
+                shaped = shaped != null,
+            )
         }
 
         override suspend fun peek(ref: String): Schema = peek(ref, emptySet())
@@ -180,7 +220,14 @@ class Registry(
                 block(this@ScopeImpl, ResolvedSchema.Recursive(currentAnchor.first, currentAnchor.second))
             }
             is ReferenceOr.Reference -> {
-                val peeked = peek()
+                val use = useOf(peek(ref), name.describe())
+                // Keywords next to the `$ref` that shape the value make this use an inline schema: the referenced one
+                // merged with them, named where it is used.
+                if (use.shaped) {
+                    val nextAnchor = if (use.schema.recursiveAnchor == true) Pair(name, use.schema) else currentAnchor
+                    return block(ScopeImpl(nextAnchor, expanding), ResolvedSchema.Value(name, use.schema))
+                }
+                val peeked = use.schema
                 // `readOnly` or `writeOnly` next to this `$ref` is about the property that holds it: it is left out of
                 // one shape of its parent. Whether the schema referred to has two shapes depends on its own content
                 // (and what it refers to) only, so that a use and the definition of one schema agree on its name.

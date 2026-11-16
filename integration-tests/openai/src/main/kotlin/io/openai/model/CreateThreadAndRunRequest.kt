@@ -60,7 +60,7 @@ public data class CreateThreadAndRunRequest(
   public val parallelToolCalls: ParallelToolCalls? = null,
   @SerialName("response_format")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
-  public val responseFormat: AssistantsApiResponseFormatOption? = null,
+  public val responseFormat: Optional<AssistantsApiResponseFormatOption> = Optional.Absent,
 ) {
   @Serializable(with = Model.Serializer::class)
   public sealed interface Model {
