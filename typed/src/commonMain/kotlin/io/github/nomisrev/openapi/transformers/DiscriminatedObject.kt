@@ -224,7 +224,11 @@ private suspend fun overrideProperty(
 ): ReferenceOr<Schema> =
     try {
         inherited.declaration.combine(own.declaration)
-    } catch (e: ContradictoryDeclarations) {
+    } catch (e: IllegalArgumentException) {
+        // A redeclaration without a generated intersection overrides the inherited one, like a subclass.
+        if (e !is ContradictoryDeclarations && e !is UngeneratedIntersection) {
+            throw e.wrap("allOf members declare property '$property' incompatibly: ${e.message}")
+        }
         overrides += Model.DiscriminatedObject.PropertyOverride(
             schema = own.schema,
             parent = inherited.schema,
@@ -234,8 +238,6 @@ private suspend fun overrideProperty(
             reason = e.message.orEmpty(),
         )
         own.declaration
-    } catch (e: IllegalArgumentException) {
-        throw e.wrap("allOf members declare property '$property' incompatibly: ${e.message}")
     }
 
 private fun ReferenceOr<Schema>.toJson(): String = when (this) {
@@ -244,17 +246,26 @@ private fun ReferenceOr<Schema>.toJson(): String = when (this) {
 }
 
 /**
- * Two declarations no value satisfies both of, such as `string` and `integer`, disjoint enums or different formats, or
- * whose intersection no generated type expresses (two unrelated unions or recursive schemas), as opposed to a merge that
- * fails for another reason.
+ * Two declarations no value satisfies both of, such as `string` and `integer`, disjoint enums or different formats, as
+ * opposed to a merge that fails for another reason. A union branch with such a declaration admits no value, so it is
+ * not generated ([mergeCompositeUnion]).
  */
 private class ContradictoryDeclarations(message: String, cause: Throwable? = null) :
     IllegalArgumentException(message, cause)
 
-/** Prefixes this error with [message], keeping it a [ContradictoryDeclarations] when it is one. */
-private fun IllegalArgumentException.wrap(message: String): IllegalArgumentException =
-    if (this is ContradictoryDeclarations) ContradictoryDeclarations(message, this)
-    else IllegalArgumentException(message, this)
+/**
+ * Two declarations values satisfy both of, but whose intersection no generated type expresses: two unrelated unions or
+ * recursive schemas. Unlike [ContradictoryDeclarations], a union branch with them admits values, so it is not dropped.
+ */
+private class UngeneratedIntersection(message: String, cause: Throwable? = null) :
+    IllegalArgumentException(message, cause)
+
+/** Prefixes this error with [message], keeping it a [ContradictoryDeclarations] or [UngeneratedIntersection]. */
+private fun IllegalArgumentException.wrap(message: String): IllegalArgumentException = when (this) {
+    is ContradictoryDeclarations -> ContradictoryDeclarations(message, this)
+    is UngeneratedIntersection -> UngeneratedIntersection(message, this)
+    else -> IllegalArgumentException(message, this)
+}
 
 /**
  * Merges the declarations of property [name] by two schemas an `allOf` combines. The property's value must validate
@@ -362,7 +373,7 @@ private suspend fun ReferenceOr.Reference.intersect(
 
     if (target.withoutAnnotations() == otherTarget.withoutAnnotations()) return other.keptNextTo(this, target)
     if (listOf(target, otherTarget).any { it.compositeUnionOrNull() != null || it.discriminator != null }) {
-        throw ContradictoryDeclarations(
+        throw UngeneratedIntersection(
             "$names do not extend one another, and one of them is a union (`oneOf`/`anyOf`) or has a " +
                 "discriminator; their intersection is not generated."
         )
@@ -370,7 +381,7 @@ private suspend fun ReferenceOr.Reference.intersect(
     val pair = setOf(ref, other.ref)
     val intersecting = ctx.registry().intersecting
     if (!intersecting.add(pair)) {
-        throw ContradictoryDeclarations(
+        throw UngeneratedIntersection(
             "$names refer to themselves, so their intersection is a recursive type that is not generated."
         )
     }
@@ -647,28 +658,49 @@ context(ctx: Registry.Scope)
 private suspend fun Schema.mergeCompositeUnion(other: Schema): Schema {
     val left = compositeUnionOrNull()
     val right = other.compositeUnionOrNull()
+    // A branch no value of the other side satisfies admits no value: it is not generated, and that is reported.
+    // Any other failure, an intersection that is not generated or a bug, is no fact about the branch and propagates.
+    val dropped = mutableListOf<String>()
+    suspend fun branch(description: String, merge: suspend () -> Schema): ReferenceOr<Schema>? =
+        try {
+            ReferenceOr.value(merge())
+        } catch (e: ContradictoryDeclarations) {
+            dropped += "${description.replaceFirstChar(Char::uppercase)} has no value in common with the other allOf " +
+                "members (${e.message?.removeSuffix(".")})"
+            null
+        }
+
+    fun ReferenceOr<Schema>.describe(kind: CompositeKind, index: Int): String {
+        val keyword = if (kind == CompositeKind.OneOf) "oneOf" else "anyOf"
+        val name = (this as? ReferenceOr.Reference)?.let { " (`\$ref: ${it.ref}`)" }.orEmpty()
+        return "branch ${index + 1}$name of a `$keyword`"
+    }
+
     val mergedBranches = when {
         left != null && right != null ->
-            left.branches.flatMap { l ->
-                right.branches.mapNotNull { r ->
-                    runCatching { l.peek().merge(r.peek()) }.getOrNull()?.let { ReferenceOr.value(it) }
+            left.branches.withIndex().flatMap { [i, l] ->
+                right.branches.withIndex().mapNotNull { [j, r] ->
+                    branch("${l.describe(left.kind, i)} with ${r.describe(right.kind, j)}") { l.peek().merge(r.peek()) }
                 }
             }
 
         left != null ->
-            left.branches.mapNotNull { branch ->
-                runCatching { branch.peek().merge(other) }.getOrNull()?.let { ReferenceOr.value(it) }
-            }
+            left.branches.withIndex().mapNotNull { [i, b] -> branch(b.describe(left.kind, i)) { b.peek().merge(other) } }
 
         right != null ->
-            right.branches.mapNotNull { branch ->
-                runCatching { merge(branch.peek()) }.getOrNull()?.let { ReferenceOr.value(it) }
-            }
+            right.branches.withIndex().mapNotNull { [i, b] -> branch(b.describe(right.kind, i)) { merge(b.peek()) } }
 
         else -> emptyList()
     }.distinct()
 
-    if (mergedBranches.isEmpty()) return Schema(description = description ?: other.description)
+    if (mergedBranches.isEmpty()) {
+        throw ContradictoryDeclarations(
+            "No branch of the union has a value in common with the other allOf members: ${dropped.joinToString("; ")}."
+        )
+    }
+    dropped.forEach { reason ->
+        ctx.registry().warn("$reason, so it admits no value and is not generated.")
+    }
     if (mergedBranches.size == 1) return mergedBranches.single().peek()
 
     val kind = when {
