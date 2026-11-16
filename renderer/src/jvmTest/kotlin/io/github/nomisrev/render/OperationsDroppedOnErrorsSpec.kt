@@ -2,7 +2,12 @@ package io.github.nomisrev.render
 
 import com.squareup.kotlinpoet.FileSpec
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.ApiTree
 import io.github.nomisrev.openapi.GenerationDiagnosticSeverity
+import io.github.nomisrev.openapi.PathNode
+import io.github.nomisrev.openapi.renderableTree
+import io.github.nomisrev.openapi.routes.Route
+import java.io.File
 import io.github.nomisrev.openapi.GenerationResult
 import io.github.nomisrev.openapi.KmpTarget
 import io.github.nomisrev.openapi.RenderConfig
@@ -82,6 +87,13 @@ private fun GenerationResult.file(name: String): FileSpec? = files.singleOrNull 
 private fun GenerationResult.errors() = diagnostics.filter { it.severity == GenerationDiagnosticSeverity.Error }.map { it.message }
 private fun GenerationResult.warnings() = diagnostics.filter { it.severity == GenerationDiagnosticSeverity.Warning }.map { it.message }
 
+/** Every operation of the tree, as `METHOD /path`, the way diagnostics name it. */
+private fun ApiTree.operationKeys(): Set<String> {
+    fun keys(operations: Map<*, Route>) = operations.values.map { "${it.method.value} ${it.path}" }
+    fun PathNode.keys(): List<String> = keys(operations) + children.flatMap { it.keys() }
+    return (keys(operations) + children.flatMap { it.keys() }).toSet()
+}
+
 /** The `/x` operation of [document] is not generated, `/ok` is, and the error is the only diagnostic. */
 private fun GenerationResult.assertOnlyXIsDropped(error: String) {
     assertEquals(1, errors().size, "diagnostics: $diagnostics")
@@ -146,6 +158,30 @@ val operationsDroppedOnErrorsSpec by testSuite {
             .toApiTree()
             .generateClientWithDiagnostics(config)
         result.assertOnlyXIsDropped("form fields [Parameters]")
+    }
+
+    // No operation is dropped silently: every operation of the document that is not rendered is named by an error.
+    listOf(
+        "operations-with-errors" to { operationsWithErrorsSpec },
+        "required-form" to { document("/x", body(required = true, "application/x-www-form-urlencoded", ARRAY_OF_OBJECTS_FIELD)) },
+        "optional-form" to { document("/x", body(required = false, "application/x-www-form-urlencoded", ARRAY_OF_OBJECTS_FIELD)) },
+        "youtrack.json" to { File("../parser/src/commonTest/resources/specs/youtrack.json").readText() },
+        "github.json" to { File("../parser/src/commonTest/resources/specs/github.json").readText() },
+        "openai.yaml" to { File("../parser/src/commonTest/resources/specs/openai.yaml").readText() },
+    ).forEach { [name, text] ->
+        test("$name: every operation that is not rendered is named by an error") {
+            val api = if (name.endsWith(".yaml")) OpenAPI.fromYaml(text()) else OpenAPI.fromJson(text())
+            val tree = api.toApiTree()
+            val result = tree.renderWithDiagnostics(config)
+            val errors = result.errors()
+            val dropped = tree.operationKeys() - tree.renderableTree().operationKeys()
+            dropped.forEach { operation ->
+                assertTrue(errors.any { it.startsWith("$operation ") }, "$operation is not rendered, but no error names it: $errors")
+            }
+            errors.forEach { error ->
+                assertTrue(dropped.any { error.startsWith("$it ") }, "an error names an operation that is rendered: $error")
+            }
+        }
     }
 
     test("a document whose only operation has an error generates no client, and reports only the error") {
