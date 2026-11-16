@@ -188,6 +188,8 @@ Counts are documents affected; see each report for how they were counted.
 | [ref-sibling-keywords-discarded-oas31](ref-sibling-keywords-discarded-oas31.md) | `required`, `description`, `default` beside `$ref` are lost | 30 of 36 OAS 3.1 docs |
 | [webhooks-and-unreferenced-schemas-generate-nothing](webhooks-and-unreferenced-schemas-generate-nothing.md) | Webhook-only documents emit nothing, without a diagnostic | 11 |
 | [render-with-diagnostics-throws-on-parameter-errors](render-with-diagnostics-throws-on-parameter-errors.md) | Parameter errors throw, form errors are returned; operations lose their body | 57 |
+| [allof-union-merge-drops-branches-silently](allof-union-merge-drops-branches-silently.md) | An `allOf` of a union drops branches that fail to merge (also wrongly, for an unsupported intersection) without a diagnostic; all failing is free-form JSON; cancellation is swallowed. Found 2026-11-16 | 0 today (latent) |
+| [allof-closed-object-merge-loses-closedness](allof-closed-object-merge-loses-closedness.md) | A closed object merged with an open one has the properties of both, without a warning; next to a typed `additionalProperties` the `false` is lost. Found 2026-11-16 | 4 |
 
 ### 2. Regressions from this branch
 
