@@ -64,7 +64,10 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     val mapping = requireNotNull(discriminator.mapping) { "Discriminator mapping required" }
     require(this is ResolvedSchema.Reference) { "Expected reference for discriminated object" }
 
-    val mappings = mapping.filterValues { it != "#/components/schemas/${reference.name}" }
+    val self = "#/components/schemas/${reference.name}"
+    // The tag selects a schema by the explicit mapping, or by the name of a schema that extends the base (the implicit
+    // mapping, which explicit entries add to). The base is a case of its own only when the mapping lists it.
+    val mappings = mapping.filterValues { it != self } + implicitSubtypes(self, mapping.values.toSet())
 
     val abstractProperties = properties(schema.properties!!, context)
         .filter { [name, prop] -> prop.model !is Model.FreeFormJson && name != discriminator.propertyName }
@@ -73,14 +76,19 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     val subtypes = mappings.map { [mappedName, ref] ->
         val name = name.nest(NamingContext.DiscriminatedObjectCase(mappedName))
         val subtypeSchema = ReferenceOr.Reference(ref).peek()
-        val allOf = requireNotNull(subtypeSchema.allOf) { "Subtype schema must be allOf" }
-
-        val parentClass = allOf.single { it.isSubtype(mapping) }
+        val parentClass = subtypeSchema.allOf.orEmpty().firstOrNull { it.isOrExtends(self) }
+        if (parentClass == null) {
+            scope.registry().warn(
+                "Discriminator of '${reference.name}': the mapping '$mappedName' selects '${ref.schemaName()}', which " +
+                    "does not extend '${reference.name}' through allOf; it is generated as a case with its own " +
+                    "properties only."
+            )
+        }
         val [superRequired, superProps, origins] =
-            parentClass.collectSuperTypeProperties(mapping, context, overrides)
+            parentClass?.collectSuperTypeProperties(self, context, overrides)
+                ?: SuperTypeProperties(emptyList(), emptyMap(), emptyMap())
 
-        val peeked =
-            (allOf - parentClass).singleOrNull()?.peek() ?: Schema()
+        val peeked = subtypeSchema.declaredNextTo(parentClass, "'${ref.schemaName()}' (mapping '$mappedName')")
         val peekedProperties =
             peeked.properties.orEmpty().filter { [_, refOrSchema] -> refOrSchema.takeIf(context) != null }
 
@@ -88,7 +96,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
             superProps.merge(peekedProperties) { property, inherited, declared ->
                 overrideProperty(
                     PropertyDeclaration(ref.schemaName(), declared),
-                    PropertyDeclaration(origins[property] ?: parentClass.schemaName(), inherited),
+                    PropertyDeclaration(origins[property] ?: parentClass?.schemaName() ?: ref.schemaName(), inherited),
                     property,
                     overrides,
                 )
@@ -98,7 +106,8 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
             name,
             peeked.copy(
                 properties = properties,
-                required = superRequired + peeked.required
+                required = superRequired + peeked.required,
+                discriminator = null,
             )
         )   // TODO: To remove 'resolveReference' make this toObject to work with resolveReference = false
             //  It's the only place where indirect recursion due to subtype relationship is broken and results in OOM
@@ -111,7 +120,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     return Model.DiscriminatedObject(
         name,
         abstractProperties,
-        listOf(simpleCase(mapping, abstractProperties)) + subtypes,
+        (if (self in mapping.values) listOf(simpleCase(mapping, abstractProperties)) else emptyList()) + subtypes,
         description(),
         schema.title,
         discriminator.propertyName,
@@ -143,25 +152,28 @@ fun Schema.isEmpty(): Boolean =
 @Suppress("UnsafeCallOnNullableType")
 context(scope: Registry.Scope)
 private tailrec suspend fun ReferenceOr<Schema>.collectSuperTypeProperties(
-    mapping: Map<String, String>,
+    base: String,
     context: SchemaContext,
     overrides: MutableList<Model.DiscriminatedObject.PropertyOverride>,
     properties: SuperTypeProperties = SuperTypeProperties(emptyList(), emptyMap(), emptyMap())
 ): SuperTypeProperties {
     val parentSchema = peek()
     val parentName = schemaName()
-    val superTypeOrNull = parentSchema.allOf?.singleOrNull { it.isSubtype(mapping) }
+    // An intermediate parent, mapped or not, is walked through to the base: its properties are the subtype's too.
+    val superTypeOrNull =
+        if (this is ReferenceOr.Reference && ref == base) null
+        else parentSchema.allOf?.firstOrNull { it.isOrExtends(base) }
     return if (superTypeOrNull != null) {
-        val schema = (parentSchema.allOf!! - superTypeOrNull).singleOrNull()?.peek()
-        val schemaProps = schema?.properties.orEmpty()
+        val schema = parentSchema.declaredNextTo(superTypeOrNull, "'$parentName'")
+        val schemaProps = schema.properties.orEmpty()
             .filter { [_, refOrSchema] -> refOrSchema.takeIf(context) != null }
 
         superTypeOrNull.collectSuperTypeProperties(
-            mapping,
+            base,
             context,
             overrides,
             SuperTypeProperties(
-                properties.required + schema?.required.orEmpty(),
+                properties.required + schema.required,
                 properties.properties.merge(schemaProps) { property, declared, inherited ->
                     overrideProperty(
                         PropertyDeclaration(properties.origins.getValue(property), declared),
@@ -186,6 +198,44 @@ private tailrec suspend fun ReferenceOr<Schema>.collectSuperTypeProperties(
             },
             parentSchema.properties.orEmpty().mapValues { parentName } + properties.origins,
         )
+    }
+}
+
+/** Whether this `allOf` member is the `$ref` [base], or a `$ref` that extends it ([extends]). */
+context(scope: Registry.Scope)
+private suspend fun ReferenceOr<Schema>.isOrExtends(base: String): Boolean =
+    this is ReferenceOr.Reference && (ref == base || extends(ReferenceOr.Reference(base)))
+
+/**
+ * The component schemas that extend [base] through `allOf` and are not in its mapping ([mapped]), by their name: the
+ * implicit mapping, whose tag is the schema name. In declaration order.
+ */
+context(scope: Registry.Scope)
+private suspend fun implicitSubtypes(base: String, mapped: Set<String>): Map<String, String> =
+    scope.registry().openAPI.components.schemas.keys
+        .map { name -> name to "#/components/schemas/$name" }
+        .filter { [_, ref] -> ref != base && ref !in mapped }
+        .filter { [_, ref] -> ReferenceOr.Reference(ref).extends(ReferenceOr.Reference(base)) }
+        .toMap()
+
+/**
+ * What this subtype (or intermediate parent) declares next to its [parent] in the hierarchy: every other `allOf`
+ * member and the keywords next to `allOf`, merged as an `allOf` merges them. A value of the subtype validates against
+ * all of them, whichever the discriminator selects it by. [owner] names the schema in an error.
+ */
+context(scope: Registry.Scope)
+private suspend fun Schema.declaredNextTo(parent: ReferenceOr<Schema>?, owner: String): Schema {
+    val members = allOf.orEmpty().filter { it != parent }.map { it.peek() }
+    val sibling = Schema(
+        properties = properties,
+        required = required,
+        additionalProperties = additionalProperties,
+    ).takeIf { properties != null || required.isNotEmpty() || additionalProperties != null }
+    val declared = members + listOfNotNull(sibling)
+    return try {
+        declared.reduceOrNull { merged, member -> merged.merge(member) } ?: Schema()
+    } catch (e: IllegalArgumentException) {
+        throw e.wrap("The allOf members of $owner in a discriminated hierarchy are incompatible: ${e.message}")
     }
 }
 
@@ -484,9 +534,6 @@ private fun Schema.nonNullType(): Type? = when (val type = type) {
     is Type.Array -> type.types.filter { it != Type.Basic.Null }.let { it.singleOrNull() ?: Type.Array(it) }
     else -> type
 }
-
-private fun ReferenceOr<Schema>.isSubtype(mapping: Map<String, String>): Boolean =
-    if (this is ReferenceOr.Reference) this.ref in mapping.values else false
 
 private fun ResolvedSchema.Reference.simpleCase(
     mapping: Map<String, String>,
