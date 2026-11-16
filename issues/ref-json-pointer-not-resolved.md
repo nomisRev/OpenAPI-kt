@@ -173,6 +173,35 @@ Failing tests to write first:
 
 Integration-tests coverage: none. `github.json` (9,514 references) and `youtrack.json` (743) contain only `#/components/<section>/<name>` references; `openai.yaml` likewise (its multi-line `$ref: >-` entries are plain component references). They would not catch a regression.
 
+## Investigation 2026-11-16 (at `5cee6c05`, not fixed)
+
+Re-verified: all reproducers still fail at typed; 27 documents now (enode.io reaches typed since the parse fixes).
+More sites than listed above assume `#/components/<section>/<name>`: `schemaName()` callers in Registry.kt, AllOf.kt,
+Union.kt, Predicates.kt, DiscriminatedObject.kt; literal `#/components/schemas/` prefixes in Union.kt,
+DiscriminatedObject.kt, Webhooks.kt; `substringAfterLast('/')` in Webhooks.kt and StreamResolution.kt. No component
+name is percent-decoded or `~`-unescaped. A schema's `$ref` name is also its identity (`Reference.toModel()` rebuilds
+from `ReferenceOr.schema(name)`), so pointers cannot be resolved in `peek` alone.
+
+Prototyped (in a throwaway worktree, saved as `scratchpad/ref-pointer/PointerHoisting.kt` and `prototype.diff`):
+hoist every local pointer that is not `#/components/<section>/<name>` into a component in the parser, before decoding
+(the target and every `$ref` to it become one component, as a bundler would), RFC 6901 decoding, section from the
+`$ref`'s location, data subtrees (`example`, `default`, `enum`, `const`, `x-*`) skipped except under `properties` and
+`responses`. 12 of 17 checked documents reach emit; conjur, peertube and dnd5eapi stop at other errors; surevoip needs
+a `pathItems` kind; rumble.run is a schema `$ref` to a Response (should be an error naming both ends). The disk filled
+during the run, so the other 10 documents and every compile step were not checked.
+
+Decisions needed before implementing:
+1. Hoist every target, or only those that generate a type (objects, enums, unions), inlining primitives (avoids
+   `UserId`-style value classes). Investigator: the latter.
+2. Hoist in the parser (covers `definitions`, YAML; `toJson()` no longer equals the input) or keep the raw JSON on
+   `OpenAPI` and resolve in typed. Investigator: the parser.
+3. Share one type between the pointer's target and its uses (renames today's nested classes, only in documents that
+   fail today) or generate the target twice. Investigator: share.
+4. Names: PascalCased pointer tokens with a deterministic numeric suffix and a diagnostic per rename
+   (`TransferEntities`, `UsersIdGetResponses200…` for path targets), or operationId-based names for path targets.
+5. A schema `$ref` to a Response/Parameter (rumble.run): fail with a message naming both ends, or accept with a
+   warning when a same-named schema exists.
+
 ## Affected documents
 
 Fail in typed (26):

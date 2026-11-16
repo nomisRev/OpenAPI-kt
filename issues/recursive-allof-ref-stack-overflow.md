@@ -1,6 +1,6 @@
 # A recursive schema reached through an inline `allOf` overflows the stack
 
-**Status:** open
+**Status:** fixed in `4da55e34`. 20 documents, not 18 (also atlassian.com:jira and dataflowkit.com), all through `resolveAllOf` transforming the merged copy in a fresh registry scope. A restating `allOf` is resolved as its `$ref` in the current scope; a structural one is a reference to its own nested type where it leads back to itself; `additionalProperties` of two members combine like properties. 19 compile and jira reaches `diagnostics` (re-checked with `--filter`). Side effect, decided: non-recursive restating `allOf`s use the top-level type instead of a nested copy (github, openai clients). Not fixed: cyclic `allOf` inheritance still overflows (no corpus document).
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** typed
 **Impact:** 18 of 1,547 documents (all `amazonaws.com`: dynamodb, glue, sagemaker, ssm, wafv2, connect, athena, lex v2, ...)
