@@ -11,29 +11,54 @@ internal data class RootClassName(val simpleName: String, val reason: String?)
  * (`CS:GO v3 Scores` is `CSGOV3Scores`, a `:` is not legal in a class name at all). A title without a letter or a
  * digit is `Api`, and one that starts with a digit is prefixed with `Api` (`Api1PasswordConnect`).
  *
- * The classes of the first path segments are in the same package, a file each. A title with the name of one of them
- * (`Files` and `/files`, or `APOD` and `/apod`, which are one file on a case-insensitive file system) would replace
- * it, or be replaced by it, so the root class is then named with `Api` after it (`FilesApi`), or `Client` when that is
- * taken too.
+ * The root class shares its package with the classes of the first path segments, a file each, and with the support
+ * files of the client. A title with the name of one of them (`Files` and `/files`, or `APOD` and `/apod`, which are
+ * one file on a case-insensitive file system), or whose server class has one (`Pets` and `/pets-server`), would
+ * replace it or not compile next to it ([clash]), so the root class is then named with `Api` after it (`FilesApi`), or
+ * `Client` when that is taken too.
  */
 internal fun ApiTree.rootClassName(config: RenderConfig): RootClassName {
-    val taken = firstSegmentClassNames()
     val configured = config.clientName
-    return if (configured != null && configured.isClientName() && configured.lowercase() !in taken) {
+    return if (configured != null && configured.isClientName() && clash(configured) == null) {
         RootClassName(configured, null)
-    } else derivedRootClassName(taken)
+    } else derivedRootClassName()
 }
 
-/** The lower-cased names of the classes of the first path segments, which are files in the root class's package. */
-private fun ApiTree.firstSegmentClassNames(): Set<String> =
-    children.uniqueNames(operations.keys).mapTo(mutableSetOf()) { it.simpleName.lowercase() }
+/**
+ * Why [candidate] cannot be the root class's name, or `null` when it can: it, or its server class, is a file or a
+ * top-level class of the client package already. Names are compared ignoring case, as file names are on a
+ * case-insensitive file system.
+ */
+private fun ApiTree.clash(candidate: String): String? {
+    val paths = children.uniqueNames(operations.keys).map { it.simpleName }
+    paths.firstOrNull { it.equals(candidate, ignoreCase = true) }?.let { path ->
+        return "a first path segment is generated as the class '$path', which would be the same file."
+    }
+    if (hasServerClass()) {
+        paths.firstOrNull { it.equals("${candidate}Server", ignoreCase = true) }?.let { path ->
+            return "a first path segment is generated as the class '$path', the name of the client's server class."
+        }
+    }
+    if (candidate.equals(StatusCodesFileName, ignoreCase = true) && buildSet { collectIanaStatusCodes(this) }.isNotEmpty()) {
+        return "the names of the status codes are generated in the file '$StatusCodesFileName', which would be the same file."
+    }
+    if (candidate.equals(SerializationUtilsFileName, ignoreCase = true) && clientNeedsSerializationUtils()) {
+        return "the union serialization helpers are generated in the file '$SerializationUtilsFileName', which would " +
+            "be the same file."
+    }
+    return null
+}
+
+/** Whether a `<Root>Server` class is generated next to the root class ([serverStrategy]). */
+private fun ApiTree.hasServerClass(): Boolean =
+    servers.size > 1 || servers.singleOrNull()?.variables?.isNotEmpty() == true
 
 /** A name a user can give the root class: a Kotlin class name without back-ticks. */
 private fun String.isClientName(): Boolean = matches(ClientNameRegex) && this !in KOTLIN_KEYWORDS
 
 private val ClientNameRegex = Regex("[A-Za-z_][A-Za-z0-9_]*")
 
-private fun ApiTree.derivedRootClassName(taken: Set<String>): RootClassName {
+private fun ApiTree.derivedRootClassName(): RootClassName {
     val plain = name.toPascalCase()
     val words = name.map { if (it.isLetterOrDigit()) it else ' ' }.joinToString("").toPascalCase()
     val identifier = when {
@@ -43,13 +68,9 @@ private fun ApiTree.derivedRootClassName(taken: Set<String>): RootClassName {
     }
     val unique = sequenceOf(identifier, "${identifier}Api", "${identifier}Client")
         .plus(generateSequence(2) { it + 1 }.map { "$identifier$it" })
-        .first { it.lowercase() !in taken }
+        .first { clash(it) == null }
     val reason = when {
-        unique != identifier ->
-            "a first path segment is generated as the class '${
-                children.zip(children.uniqueNames(operations.keys))
-                    .first { it.second.simpleName.equals(identifier, ignoreCase = true) }.second.simpleName
-            }', which would be the same file."
+        unique != identifier -> clash(identifier)
         identifier != plain && plain.isEmpty() -> "the document has no title to name it from."
         identifier != plain -> "the title '$name' is not a Kotlin name."
         else -> null
@@ -67,9 +88,7 @@ internal fun ApiTree.rootClassNameDiagnostics(config: RenderConfig): List<Genera
         val reason = when {
             !configured.isClientName() ->
                 "is not a Kotlin class name: use letters, digits and '_', not starting with a digit, and no keyword."
-            configured.lowercase() in firstSegmentClassNames() ->
-                "is the name of the class of a first path segment, which would be the same file."
-            else -> return emptyList()
+            else -> clash(configured)?.let { "cannot be used: $it" } ?: return emptyList()
         }
         return listOf(
             GenerationDiagnostic(GenerationDiagnosticSeverity.Error, "The client name '$configured' $reason")

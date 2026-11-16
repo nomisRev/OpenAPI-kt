@@ -77,8 +77,11 @@ private fun Route.collectIanaStatusCodes(into: MutableSet<Int>) {
  * models never mention them. The properties are top-level, so a second copy in another package would be an
  * ambiguous name for a caller that imports both.
  */
+/** The file of the status code names that Ktor has no name for, in the api package. */
+internal const val StatusCodesFileName = "StatusCodes"
+
 internal fun generateStatusCodeSupport(config: RenderConfig, codes: Set<Int>): FileSpec {
-    val builder = FileSpec.builder(config.apiPackage.toPackageName(), "StatusCodes")
+    val builder = FileSpec.builder(config.apiPackage.toPackageName(), StatusCodesFileName)
     for (code in codes.sorted()) {
         val status = iana.getValue(code)
         builder.addProperty(

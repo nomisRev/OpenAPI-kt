@@ -20,12 +20,15 @@ fun ApiTree.generateClientWithDiagnostics(config: RenderConfig): GenerationResul
     )
 }
 
+/** Whether the client package has a copy of the union helpers (`AttemptDeserialize.kt`), for its inline unions. */
+internal fun ApiTree.clientNeedsSerializationUtils(): Boolean =
+    hasInlineNonDiscriminatedParameterUnion() ||
+            hasInlineNonDiscriminatedBodyUnion() ||
+            hasInlineNonDiscriminatedResponseUnion()
+
 internal fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
-    val needsSerializationUtils =
-        hasInlineNonDiscriminatedParameterUnion() ||
-                hasInlineNonDiscriminatedBodyUnion() ||
-                hasInlineNonDiscriminatedResponseUnion()
+    val needsSerializationUtils = clientNeedsSerializationUtils()
 
     val rootName = rootClassName(config).simpleName
     val rootClassName = ClassName(config.apiPackage, rootName)

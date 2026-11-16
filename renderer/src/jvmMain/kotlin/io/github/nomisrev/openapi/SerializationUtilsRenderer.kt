@@ -26,11 +26,14 @@ private val EncoderType = ClassName("kotlinx.serialization.encoding", "Encoder")
 private val KClassType = ClassName("kotlin.reflect", "KClass")
 private val PairType = ClassName("kotlin", "Pair")
 
+/** The file of the union serialization helpers, in the model package and in the api package when the client needs them. */
+internal const val SerializationUtilsFileName = "AttemptDeserialize"
+
 fun generateSerializationUtils(config: RenderConfig): FileSpec {
     val packageName = config.modelPackage
         .split('.').filter(String::isNotBlank).joinToString(".") { it.sanitize() }
 
-    return FileSpec.builder(packageName, "AttemptDeserialize")
+    return FileSpec.builder(packageName, SerializationUtilsFileName)
         .addType(buildUnionSerializationException())
         .addFunction(buildAttemptDeserialize())
         .addFunction(buildPutAll())

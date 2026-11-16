@@ -8,6 +8,7 @@ import io.github.nomisrev.openapi.generateClient
 import io.github.nomisrev.openapi.generateClientWithDiagnostics
 import io.github.nomisrev.openapi.generateModels
 import io.github.nomisrev.openapi.parser.OpenAPI
+import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.toApiTree
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -19,7 +20,12 @@ import kotlin.test.assertTrue
  * `RootClassNameRuntimeTest` creates both clients and checks a request.
  */
 val rootClassNameSpec by testSuite {
-    fun spec(title: String, path: String = "/scores/{id}") = """
+    fun spec(
+        title: String,
+        path: String = "/scores/{id}",
+        status: String = "204",
+        content: String = "",
+    ) = """
         {
           "openapi": "3.0.3",
           "info": { "title": "$title", "version": "0.0.1" },
@@ -30,7 +36,7 @@ val rootClassNameSpec by testSuite {
             "$path": {
               "get": {
                 "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } } ],
-                "responses": { "204": { "description": "No Content" } }
+                "responses": { "$status": { "description": "No Content"$content } }
               }
             }
           }
@@ -44,8 +50,8 @@ val rootClassNameSpec by testSuite {
         tree.generateModels(named) + tree.generateClient(named)
     }
 
-    suspend fun generate(title: String, path: String = "/scores/{id}", clientName: String? = null) =
-        OpenAPI.fromJson(spec(title, path)).toApiTree().generateClientWithDiagnostics(
+    suspend fun generate(json: String, clientName: String? = null) =
+        OpenAPI.fromJson(json).toApiTree().generateClientWithDiagnostics(
             RenderConfig(
                 modelPackage = "test.model",
                 apiPackage = "test.api",
@@ -58,17 +64,27 @@ val rootClassNameSpec by testSuite {
         title: String,
         path: String = "/scores/{id}",
         clientName: String? = null,
+        json: String = spec(title, path),
     ): Pair<String, List<String>> {
-        val result = generate(title, path, clientName)
+        val result = generate(json, clientName)
         assertTrue(result.diagnostics.all { it.severity == GenerationDiagnosticSeverity.Warning })
         val names = result.files.map { it.name }
         assertEquals(names.size, names.map(String::lowercase).distinct().size, "Two files with one name: $names")
+        // Two top-level declarations of one name in a package do not compile, whichever files they are in.
+        val types = result.files.flatMap { file ->
+            file.members.filterIsInstance<TypeSpec>().map { "${file.packageName}.${it.name}".lowercase() }
+        }
+        assertEquals(types.size, types.distinct().size, "Two top-level classes with one name: $types")
         val root = result.files.single { file -> "public constructor" in file.toString() || "fun close" in file.toString() }
         return root.name to result.diagnostics.map { it.message }
     }
 
-    suspend fun errorsOf(clientName: String, path: String = "/scores/{id}"): List<String> =
-        generate("Pet Store", path, clientName).diagnostics
+    suspend fun errorsOf(
+        clientName: String,
+        path: String = "/scores/{id}",
+        json: String = spec("Pet Store", path),
+    ): List<String> =
+        generate(json, clientName).diagnostics
             .filter { it.severity == GenerationDiagnosticSeverity.Error }
             .map { it.message }
 
@@ -93,12 +109,16 @@ val rootClassNameSpec by testSuite {
 
     test("a configured client name with the name of a first path segment's class is an error") {
         val expected = listOf(
-            "The client name 'Scores' is the name of the class of a first path segment, which would be the same file."
+            "The client name 'Scores' cannot be used: a first path segment is generated as the class 'Scores', which " +
+                "would be the same file."
         )
         assertEquals(expected, errorsOf("Scores"))
         // One file on a case-insensitive file system.
         assertEquals(
-            listOf("The client name 'SCORES' is the name of the class of a first path segment, which would be the same file."),
+            listOf(
+                "The client name 'SCORES' cannot be used: a first path segment is generated as the class 'Scores', " +
+                    "which would be the same file."
+            ),
             errorsOf("SCORES"),
         )
     }
@@ -140,5 +160,63 @@ val rootClassNameSpec by testSuite {
         // Names that differ only by case are one file on a case-insensitive file system.
         assertEquals("APODApi", rootOf("APOD", path = "/apod/{id}").first)
         assertEquals("FilesApiApi", rootOf("files api", path = "/files-api/{id}").first)
+    }
+
+    test("a name whose server class is the class of a first path segment is named with Api after it") {
+        // The server class (`<Root>Server`) is next to the root class, in the same package as the path classes.
+        assertEquals(
+            "PetsApi" to listOf(
+                "The client class is generated as 'PetsApi': a first path segment is generated as the class " +
+                    "'PetsServer', the name of the client's server class."
+            ),
+            rootOf("Pets", path = "/pets-server/{id}"),
+        )
+        assertEquals(
+            listOf(
+                "The client name 'Pets' cannot be used: a first path segment is generated as the class " +
+                    "'PetsServer', the name of the client's server class."
+            ),
+            errorsOf("Pets", path = "/pets-server/{id}"),
+        )
+    }
+
+    test("a name of a support file in the package of the client is named with Api after it") {
+        val statusCodes = spec("Status Codes", status = "421")
+        val withStatusCodes = generate(spec("Pet Store", status = "421")).files.map { it.name }
+        assertTrue("StatusCodes" in withStatusCodes, "421 has no Ktor name, so it is in StatusCodes.kt: $withStatusCodes")
+        assertEquals(
+            "StatusCodesApi" to listOf(
+                "The client class is generated as 'StatusCodesApi': the names of the status codes are generated in " +
+                    "the file 'StatusCodes', which would be the same file."
+            ),
+            rootOf("Status Codes", json = statusCodes),
+        )
+        // Without a status code that needs the file, the title is the name as it is.
+        assertEquals("StatusCodes" to emptyList(), rootOf("Status Codes"))
+
+        fun union(title: String) = spec(
+            title,
+            status = "200",
+            content = """, "content": { "application/json": { "schema": { "oneOf": [
+                { "type": "string" }, { "type": "integer" }
+            ] } } }""",
+        )
+        val union = union("Attempt Deserialize")
+        val withUnion = generate(union("Pet Store")).files.map { it.name }
+        assertTrue("AttemptDeserialize" in withUnion, "An inline union response needs the helpers: $withUnion")
+        assertEquals(
+            "AttemptDeserializeApi" to listOf(
+                "The client class is generated as 'AttemptDeserializeApi': the union serialization helpers are " +
+                    "generated in the file 'AttemptDeserialize', which would be the same file."
+            ),
+            rootOf("Attempt Deserialize", json = union),
+        )
+        assertEquals(
+            listOf(
+                "The client name 'StatusCodes' cannot be used: the names of the status codes are generated in the " +
+                    "file 'StatusCodes', which would be the same file."
+            ),
+            errorsOf("StatusCodes", json = statusCodes),
+        )
     }
 }
