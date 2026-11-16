@@ -426,8 +426,11 @@ private fun serializerTypeSpec(
         )
         .build()
 
-/** The case of a discriminated base that [tag] selects in the property [discriminator]. */
-data class DiscriminatorTag(val discriminator: String, val tag: String)
+/**
+ * The case of a discriminated base that [tags] select in the property [discriminator]. A case of several tags has the
+ * property itself (an enum of them), and its serializer only checks it.
+ */
+data class DiscriminatorTag(val discriminator: String, val tags: List<String>)
 
 /** The serializer of a case: [delegate], the class's own, with the case's tag (`TaggedCaseSerializer`). */
 private fun taggedCaseSerializerTypeSpec(
@@ -441,7 +444,10 @@ private fun taggedCaseSerializerTypeSpec(
         .superclass(ClassName(config.modelPackage.toPackageName(), TaggedCaseSerializerName).parameterizedBy(className))
         .addSuperclassConstructorParameter("%L", delegate)
         .addSuperclassConstructorParameter("%S", tag.discriminator)
-        .addSuperclassConstructorParameter("%S", tag.tag)
+        .addSuperclassConstructorParameter(
+            tag.tags.singleOrNull()?.let { CodeBlock.of("%S", it) }
+                ?: CodeBlock.of("setOf(%L)", tag.tags.joinToCode { CodeBlock.of("%S", it) })
+        )
         .build()
 
 /** [preferred], or the first of `preferred2`, `preferred3`... that is not in [taken]. */

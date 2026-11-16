@@ -50,18 +50,41 @@ class Registry(
 
     /**
      * The names of the component schemas that are context-specific: they, or anything they contain, are `readOnly` or
-     * `writeOnly`, following `$ref`s, so they have a request and a response shape. Computed once, in linear time, from
-     * the components alone: the answer for a schema depends on that schema only, never on where it is used, so that a
+     * `writeOnly`, following `$ref`s, so they have a request and a response shape. Computed once, from the components
+     * alone: the answer for a schema depends on that schema only, never on where it is used, so that a
      * use and the definition of one schema agree on its name. Cycles need no special care.
+     *
+     * A discriminated base is generated with its cases, so it contains them: the schemas its mapping selects, and those
+     * that extend it through `allOf` (the implicit mapping), also through an intermediate parent. A plain `allOf`
+     * parent does not contain its children. Finding the schemas under a discriminated base takes a pass per level of
+     * inheritance.
      */
     private val contextSpecificComponents: Set<String> by lazy {
         val prefix = "#/components/schemas/"
+        val schemas = openAPI.components.schemas
         val direct = mutableSetOf<String>()
         val usedBy = mutableMapOf<String, MutableList<String>>()
-        openAPI.components.schemas.forEach { [name, declared] ->
+        fun use(used: String, by: String) {
+            usedBy.getOrPut(used) { mutableListOf() } += by
+        }
+        val parents = schemas.mapValues { [_, declared] ->
+            (declared as? ReferenceOr.Value<Schema>)?.value?.allOf.orEmpty()
+                .filterIsInstance<ReferenceOr.Reference>().map { it.ref }
+                .filter { it.startsWith(prefix) }.map { it.schemaName() }
+        }
+        val discriminated = schemas.filterValues { (it as? ReferenceOr.Value<Schema>)?.value?.discriminator != null }
+            .keys.toMutableSet()
+        do {
+            val extending = parents.filter { [name, of] -> name !in discriminated && of.any { it in discriminated } }.keys
+            discriminated += extending
+        } while (extending.isNotEmpty())
+        schemas.forEach { [name, declared] ->
             val scan = ContextScan().apply { scan(declared) }
             if (scan.direct) direct += name
-            scan.refs.forEach { if (it.startsWith(prefix)) usedBy.getOrPut(it.schemaName()) { mutableListOf() } += name }
+            scan.refs.forEach { if (it.startsWith(prefix)) use(it.schemaName(), name) }
+            (declared as? ReferenceOr.Value<Schema>)?.value?.discriminator?.mapping?.values
+                ?.filter { it.startsWith(prefix) }?.forEach { use(it.schemaName(), name) }
+            parents.getValue(name).filter { it in discriminated }.forEach { parent -> use(name, parent) }
         }
         val result = direct.toMutableSet()
         val pending = ArrayDeque(direct)

@@ -10,6 +10,7 @@ import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.openapi.transformers.discriminatedSubtypeOrNull
 import io.github.nomisrev.openapi.transformers.toDiscriminatedObject
 
 object DiscriminatedObjectPlugin : SchemaTransformerPlugin {
@@ -23,7 +24,13 @@ object DiscriminatedObjectPlugin : SchemaTransformerPlugin {
         context: SchemaContext,
         next: suspend (ResolvedSchema, SchemaContext) -> Model
     ): Model? = with(ctx) {
-        if (schema is ResolvedSchema.Reference && schema.isObjectWithDiscriminator()) {
+        // A schema with a discriminator of its own that extends a discriminated base is a case of that base
+        // (`DiscriminatedSubtypePlugin`), not a hierarchy of its own.
+        if (
+            schema is ResolvedSchema.Reference &&
+            schema.isObjectWithDiscriminator() &&
+            schema.schema.discriminatedSubtypeOrNull(context, schema.reference.name) == null
+        ) {
             schema.toDiscriminatedObject(context)
         } else null
     }

@@ -11,6 +11,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.joinToCode
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
@@ -32,7 +33,9 @@ fun Model.DiscriminatedObject.toTypeSpec(
         renderAbstractProperty(jsonName, property, config, className.packageName)
     }
 
-    val cases = subtypes.map { it to it.discriminatorValue() }
+    val cases = subtypes.map { subtype ->
+        subtype to (caseTags[subtype.caseName()] ?: listOf(subtype.discriminatorValue()))
+    }
     val serializerName = freeNestedName("Serializer", cases.mapTo(mutableSetOf()) { [subtype, _] ->
         subtype.context.toClassName(config).simpleName
     })
@@ -62,13 +65,13 @@ fun Model.DiscriminatedObject.toTypeSpec(
     renderedAbstractProperties.forEach { builder.addProperty(it.propertySpec) }
 
     cases
-        .map { [subtype, tag] ->
+        .map { [subtype, tags] ->
             subtype.toTypeSpec(
                 config = config,
                 parentInterface = className,
-                serialName = tag,
+                serialName = tags.singleOrNull() ?: subtype.discriminatorValue(),
                 overridePropertyNames = abstractProperties.keys,
-                discriminatorTag = DiscriminatorTag(discriminator, tag),
+                discriminatorTag = DiscriminatorTag(discriminator, tags),
             )
         }
         .forEach(builder::addType)
@@ -95,7 +98,7 @@ private fun Model.DiscriminatedObject.baseSerializerTypeSpec(
     config: RenderConfig,
     name: String,
     className: ClassName,
-    cases: List<Pair<Model.Object, String>>,
+    cases: List<Pair<Model.Object, List<String>>>,
 ): TypeSpec {
     val select = CodeBlock.builder()
         .beginControlFlow(
@@ -104,14 +107,18 @@ private fun Model.DiscriminatedObject.baseSerializerTypeSpec(
             discriminator,
         )
         .apply {
-            cases.forEach { [subtype, tag] ->
-                addStatement("%S -> %T.serializer()", tag, subtype.context.toClassName(config))
+            cases.forEach { [subtype, tags] ->
+                addStatement(
+                    "%L -> %T.serializer()",
+                    tags.joinToCode { CodeBlock.of("%S", it) },
+                    subtype.context.toClassName(config),
+                )
             }
         }
         .addStatement(
             "else -> throw %T(%S + tag)",
             SerializationExceptionType,
-            "'$discriminator' of ${className.simpleName} selects none of ${cases.joinToString(", ") { it.second }}: ",
+            "'$discriminator' of ${className.simpleName} selects none of ${cases.flatMap { it.second }.joinToString(", ")}: ",
         )
         .endControlFlow()
         .build()
@@ -162,6 +169,11 @@ private fun renderAbstractProperty(
 private fun Model.Object.Property.renderedTypeName(config: RenderConfig, packageName: String): TypeName =
     if (isOptionalNullable) config.optionalOf(packageName, model.toTypeName(config))
     else model.toTypeName(config).copy(nullable = model.isNullable || !isRequired)
+
+/** The name of this case, its [NamingContext.DiscriminatedObjectCase], by which [Model.DiscriminatedObject.caseTags] lists it. */
+private fun Model.Object.caseName(): String? =
+    (context.nested.lastOrNull { it is NamingContext.DiscriminatedObjectCase } as? NamingContext.DiscriminatedObjectCase)
+        ?.discriminator
 
 private fun Model.Object.discriminatorValue(): String {
     val case =

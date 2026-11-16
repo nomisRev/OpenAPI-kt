@@ -65,31 +65,54 @@ private val JsonNullType = ClassName("kotlinx.serialization.json", "JsonNull")
  */
 private fun buildTaggedCaseSerializer(): TypeSpec {
     val t = TypeVariableName("T", ANY)
+    val serializerType = KSerializerType.parameterizedBy(t)
+    val setOfString = Set::class.asClassName().parameterizedBy(String::class.asClassName())
     return TypeSpec.classBuilder(TaggedCaseSerializerName)
         .addModifiers(KModifier.OPEN)
         .addTypeVariable(t)
         .addKdoc(
             "The serializer of a case of a discriminated base: [serializer], with the property [discriminator] set " +
-                "to [tag]. A value of another case, or without its tag, is an error.\n",
+                "to one of [tags]. A value of another case, or without its tag, is an error.\n",
         )
         .primaryConstructor(
             FunSpec.constructorBuilder()
-                .addParameter("serializer", KSerializerType.parameterizedBy(t))
+                .addModifiers(KModifier.PRIVATE)
+                .addParameter("serializer", serializerType)
+                .addParameter("discriminator", String::class)
+                .addParameter("tags", setOfString)
+                .addParameter("inProperty", Boolean::class)
+                .build()
+        )
+        .addFunction(
+            FunSpec.constructorBuilder()
+                .addKdoc("A case of one [tag]: the tag is written and read here, the case has no property for it.\n")
+                .addParameter("serializer", serializerType)
                 .addParameter("discriminator", String::class)
                 .addParameter("tag", String::class)
+                .callThisConstructor("serializer", "discriminator", "setOf(tag)", "false")
+                .build()
+        )
+        .addFunction(
+            FunSpec.constructorBuilder()
+                .addKdoc("A case of several [tags]: its [discriminator] property holds the tag, which must be one of them.\n")
+                .addParameter("serializer", serializerType)
+                .addParameter("discriminator", String::class)
+                .addParameter("tags", setOfString)
+                .callThisConstructor("serializer", "discriminator", "tags", "true")
                 .build()
         )
         .superclass(JsonTransformingSerializerType.parameterizedBy(t))
         .addSuperclassConstructorParameter("serializer")
         .addProperty(PropertySpec.builder("discriminator", String::class, KModifier.PRIVATE).initializer("discriminator").build())
-        .addProperty(PropertySpec.builder("tag", String::class, KModifier.PRIVATE).initializer("tag").build())
+        .addProperty(PropertySpec.builder("tags", setOfString, KModifier.PRIVATE).initializer("tags").build())
+        .addProperty(PropertySpec.builder("inProperty", Boolean::class, KModifier.PRIVATE).initializer("inProperty").build())
         .addFunction(
             FunSpec.builder("transformSerialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("element", JsonElementType)
                 .returns(JsonElementType)
                 .addStatement(
-                    "return %T(mapOf(discriminator to %T(tag)) + (element as %T))",
+                    "return if (inProperty) element else %T(mapOf(discriminator to %T(tags.single())) + (element as %T))",
                     JsonObjectType,
                     JsonPrimitiveType,
                     JsonObjectType,
@@ -102,14 +125,20 @@ private fun buildTaggedCaseSerializer(): TypeSpec {
                 .addParameter("element", JsonElementType)
                 .returns(JsonElementType)
                 .addStatement("val found = element.%L(discriminator)", DiscriminatorValueName)
-                .beginControlFlow("if (found != tag)")
+                .beginControlFlow("if (found !in tags)")
+                .addStatement(
+                    "val expected = tags.joinToString(%S) { %P }",
+                    ", ",
+                    "'\$it'",
+                )
                 .addStatement(
                     "throw %T(%P)",
                     SerializationExceptionType,
-                    "Expected '\$discriminator' to be '\$tag', but it was \${found?.let { \"'\$it'\" } ?: \"absent\"}",
+                    "Expected '\$discriminator' to be \${if (tags.size == 1) \"\" else \"one of \"}\$expected, but it was " +
+                        "\${found?.let { \"'\$it'\" } ?: \"absent\"}",
                 )
                 .endControlFlow()
-                .addStatement("return %T(element as %T - discriminator)", JsonObjectType, JsonObjectType)
+                .addStatement("return if (inProperty) element else %T(element as %T - discriminator)", JsonObjectType, JsonObjectType)
                 .build()
         )
         .build()

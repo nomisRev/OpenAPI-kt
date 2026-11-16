@@ -8,6 +8,7 @@ import io.github.nomisrev.openapi.effectiveMaximum
 import io.github.nomisrev.openapi.effectiveMinimum
 import io.github.nomisrev.openapi.enumLikeValues
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import io.github.nomisrev.openapi.enumMembers
 import io.github.nomisrev.openapi.merge
 import io.github.nomisrev.openapi.mergeMaximumBound
@@ -36,7 +37,8 @@ import kotlin.collections.component2
  * The case of a discriminated hierarchy that the schema [name] (this) is, or `null` when it extends no discriminated
  * base. It is the case [toDiscriminatedObject] generates for it in its top-most discriminated base, the one furthest up
  * its `allOf`s (an intermediate parent with a discriminator of its own is a case of the top as well): named by its tag
- * in the mapping, or by its schema name when the mapping does not list it (the implicit mapping).
+ * in the mapping, or by its schema name when the mapping does not list it (the implicit mapping) or lists it under
+ * several tags ([caseName]).
  */
 @Suppress("UnsafeCallOnNullableType")
 context(scope: Registry.Scope)
@@ -51,12 +53,23 @@ suspend fun Schema.discriminatedSubtypeOrNull(context: SchemaContext, name: Stri
             .filter { visited.add(it.ref) }
     }
     val base = top ?: return null
-    val tag = base.peek().discriminator!!.mapping!!.entries.firstOrNull { [_, mapped] -> mapped == ref }?.key ?: name
+    val tags = base.peek().discriminator!!.mapping!!.filterValues { it == ref }.keys.toList()
     return NamingContext(
         NamingContext.Reference(base.ref.schemaName(), context),
-        listOf(NamingContext.DiscriminatedObjectCase(tag))
+        listOf(NamingContext.DiscriminatedObjectCase(caseName(tags, name)))
     )
 }
+
+/**
+ * The name of the case of the schema [schemaName] that the mapping selects by [tags]: its tag, or the schema name when
+ * the mapping selects it under none (the implicit mapping) or several. A case of several tags has the discriminator
+ * property, an enum of them ([tagProperty]).
+ */
+private fun caseName(tags: List<String>, schemaName: String): String = tags.singleOrNull() ?: schemaName
+
+/** The discriminator property of a case the mapping selects under several [tags]: one of them, required. */
+private fun tagProperty(tags: List<String>): ReferenceOr<Schema> =
+    ReferenceOr.Value(Schema(type = Type.Basic.String, enum = tags.map(::JsonPrimitive)))
 
 @Suppress("UnsafeCallOnNullableType")
 context(scope: Registry.Scope)
@@ -69,13 +82,17 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     // The tag selects a schema by the explicit mapping, or by the name of a schema that extends the base (the implicit
     // mapping, which explicit entries add to). The base is a case of its own only when the mapping lists it.
     val mappings = mapping.filterValues { it != self } + implicitSubtypes(self, mapping.values.toSet())
+    // A schema can be selected by several tags: it is one case, which keeps the tag as a property.
+    val tagsOf = mappings.entries.groupBy({ it.value }, { it.key })
+    val selfTags = mapping.filterValues { it == self }.keys.toList()
 
     val abstractProperties = properties(schema.properties!!, context)
         .filter { [name, prop] -> prop.model !is Model.FreeFormJson && name != discriminator.propertyName }
 
     val overrides = mutableListOf<Model.DiscriminatedObject.PropertyOverride>()
-    val subtypes = mappings.map { [mappedName, ref] ->
-        val name = name.nest(NamingContext.DiscriminatedObjectCase(mappedName))
+    val subtypes = tagsOf.map { [ref, tags] ->
+        val mappedName = tags.joinToString("', '")
+        val name = name.nest(NamingContext.DiscriminatedObjectCase(caseName(tags, ref.schemaName())))
         val subtypeSchema = ReferenceOr.Reference(ref).peek()
         val parentClass = subtypeSchema.allOf.orEmpty().firstOrNull { it.isOrExtends(self) }
         if (parentClass == null) {
@@ -102,12 +119,13 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
                     overrides,
                 )
             }.filter { [name, _] -> name != discriminator.propertyName }
+            .let { if (tags.size > 1) mapOf(discriminator.propertyName to tagProperty(tags)) + it else it }
 
         ResolvedSchema.Value(
             name,
             peeked.copy(
                 properties = properties,
-                required = superRequired + peeked.required,
+                required = superRequired + peeked.required + listOfNotNull(discriminator.propertyName.takeIf { tags.size > 1 }),
                 discriminator = null,
             )
         )   // TODO: To remove 'resolveReference' make this toObject to work with resolveReference = false
@@ -121,13 +139,16 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     return Model.DiscriminatedObject(
         name,
         abstractProperties,
-        (if (self in mapping.values) listOf(simpleCase(mapping, abstractProperties)) else emptyList()) + subtypes,
+        listOfNotNull(selfCase(selfTags, discriminator.propertyName, abstractProperties, context)) + subtypes,
         description(),
         schema.title,
         discriminator.propertyName,
         isNullable,
         // An intermediate subtype's override is found again for each subtype that extends it.
         overrides.distinct(),
+        caseTags = (tagsOf.mapKeys { [ref, tags] -> caseName(tags, ref.schemaName()) } +
+            listOfNotNull(selfTags.takeIf { it.isNotEmpty() }?.let { selfCaseName(it) to it }))
+            .filterValues { it.size > 1 },
     )
 }
 
@@ -536,23 +557,35 @@ private fun Schema.nonNullType(): Type? = when (val type = type) {
     else -> type
 }
 
-private fun ResolvedSchema.Reference.simpleCase(
-    mapping: Map<String, String>,
-    abstractProperties: Map<String, Model.Object.Property>
-): Model.Object {
-    val mappingName = mapping.entries
-        .singleOrNull { [_, ref] -> ref == "#/components/schemas/${reference.name}" }
-        ?.key ?: error("Expected exactly one self mapping for discriminated object")
+/**
+ * The name of the base's own case, which the mapping selects by [tags]: `Default` for its own schema name or several
+ * tags, otherwise its tag.
+ */
+private fun ResolvedSchema.Reference.selfCaseName(tags: List<String>): String =
+    tags.singleOrNull()?.takeIf { it != reference.name } ?: "Default"
 
-    val selfName =
-        if (mappingName == reference.name) name.nest(NamingContext.DiscriminatedObjectCase("Default"))
-        else name.nest(NamingContext.DiscriminatedObjectCase(mappingName))
-
+/**
+ * The case of a plain base, when the mapping lists the base itself (under [tags]): its [abstractProperties], and the
+ * [discriminator] property, an enum of its tags, when there are several.
+ */
+context(scope: Registry.Scope)
+private suspend fun ResolvedSchema.Reference.selfCase(
+    tags: List<String>,
+    discriminator: String,
+    abstractProperties: Map<String, Model.Object.Property>,
+    context: SchemaContext,
+): Model.Object? {
+    if (tags.isEmpty()) return null
+    val selfName = name.nest(NamingContext.DiscriminatedObjectCase(selfCaseName(tags)))
+    val tagProperty =
+        if (tags.size == 1) emptyMap()
+        else ResolvedSchema.Value(selfName, Schema(required = listOf(discriminator)))
+            .properties(mapOf(discriminator to tagProperty(tags)), context)
     return Model.Object(
         selfName,
         null,
         null,
-        abstractProperties,
+        tagProperty + abstractProperties,
         Model.Object.AdditionalProperties.Allowed(false),
         isNullable
     )

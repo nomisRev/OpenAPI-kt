@@ -185,7 +185,11 @@ private suspend fun Schema.isObjectWithDiscriminator(ref: String): Boolean = wit
                     true
                 } else {
                     val s = peek(mappingName)
-                    s.allOf != null && s.type == null
+                    // `type: object` next to `allOf` adds nothing to its `$ref` member (apple.com:sirikit-cloud-media).
+                    s.allOf != null && s.type.let {
+                        it == null || it == Schema.Type.Basic.Object ||
+                            (it is Schema.Type.Array && it.types == listOf(Schema.Type.Basic.Object))
+                    }
                 }
             } ?: false
 }

@@ -2,9 +2,11 @@ package io.github.nomisrev.render.test.object_.plain.model.no.read.suffix
 
 import java.lang.IllegalArgumentException
 import kotlin.Any
+import kotlin.Boolean
 import kotlin.Pair
 import kotlin.String
 import kotlin.collections.Map
+import kotlin.collections.Set
 import kotlin.reflect.KClass
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -56,21 +58,41 @@ public fun <Wrapped, Value> ValueClassSerializer(
 }
 
 /**
- * The serializer of a case of a discriminated base: [serializer], with the property [discriminator] set to [tag]. A value of another case, or without its tag, is an error.
+ * The serializer of a case of a discriminated base: [serializer], with the property [discriminator] set to one of [tags]. A value of another case, or without its tag, is an error.
  */
-public open class TaggedCaseSerializer<T : Any>(
+public open class TaggedCaseSerializer<T : Any> private constructor(
   serializer: KSerializer<T>,
   private val discriminator: String,
-  private val tag: String,
+  private val tags: Set<String>,
+  private val inProperty: Boolean,
 ) : JsonTransformingSerializer<T>(serializer) {
-  override fun transformSerialize(element: JsonElement): JsonElement = JsonObject(mapOf(discriminator to JsonPrimitive(tag)) + (element as JsonObject))
+  /**
+   * A case of one [tag]: the tag is written and read here, the case has no property for it.
+   */
+  public constructor(
+    serializer: KSerializer<T>,
+    discriminator: String,
+    tag: String,
+  ) : this(serializer, discriminator, setOf(tag), false)
+
+  /**
+   * A case of several [tags]: its [discriminator] property holds the tag, which must be one of them.
+   */
+  public constructor(
+    serializer: KSerializer<T>,
+    discriminator: String,
+    tags: Set<String>,
+  ) : this(serializer, discriminator, tags, true)
+
+  override fun transformSerialize(element: JsonElement): JsonElement = if (inProperty) element else JsonObject(mapOf(discriminator to JsonPrimitive(tags.single())) + (element as JsonObject))
 
   override fun transformDeserialize(element: JsonElement): JsonElement {
     val found = element.discriminatorValue(discriminator)
-    if (found != tag) {
-      throw SerializationException("""Expected '$discriminator' to be '$tag', but it was ${found?.let { "'$it'" } ?: "absent"}""")
+    if (found !in tags) {
+      val expected = tags.joinToString(", ") { """'$it'""" }
+      throw SerializationException("""Expected '$discriminator' to be ${if (tags.size == 1) "" else "one of "}$expected, but it was ${found?.let { "'$it'" } ?: "absent"}""")
     }
-    return JsonObject(element as JsonObject - discriminator)
+    return if (inProperty) element else JsonObject(element as JsonObject - discriminator)
   }
 }
 

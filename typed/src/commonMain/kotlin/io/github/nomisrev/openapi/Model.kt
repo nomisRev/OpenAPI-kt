@@ -460,6 +460,12 @@ sealed interface Model {
          * The subtype's declaration is its property, as a subclass overrides one, see [PropertyOverride].
          */
         val overriddenProperties: List<PropertyOverride> = emptyList(),
+        /**
+         * The tags of each case that the mapping selects under several tags, by the case's name (the
+         * [NamingContext.DiscriminatedObjectCase] of its context). Such a case has the discriminator property, an enum
+         * of these tags, so that a value is written with its own; a case of one tag has neither, its name is its tag.
+         */
+        val caseTags: Map<String, List<String>> = emptyMap(),
     ) : Model, ContextHolder {
         /**
          * Subtype [schema] redeclares [property], which it inherits from [parent] as [inherited], as [declared], and no
