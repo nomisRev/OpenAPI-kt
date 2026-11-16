@@ -549,9 +549,24 @@ private suspend fun Schema.mergeNonNull(other: Schema): Schema = when {
     isObjectLike() && other.isObjectLike() -> mergeObject(other)
     isNonStructural() -> other.mergeCommon(this).mergeConstraints(this)
     other.isNonStructural() -> mergeCommon(other).mergeConstraints(other)
+    // `additionalProperties` that only opens or closes the keys of an object constrains no value of another type.
+    other.onlyOpensOrClosesObjects() && type?.permitsObject() == false ->
+        mergeNonNull(other.copy(additionalProperties = null))
+    onlyOpensOrClosesObjects() && other.type?.permitsObject() == false ->
+        copy(additionalProperties = null).mergeNonNull(other)
     // A schema without `type` that shapes values (`items`, `properties`) is merged as the type it is modelled as.
-    type == null || other.type == null ->
-        copy(type = impliedType()).mergeNonNull(other.copy(type = other.impliedType()))
+    type == null || other.type == null -> {
+        val implied = impliedType()
+        val otherImplied = other.impliedType()
+        if (implied is Type.Basic && otherImplied is Type.Basic && implied != otherImplied &&
+            setOf(implied, otherImplied) != setOf(Type.Basic.Integer, Type.Basic.Number)
+        ) {
+            throw ContradictoryDeclarations(
+                "No value is both of type ${typeDescription(implied)} and of type ${other.typeDescription(otherImplied)}."
+            )
+        }
+        copy(type = implied).mergeNonNull(other.copy(type = otherImplied))
+    }
 
     else -> throw ContradictoryDeclarations(
         "No value is both of type ${type.describe()} and of type ${other.type.describe()}."
@@ -567,6 +582,33 @@ private fun Schema.impliedType(): Type = type ?: when {
     isImplicitCollection() -> Type.Basic.Array
     isObjectLike() -> Type.Basic.Object
     else -> throw IllegalArgumentException("Cannot infer the type of $this.")
+}
+
+/** [type], and the keyword that implies it when this schema declares no `type` ([impliedType]). */
+private fun Schema.typeDescription(type: Type): String {
+    if (this.type != null) return type.describe()
+    val keyword = when {
+        isImplicitCollection() -> "items"
+        properties != null -> "properties"
+        else -> "additionalProperties"
+    }
+    return "${type.describe()} (implied by `$keyword`)"
+}
+
+/**
+ * Whether this schema declares no type and no shape but `additionalProperties: true`, `false` or `{}`: it only
+ * permits or forbids keys an object does not declare, so it constrains no value that is not an object.
+ */
+private fun Schema.onlyOpensOrClosesObjects(): Boolean {
+    val keys = additionalProperties
+    val opensOrCloses = keys is Allowed ||
+        (keys is AdditionalProperties.PSchema && keys.value == ReferenceOr.Value(Schema()))
+    return type == null && properties == null && items == null && opensOrCloses
+}
+
+private fun Type.permitsObject(): Boolean = when (this) {
+    is Type.Basic -> this == Type.Basic.Object
+    is Type.Array -> Type.Basic.Object in types
 }
 
 private fun Type?.describe(): String = when (this) {

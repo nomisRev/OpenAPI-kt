@@ -156,8 +156,51 @@ val allOfUntypedMemberSpec by testSuite {
         assertIs<Model.DateTime>(model)
     }
 
-    // The implied types no value has both of.
-    rejected("string and untyped items", string, untypedItems, "string", "array")
+    // additionalProperties: true, false or {} only opens or closes the keys of an object: next to another type it
+    // constrains nothing, and the merge is the typed member (linqr.app: an allOf of a string enum, closed).
+    listOf("false", "true", "{}").forEach { value ->
+        merged("string and untyped additionalProperties $value is the string", string, """{ "additionalProperties": $value }""") { model ->
+            assertIs<Model.Primitive.String>(model)
+        }
+    }
+
+    merged(
+        "string enum and untyped additionalProperties false is the enum",
+        """{ "type": "string", "enum": ["icon://appstore", "icon://bitcoin"] }""",
+        """{ "additionalProperties": false }"""
+    ) { model ->
+        assertEquals(listOf("icon://appstore", "icon://bitcoin"), assertIs<Model.Enum>(model).values.map { it.rawValue })
+    }
+
+    merged("integer and untyped additionalProperties false is the integer", """{ "type": "integer" }""", """{ "additionalProperties": false }""") { model ->
+        assertIs<Model.Primitive.Long>(model)
+    }
+
+    merged(
+        "oneOf of string and integer with untyped additionalProperties false keeps both branches",
+        """{ "oneOf": [{ "type": "string" }, { "type": "integer" }] }""",
+        """{ "additionalProperties": false }"""
+    ) { model ->
+        assertEquals(2, assertIs<Model.Union>(model).cases.size, "$model")
+    }
+
+    merged(
+        "object and untyped additionalProperties false is the object",
+        """{ "type": "object", "properties": { "a": { "type": "string" } } }""",
+        """{ "additionalProperties": false }"""
+    ) { model ->
+        assertEquals(setOf("a"), assertIs<Model.Object>(model).properties.keys)
+    }
+
+    // The implied types no value has both of. The error names the keyword that implies the type.
+    rejected(
+        "string and untyped additionalProperties of a schema",
+        string,
+        """{ "additionalProperties": { "type": "string" } }""",
+        "string", "object", "`additionalProperties`"
+    )
+    rejected("string and untyped properties", string, """{ "properties": { "a": { "type": "string" } } }""", "string", "object", "`properties`")
+    rejected("string and untyped items", string, untypedItems, "string", "array", "`items`")
     rejected(
         "array and untyped properties",
         """{ "type": "array", "items": { "type": "string" } }""",
