@@ -1,6 +1,15 @@
 # `renderWithDiagnostics` throws for parameter errors but returns form-body errors, so warnings are lost and the census miscounts
 
-**Status:** open
+**Status:** fixed in `84ab0bcd`. `renderWithDiagnostics` and `generateClientWithDiagnostics` return every diagnostic
+once and never throw for one; an operation with an `Error` of its own (unsupported parameter, a body without a sendable
+variant, required or optional, the 32-overload limit) is not rendered, and path classes left empty are pruned. Skipping
+a variant next to a sendable one stays a warning. The census worker fails such a document in a new `diagnostics`
+phase (after render, before emit). Re-checked on the census of `7bf24f56`: the 41 render failures now fail there with
+their warnings; only 5 documents still had a body-less operation (not 14: the untyped-field fix took the Twilio ones),
+salesloft.com, apacta.com, fungenerators.com:barcode, digitallocker.gov.in:authpartner and mineskin.org, and they are
+now refused. Not covered by a test: the charset and wildcard errors, which no corpus document has. Kept open:
+whether an `Error` can be made non-fatal in the plugin; supporting the refused shapes is in the parameter and form-field
+reports.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** render (API behaviour) / harness artefact
 **Impact:** 57 of 1,547 documents are rejected by the Gradle task for an `Error` diagnostic; the census shows only 43 of them as failures. The other 14 (12 `twilio.com:*`, digitallocker.gov.in:authpartner, mineskin.org) are counted as emitted — 12 of them as `compile: pass`.

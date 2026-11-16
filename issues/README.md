@@ -59,6 +59,7 @@ Read these numbers with three caveats:
 | [schema-names-map-to-one-kotlin-class](schema-names-map-to-one-kotlin-class.md), [schema-names-differ-by-case](schema-names-differ-by-case.md) | `6faa2a6d` | an implicit discriminator over two schemas with one Kotlin name; `OBRate102`-style numbers after a digit; declaration order decides who keeps a name |
 | [ref-sibling-keywords-discarded-oas31](ref-sibling-keywords-discarded-oas31.md) | `c4ef6f6f` | `description`, `deprecated`, `default` next to a `$ref` change nothing until properties get KDoc and `@Deprecated`; 3.0 documents get the same reading, with warnings |
 | [webhooks-and-unreferenced-schemas-generate-nothing](webhooks-and-unreferenced-schemas-generate-nothing.md) | `83961659` | unreferenced component schemas are reported, not generated; inline webhook payloads, `x-webhooks` and callbacks are not generated |
+| [render-with-diagnostics-throws-on-parameter-errors](render-with-diagnostics-throws-on-parameter-errors.md) | `84ab0bcd` | an `Error` still fails the Gradle task (no opt-in to skip the operation); the census counts such documents as `diagnostics` failures, so 5 former passes are now refused |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none
