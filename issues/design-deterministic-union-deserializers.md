@@ -51,8 +51,24 @@ union is put in the cheapest bucket that tells all its cases apart:
 The ambiguous ones, by the JSON kind their cases share: object 217, array 60 (github.com: `oneOf` of two arrays of
 different items), array and object 40, number 34 (`integer` vs `number`), string 23, number and string 1.
 
-So about 95% of the unions can be decided by checks on the JSON tree that never decode a case speculatively, and
-most of the rest by two more checks (array item kind, integer vs fractional number).
+So about 95% of the unions can be decided by checks on the JSON tree that never decode a case speculatively.
+
+The "ambiguous" bucket above only compares the cases' top-level kinds and keys. Most of it is decided one or two
+levels deeper in the same tree, so the analysis must recurse:
+
+| Ambiguous cases share | Unions | What separates them |
+| --- | ---: | --- |
+| Objects with identical property names | 232 | mostly the kind or item kind of a shared property (github.com's 422 `oneOf [validation-error, validation-error-simple]`: `errors` is an array of objects vs of strings); 17 the enum values of a shared property; 4 have the same shape |
+| Arrays with the same item kind | 53 | the items' own properties, recursively |
+| Arrays with different item kinds | 45 | the first element's kind |
+| `integer` vs `number` | 32 | whether the number is integral |
+| One object's properties a subset of another's | 24 | presence of an extra key |
+| Strings with nothing to compare | 24 | nothing |
+
+What remains is not a deserializer problem: values the schema admits in both cases (an empty `errors` array, the
+number `5` for `integer` vs `number`, `{message}` when one case only adds optional keys, identical shapes). Both
+readings are valid per the spec (and such a value violates a `oneOf`), so they need a rule, not more inspection:
+open decision 1.
 
 ## Proposal
 
@@ -121,10 +137,13 @@ value is JsonObject -> when {
 
 ## Open decisions
 
-1. **Ambiguous unions** (375):
-   - (a) keep `attemptDeserialize` for them, with a warning (no client gets worse; recommended for the first slice);
-   - (b) declaration order: the first case the tree cannot exclude wins, warning (deterministic, but picks silently);
-   - (c) refuse to generate the union (strict; shrinks supported specs, against the project principle).
+1. **Values two cases both admit** (after the recursive search; empty arrays, integral numbers, subsets, identical
+   shapes):
+   - (a) the most specific case that admits it (the integer case, the case without extra keys), warning at generation
+     (deterministic and explainable; recommended);
+   - (b) declaration order, warning (deterministic, but depends on how the spec lists them);
+   - (c) keep `attemptDeserialize` for these unions (no client gets worse, but keeps the guessing);
+   - (d) refuse to generate the union (strict; shrinks supported specs, against the project principle).
 2. **`oneOf` exclusivity**: when two cases both admit a value (only possible for ambiguous unions), fail the decode
    (spec-correct for `oneOf`) or take the first (lenient). Recommended: lenient with the generation warning, since
    generated specs overlap by accident far more often than servers send ambiguous values.
