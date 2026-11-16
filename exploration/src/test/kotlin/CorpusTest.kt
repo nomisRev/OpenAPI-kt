@@ -99,6 +99,33 @@ val corpusTests by testSuite {
         assertEquals(2 to 4, sharded.shard to sharded.shards)
         assertTrue(parseOptions(arrayOf("--summarize-only")).summarizeOnly)
     }
+    test("a document with an error diagnostic fails the diagnostics phase and emits nothing") {
+        val directory = Files.createTempDirectory("corpus-test").toFile()
+        try {
+            val spec = directory.resolve("spec.json")
+            spec.writeText(
+                """
+                { "openapi": "3.1.0", "info": { "title": "Diag", "version": "1" }, "paths": {
+                  "/x": { "post": { "requestBody": { "required": true, "content": { "application/x-www-form-urlencoded": { "schema": {
+                    "type": "object", "properties": { "p": { "type": "array", "items": { "type": "object", "properties": { "a": { "type": "string" } } } } } } } } },
+                    "responses": { "204": { "description": "No content" } } } },
+                  "/ok": { "get": { "responses": { "204": { "description": "No content" } } } } } }
+                """.trimIndent()
+            )
+            val output = directory.resolve("out")
+            val failure = assertFailsWith<IllegalStateException> { work(spec, output) }
+            assertTrue("POST /x (application/x-www-form-urlencoded) contains form fields [p]" in failure.message.orEmpty())
+            val phases = Json.parseToJsonElement(output.resolve("phases.json").readText()).jsonArray.map {
+                it.jsonObject.string("phase") to it.jsonObject.string("status")
+            }
+            assertEquals(
+                listOf("parse" to "pass", "typed" to "pass", "render" to "pass", "diagnostics" to "fail"),
+                phases,
+            )
+            assertEquals(1, Json.parseToJsonElement(output.resolve("diagnostics.json").readText()).jsonArray.size)
+            assertFalse(output.resolve("sources").exists())
+        } finally { directory.deleteRecursively() }
+    }
     test("summary counts compiler diagnostics once per document and groups phase failures") {
         val directory = Files.createTempDirectory("corpus-test").toFile()
         try {

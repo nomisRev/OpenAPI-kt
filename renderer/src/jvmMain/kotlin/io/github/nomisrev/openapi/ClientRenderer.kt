@@ -11,16 +11,16 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> =
         .also(GenerationResult::throwOnErrors)
         .files
 
+/** The client files and every diagnostic; an operation with an `Error` is not in the files ([renderableTree]). */
 fun ApiTree.generateClientWithDiagnostics(config: RenderConfig): GenerationResult {
-    val diagnostics = generationDiagnostics(config)
-    val filteredTree = withSupportedRequestBodiesOnly()
+    val rendered = renderableTree()
     return GenerationResult(
-        files = filteredTree.generateClientFiles(config.withResolvedNames(this)),
-        diagnostics = diagnostics,
+        files = rendered.generateClientFiles(config.withResolvedNames(rendered)),
+        diagnostics = generationDiagnostics(config),
     )
 }
 
-private fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
+internal fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
     val needsSerializationUtils =
         hasInlineNonDiscriminatedParameterUnion() ||

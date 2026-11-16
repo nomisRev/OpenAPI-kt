@@ -22,18 +22,26 @@ fun ApiTree.render(config: RenderConfig): List<FileSpec> =
         .also(GenerationResult::throwOnErrors)
         .files
 
+/**
+ * The files and every diagnostic of the document; it never throws for a diagnosed problem, the caller decides
+ * ([throwOnErrors]). An operation with an `Error` is not in the files ([renderableTree]).
+ */
 fun ApiTree.renderWithDiagnostics(config: RenderConfig): GenerationResult {
     val enrichedConfig = config.copy(contextSpecificNames = models.contextSpecificNames())
     val diagnostics = generationDiagnostics(enrichedConfig)
-    val filteredTree = withSupportedRequestBodiesOnly()
-    val files = filteredTree.generateModels(enrichedConfig) + filteredTree.generateClient(enrichedConfig)
+    val rendered = renderableTree()
+    val files = rendered.generateModels(enrichedConfig) + rendered.generateClientFiles(enrichedConfig.withResolvedNames(rendered))
+    val declaresNothing = operations.isEmpty() && children.isEmpty()
     return GenerationResult(
         files = files,
-        diagnostics = diagnostics + listOfNotNull(NoFilesDiagnostic.takeIf { files.isEmpty() }),
+        diagnostics = diagnostics + listOfNotNull(NoFilesDiagnostic.takeIf { files.isEmpty() && declaresNothing }),
     )
 }
 
-/** An empty output directory is almost never what was asked for, and is otherwise a green build. */
+/**
+ * An empty output directory is almost never what was asked for, and is otherwise a green build. A document whose
+ * operations all have an error has their errors instead.
+ */
 private val NoFilesDiagnostic = GenerationDiagnostic(
     GenerationDiagnosticSeverity.Warning,
     "The document has no operations, and no webhooks or schemas they refer to: no files are generated.",

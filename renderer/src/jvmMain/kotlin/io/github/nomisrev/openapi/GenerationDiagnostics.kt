@@ -43,12 +43,23 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
     )
 }
 
-internal fun ApiTree.generationDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
-    requestBodyDiagnostics() + renamedModelDiagnostics(config) + modelFileCollisionDiagnostics(config) + ignoredParameterDiagnostics() + parameterDiagnostics() +
-        renamedArgumentDiagnostics(config.withResolvedNames(this)) +
-        children.renamedPathDiagnostics(parentPath = "", operations = operations.keys) + renamedServerDiagnostics() + rootClassNameDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics() +
-        renamedEnumEntryDiagnostics(config.withResolvedNames(this)) +
-        renumberedUnionCaseDiagnostics(config.withResolvedNames(this))
+/**
+ * Every diagnostic of the document, once. The parameter and request body diagnostics are of the whole document: they
+ * say which operations and body variants are not rendered, and why. The others describe what is rendered, so they are
+ * of the [renderableTree]: an operation that is not generated has no arguments to rename or headers to ignore.
+ */
+internal fun ApiTree.generationDiagnostics(config: RenderConfig): List<GenerationDiagnostic> {
+    val rendered = renderableTree()
+    val renderedConfig = config.withResolvedNames(rendered)
+    return requestBodyDiagnostics() + rendered.renamedModelDiagnostics(config) + rendered.modelFileCollisionDiagnostics(config) +
+        rendered.ignoredParameterDiagnostics() + parameterDiagnostics() +
+        rendered.renamedArgumentDiagnostics(renderedConfig) +
+        rendered.children.renamedPathDiagnostics(parentPath = "", operations = rendered.operations.keys) +
+        rendered.renamedServerDiagnostics() + rendered.rootClassNameDiagnostics() + rendered.propertyOverrideDiagnostics() +
+        rendered.typedWarningDiagnostics() +
+        rendered.renamedEnumEntryDiagnostics(renderedConfig) +
+        rendered.renumberedUnionCaseDiagnostics(renderedConfig)
+}
 
 /**
  * A warning for each union with two cases of one class name, which are numbered so that the code compiles
@@ -325,24 +336,43 @@ private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
     return diagnostics
 }
 
-internal fun ApiTree.withSupportedRequestBodiesOnly(): ApiTree = copy(
-    operations = operations.mapValues { [_, route] -> route.withSupportedRequestBodiesOnly() },
-    children = children.map(PathNode::withSupportedRequestBodiesOnly),
+/**
+ * The tree the client is rendered from. An operation with an `Error` ([Route.hasGenerationError]) is not in it: rendering
+ * it without the parameter or body that cannot be sent would send another request than the document declares. A path
+ * node left without operations and children is not in it either, so no generated class leads nowhere. The other operations
+ * lose only the request body variants that cannot be sent, each reported as a warning next to a variant that can.
+ */
+internal fun ApiTree.renderableTree(): ApiTree = copy(
+    operations = operations.renderable(),
+    children = children.mapNotNull(PathNode::renderableOrNull),
 )
 
-private fun PathNode.withSupportedRequestBodiesOnly(): PathNode = copy(
-    operations = operations.mapValues { [_, route] -> route.withSupportedRequestBodiesOnly() },
-    children = children.map(PathNode::withSupportedRequestBodiesOnly),
-)
+private fun PathNode.renderableOrNull(): PathNode? {
+    val operations = operations.renderable()
+    val children = children.mapNotNull(PathNode::renderableOrNull)
+    return if (operations.isEmpty() && children.isEmpty()) null else copy(operations = operations, children = children)
+}
 
-private fun Route.withSupportedRequestBodiesOnly(): Route =
-    copy(body = body?.withSupportedRequestBodiesOnly())
+private fun Map<HttpMethod, Route>.renderable(): Map<HttpMethod, Route> =
+    filterValues { !it.hasGenerationError() }.mapValues { [_, route] -> route.withSupportedRequestBodiesOnly() }
 
-private fun Route.Bodies.withSupportedRequestBodiesOnly(): Route.Bodies? {
-    val supportedTypes = types.filter { entry ->
+/** Whether the operation has an `Error` of its own: a parameter or a request body the client cannot send. */
+private fun Route.hasGenerationError(): Boolean =
+    (requestBodyDiagnostics() + parameterDiagnostics()).any { it.severity == GenerationDiagnosticSeverity.Error }
+
+/**
+ * The operation with only the request body variants the client can send. An operation that declares a body keeps at
+ * least one: when none can be sent, it has an `Error` and is not rendered at all ([renderableTree]).
+ */
+private fun Route.withSupportedRequestBodiesOnly(): Route {
+    val bodies = body ?: return this
+    val supportedTypes = bodies.types.filter { entry ->
         Route.Bodies.Variant(entry.key, entry.value).isSupportedForGeneration()
     }
-    return if (supportedTypes.isEmpty()) null else copy(types = supportedTypes)
+    check(supportedTypes.isNotEmpty()) {
+        "${method.value} $path has no request body variant the client can send, but no error reports it"
+    }
+    return copy(body = bodies.copy(types = supportedTypes))
 }
 
 private fun Route.Bodies.Variant.isSupportedForGeneration(): Boolean =
