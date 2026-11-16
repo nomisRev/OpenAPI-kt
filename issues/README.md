@@ -67,7 +67,8 @@ Read these numbers with three caveats:
 | [recursive-allof-ref-stack-overflow](recursive-allof-ref-stack-overflow.md) | `4da55e34` | cyclic `allOf` inheritance still overflows; atlassian.com:jira stops on a refused query parameter |
 | [discriminator-mapping-without-base-entry](discriminator-mapping-without-base-entry.md) | `e1cbf0e7`, `c291f8a5` | microsoft.com:graph runs out of the census's 1 GB heap at render; rebilly.com stops on a discriminated `$ref` merged with another in an `allOf` property; an operation typed as a case decoded without the tag (`discriminated-subtype-serializer-without-tag`, fixed) |
 | [client-name-from-info-title-not-an-identifier](client-name-from-info-title-not-an-identifier.md) | `8272a0cc`, `0fc8ae5c`, `d758ac59` | no length cap on a name from a long title; `generateOpenApi` leaves the files of an earlier run, so a renamed client keeps its old root class next to the new one |
-| [discriminated-subtype-serializer-without-tag](discriminated-subtype-serializer-without-tag.md) | `8a45c189` | microsoft.com:graph was not re-run; a schema mapped under several tags stops in typed (`discriminator-schema-mapped-under-several-tags`) |
+| [discriminated-subtype-serializer-without-tag](discriminated-subtype-serializer-without-tag.md) | `8a45c189` | microsoft.com:graph was not re-run |
+| [discriminator-schema-mapped-under-several-tags](discriminator-schema-mapped-under-several-tags.md) | `73cb10c5` | an inline object property of a base that lists itself is generated inside its case (`discriminated-base-inline-property-class-in-case`, latent) |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none
@@ -218,7 +219,6 @@ Counts are documents affected; see each report for how they were counted.
 | [query-parameter-named-url-shadows-request-builder](query-parameter-named-url-shadows-request-builder.md) | `f43c8ec9` | 24 |
 | [allof-property-two-refs-rejected](allof-property-two-refs-rejected.md) | `29766c84` | 2 |
 | [allof-additional-properties-implies-object](allof-additional-properties-implies-object.md) | `0e374d2f` | 1 |
-| [discriminator-schema-mapped-under-several-tags](discriminator-schema-mapped-under-several-tags.md) | `e1cbf0e7` / `c291f8a5`: sirikit failed compile before, now typed. Needs a design decision | 1 |
 
 ### 3. Largest blockers
 
@@ -247,6 +247,8 @@ Counts are documents affected; see each report for how they were counted.
   [discriminator-mapping-without-base-entry](discriminator-mapping-without-base-entry.md) (5),
   [discriminator-without-mapping-ignored](discriminator-without-mapping-ignored.md) (8),
   [discriminator-default-mapping-oas32](discriminator-default-mapping-oas32.md) (0, OAS 3.2 feature),
+- Compile:
+  [discriminated-base-inline-property-class-in-case](discriminated-base-inline-property-class-in-case.md) (0, latent).
   [form-urlencoded-non-object-body](form-urlencoded-non-object-body.md) (8, includes Stripe),
   [null-type-schema-crash](null-type-schema-crash.md) (1),
   [remote-references-not-supported](remote-references-not-supported.md) (0 in the corpus).
