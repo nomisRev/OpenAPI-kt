@@ -795,6 +795,8 @@ suspend fun Schema.mergeObject(other: Schema): Schema {
     val properties = properties.orEmpty().merge(other.properties.orEmpty()) { property, a, b ->
         combineProperty(property, a, b)
     }
+    warnClosedAgainst(other)
+    other.warnClosedAgainst(this)
 
     return mergeCommon(other)
         .mergeObjectConstraints(other)
@@ -802,6 +804,35 @@ suspend fun Schema.mergeObject(other: Schema): Schema {
             properties = properties,
             additionalProperties = additionalProperties.merge(other.additionalProperties)
         )
+}
+
+/**
+ * Read literally, `additionalProperties: false` forbids every property this schema does not declare, also the ones
+ * [other], another member of the `allOf`, declares: JSON Schema's `additionalProperties` only sees the properties next
+ * to it. Generators for C# and Java close every class and extend it with `allOf`, and servers send the properties of
+ * both, so they are generated (the `allOf` is read as an extension), with a warning. Additional properties of a schema
+ * [other] allows are not generated, the object stays closed, as the closed member says.
+ */
+context(ctx: Registry.Scope)
+private fun Schema.warnClosedAgainst(other: Schema) {
+    if (additionalProperties != Allowed(false)) return
+    val declared = properties.orEmpty().keys
+    val closed = "An allOf member with `additionalProperties: false` declares only ${declared.sorted()}"
+    val forbidden = other.properties.orEmpty().keys - declared
+    if (forbidden.isNotEmpty()) {
+        val required = forbidden.filter { it in other.required || it in this.required }.sorted()
+        ctx.registry().warn(
+            "$closed; another member declares ${forbidden.sorted()}" +
+                (if (required.isNotEmpty()) " (required: $required)" else "") +
+                ", which it forbids. They are generated, reading the allOf as an extension of the closed member."
+        )
+    }
+    if (other.additionalProperties is AdditionalProperties.PSchema) {
+        ctx.registry().warn(
+            "$closed; another member allows additional properties of a schema, which it forbids. They are not " +
+                "generated: the object stays closed."
+        )
+    }
 }
 
 private inline fun <A> let(a: A?, b: A?, block: (A, A) -> A): A? =
@@ -812,7 +843,8 @@ private suspend fun AdditionalProperties?.merge(other: AdditionalProperties?): A
     let(this, other) { a, b ->
         when (a) {
             is AdditionalProperties.PSchema -> when (b) {
-                is Allowed -> a
+                // `false` forbids every additional property, whatever the schema allows; `true` allows them all.
+                is Allowed -> if (b.value) a else b
                 is AdditionalProperties.PSchema -> AdditionalProperties.PSchema(
                     ReferenceOr.value(
                         a.value.peek().merge(b.value.peek())
@@ -822,7 +854,7 @@ private suspend fun AdditionalProperties?.merge(other: AdditionalProperties?): A
 
             is Allowed -> when (b) {
                 is Allowed -> Allowed(a.value && b.value)
-                is AdditionalProperties.PSchema -> b
+                is AdditionalProperties.PSchema -> if (a.value) b else a
             }
         }
     }
