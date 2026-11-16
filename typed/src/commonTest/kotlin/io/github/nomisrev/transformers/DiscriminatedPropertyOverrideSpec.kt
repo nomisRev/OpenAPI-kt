@@ -212,18 +212,18 @@ val discriminatedPropertyOverrideSpec by testSuite {
         assertTrue("result" in message && "object" in message && "array" in message, message)
     }
 
-    test("a contradictory allOf of a discriminated parent it is not mapped by is still rejected") {
-        val error = assertFails {
-            model(
-                "Unmapped",
-                mapOf(
-                    "Item" to objectItem,
-                    "Multi" to subtype("Item", """"name": { "type": "string" }"""),
-                    "Unmapped" to subtype("Item", """"added": { "type": "array", "items": { "type": "string" } }"""),
-                )
+    test("a subtype the mapping does not list is a case of its schema name, and overrides like a mapped one") {
+        // The implicit mapping: a schema that extends the base is selected by its name, so it is a subtype too.
+        val model = discriminated(
+            mapOf(
+                "Item" to objectItem,
+                "Multi" to subtype("Item", """"name": { "type": "string" }"""),
+                "Unmapped" to subtype("Item", """"added": { "type": "array", "items": { "type": "string" } }"""),
             )
-        }
-        assertIs<IllegalArgumentException>(error)
-        assertTrue("added" in error.message.orEmpty(), error.message)
+        )
+        assertIs<Model.Collection>(model.property("Unmapped", "added"))
+        val override = model.overriddenProperties.single()
+        assertEquals("Unmapped", override.schema)
+        assertEquals("added", override.property)
     }
 }

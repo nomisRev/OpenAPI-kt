@@ -23,7 +23,7 @@ import io.github.nomisrev.openapi.registry.toModel
 
 context(scope: Registry.Scope)
 suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr<Schema>>): Model =
-    if (this is ResolvedSchema.Reference && allOf.size in 1..2) {
+    if (this is ResolvedSchema.Reference) {
         schema.discriminatedSubtypeOrNull(context, reference.name)?.let { naming ->
             Model.Reference(naming, description(), isNullable, schema.title)
         } ?: resolveAllOf(allOf, context)

@@ -171,7 +171,7 @@ suspend fun ReferenceOr<Schema>.isObjectWithDiscriminator(): Boolean {
         returns(true) implies (this@isObjectWithDiscriminator is ReferenceOr.Reference)
     }
     return when (this) {
-        is ReferenceOr.Reference if peek().isObjectWithDiscriminator(ref) -> true
+        is ReferenceOr.Reference if peek().isObjectWithDiscriminator(ref.schemaName()) -> true
         is ReferenceOr.Reference, is ReferenceOr.Value<*> -> false
     }
 }

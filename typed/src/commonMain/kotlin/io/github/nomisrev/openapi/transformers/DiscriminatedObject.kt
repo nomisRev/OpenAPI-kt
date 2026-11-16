@@ -26,35 +26,36 @@ import io.github.nomisrev.openapi.registry.allOfNullability
 import io.github.nomisrev.openapi.registry.combine
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.isNonStructural
+import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.schemaName
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-@Suppress("ReturnCount", "UnsafeCallOnNullableType")
+/**
+ * The case of a discriminated hierarchy that the schema [name] (this) is, or `null` when it extends no discriminated
+ * base. It is the case [toDiscriminatedObject] generates for it in its top-most discriminated base, the one furthest up
+ * its `allOf`s (an intermediate parent with a discriminator of its own is a case of the top as well): named by its tag
+ * in the mapping, or by its schema name when the mapping does not list it (the implicit mapping).
+ */
+@Suppress("UnsafeCallOnNullableType")
 context(scope: Registry.Scope)
 suspend fun Schema.discriminatedSubtypeOrNull(context: SchemaContext, name: String): NamingContext? {
-    if (allOf.orEmpty().isEmpty()) return null
-
-    val references = allOf!!.mapNotNull { refOrSchema ->
-        when (refOrSchema) {
-            is ReferenceOr.Reference -> refOrSchema
-            is ReferenceOr.Value<Schema> -> null
-        }
+    val ref = "#/components/schemas/$name"
+    val visited = mutableSetOf(ref)
+    var level = allOf.orEmpty().filterIsInstance<ReferenceOr.Reference>().filter { visited.add(it.ref) }
+    var top: ReferenceOr.Reference? = null
+    while (level.isNotEmpty()) {
+        top = level.firstOrNull { it.isObjectWithDiscriminator() } ?: top
+        level = level.flatMap { parent -> parent.peek().allOf.orEmpty().filterIsInstance<ReferenceOr.Reference>() }
+            .filter { visited.add(it.ref) }
     }
-
-    val singleReference = references.singleOrNull() ?: return null
-    val singlePeeked = singleReference.peek()
-    return when (singleReference) {
-        else if singlePeeked.allOf.orEmpty().size in 1..2 -> singlePeeked.discriminatedSubtypeOrNull(context, name)
-        else if singlePeeked.discriminator?.mapping.orEmpty().containsValue("#/components/schemas/$name") ->
-            NamingContext(
-                NamingContext.Reference(singleReference.ref.schemaName(), context),
-                listOf(NamingContext.DiscriminatedObjectCase(name))
-            )
-
-        else -> null
-    }
+    val base = top ?: return null
+    val tag = base.peek().discriminator!!.mapping!!.entries.firstOrNull { [_, mapped] -> mapped == ref }?.key ?: name
+    return NamingContext(
+        NamingContext.Reference(base.ref.schemaName(), context),
+        listOf(NamingContext.DiscriminatedObjectCase(tag))
+    )
 }
 
 @Suppress("UnsafeCallOnNullableType")

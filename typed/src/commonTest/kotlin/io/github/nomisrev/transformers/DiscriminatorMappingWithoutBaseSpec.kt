@@ -194,4 +194,55 @@ val discriminatorMappingWithoutBaseSpec by testSuite {
             warnings,
         )
     }
+
+    suspend fun referenced(schemas: Map<String, String>): NamingContext =
+        Registry(OpenAPI.fromJson(document(schemas + ("Holder" to """
+            { "type": "object", "properties": { "pet": ${ref("Target")} } }
+        """.trimIndent())))).use { registry ->
+            val holder = with(registry) {
+                ReferenceOr.schema("Holder").toModel(NamingContext.reference("Holder", SchemaContext.Null), SchemaContext.Write)
+            }
+            assertIs<Model.Reference>(assertIs<Model.Object>(holder).properties.getValue("pet").model).context
+        }
+
+    fun case(base: String, tag: String): NamingContext =
+        NamingContext.reference(base, SchemaContext.Write).nest(NamingContext.DiscriminatedObjectCase(tag))
+
+    test("a \$ref to a subtype is the case its tag selects, also when the tag is not the schema name") {
+        val schemas = mapOf(
+            "Pet" to base(""""name": { "type": "string" }""", "pet" to "Pet", "feline" to "Target"),
+            "Target" to extends("Pet", """"huntingSkill": { "type": "string" }"""),
+        )
+        assertEquals(case("Pet", "feline"), referenced(schemas))
+        assertEquals(
+            case("Pet", "feline"),
+            referenced(schemas + ("Pet" to base(""""name": { "type": "string" }""", "feline" to "Target"))),
+        )
+    }
+
+    test("a \$ref to a subtype the mapping does not list is the case of its schema name") {
+        assertEquals(
+            case("Pet", "Target"),
+            referenced(
+                mapOf(
+                    "Pet" to base(""""name": { "type": "string" }""", "cat" to "Cat"),
+                    "Cat" to extends("Pet"),
+                    "Target" to extends("Pet", """"packSize": { "type": "integer" }"""),
+                )
+            ),
+        )
+    }
+
+    test("a \$ref to a subtype with several allOf members is the case of the base it extends") {
+        assertEquals(
+            case("Restriction", "per-redemption"),
+            referenced(
+                mapOf(
+                    "Restriction" to base(""""id": { "type": "string" }""", "per-redemption" to "Target"),
+                    "Limit" to """{ "type": "object", "properties": { "limit": { "type": "integer" } } }""",
+                    "Target" to """{ "allOf": [${ref("Restriction")}, ${ref("Limit")}, { "type": "object" }] }""",
+                )
+            ),
+        )
+    }
 }
