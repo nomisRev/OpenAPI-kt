@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         id: restore
         with:
           path: ${{ runner.temp }}/snapshot
@@ -52,7 +52,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/snapshot"
           mv "$RUNNER_TEMP/fetch/index.json" "$RUNNER_TEMP/fetch/specs" "$RUNNER_TEMP/snapshot/"
 
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: steps.restore.outputs.cache-hit != 'true'
         with:
           path: ${{ runner.temp }}/snapshot
@@ -76,7 +76,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/snapshot
           key: ${{ env.SNAPSHOT_KEY }}
